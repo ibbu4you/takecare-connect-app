@@ -29,8 +29,13 @@ dependencies:
   # The API returns `body`, `intro` and `story` as raw HTML.
   flutter_widget_from_html_core: ^0.15.2
 
-  # tel:, mailto:, maps, external links, Stripe checkout.
+  # tel:, mailto:, maps, external links, the donation hand-off, the receipt PDF.
   url_launcher: ^6.3.0
+
+  # Exactly one screen uses this: the map on Contact, which renders the same
+  # Google Maps embed the website does. Everything else that could have been a
+  # WebView is a native screen instead.
+  webview_flutter: ^4.10.0
 
   # A client id for the rate limiter, so a whole carrier NAT is not one bucket.
   shared_preferences: ^2.2.3

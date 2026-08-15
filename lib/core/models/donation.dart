@@ -90,6 +90,7 @@ class DonationStatus {
     this.currency = 'INR',
     this.campaignSlug,
     this.receiptNumber,
+    this.receiptUrl,
     this.paidAt,
     this.isRecurring = false,
   });
@@ -100,8 +101,19 @@ class DonationStatus {
   final String currency;
   final String? campaignSlug;
   final String? receiptNumber;
+
+  /// A signed, expiring link to the donor's own 80G receipt PDF.
+  ///
+  /// Null until the file exists — it is written by a queued job once the
+  /// webhook confirms payment, so a donor who polls seconds after paying will
+  /// legitimately have a receipt *number* and no document yet. The download is
+  /// offered only when this is present.
+  final String? receiptUrl;
+
   final DateTime? paidAt;
   final bool isRecurring;
+
+  bool get hasReceipt => (receiptUrl?.isNotEmpty ?? false);
 
   bool get isPaid => status == 'paid';
 
@@ -114,6 +126,7 @@ class DonationStatus {
         currency: (json['currency'] ?? 'INR') as String,
         campaignSlug: json['campaign_slug'] as String?,
         receiptNumber: json['receipt_number'] as String?,
+        receiptUrl: json['receipt_url'] as String?,
         paidAt: DateTime.tryParse((json['paid_at'] ?? '') as String),
         isRecurring: (json['is_recurring'] ?? false) as bool,
       );

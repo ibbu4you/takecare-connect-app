@@ -61,6 +61,15 @@ final postProvider = FutureProvider.autoDispose.family<PostDetail, String>(
   (ref, slug) => ref.read(repositoryProvider).post(slug),
 );
 
+/// The editor-curated stories beside an article, excluding the one being read.
+///
+/// A family on the excluded slug rather than a single provider, because the
+/// server does the excluding — so the list genuinely differs per article, and
+/// caching one copy would show the reader the story they are already on.
+final trendingProvider = FutureProvider.autoDispose.family<List<PostSummary>, String?>(
+  (ref, exclude) => ref.read(repositoryProvider).trendingStories(exclude: exclude),
+);
+
 final authorProvider = FutureProvider.autoDispose.family<AuthorProfile, String>(
   (ref, slug) => ref.read(repositoryProvider).author(slug),
 );

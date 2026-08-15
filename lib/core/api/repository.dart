@@ -75,6 +75,19 @@ class Repository {
     return _list(json, TaxonomyOption.fromJson);
   }
 
+  /// The editor-curated list the website prints beside every article.
+  ///
+  /// [exclude] is the story the reader is already on. The server applies it to
+  /// its recency fallback only — a story an editor ticked is shown wherever
+  /// they ticked it.
+  Future<List<PostSummary>> trendingStories({String? exclude}) async {
+    final json = await _api.get(Api.trendingStories, query: {
+      if (exclude != null) 'exclude': exclude,
+    });
+
+    return _list(json, PostSummary.fromJson);
+  }
+
   Future<AuthorProfile> author(String slug) async {
     final json = await _api.get(Api.author(slug));
 

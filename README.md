@@ -100,6 +100,25 @@ Confirmation never comes back through the browser — it arrives at the server a
 says plainly that the payment is still being confirmed rather than spinning forever. A donor who
 is unsure whether their money went through donates twice.
 
+The 80G receipt arrives in that same polling. `receipt_url` is a signed, hour-long link keyed on
+the reference, and it is **null until the PDF exists** — the file is written by a queued job after
+the webhook, so a donor who reaches the screen seconds after paying has a receipt number and no
+document. The download button appears when the link does; polling continues past "paid" for
+exactly that reason. It opens in the browser rather than downloading into the app, because the
+PDF carries the donor's name and PAN.
+
+**Website paths are not app routes.** The API hands out site-relative paths in banner CTAs,
+programme cards, and anything an editor types — `/blog/category/tales-of-brands`,
+`/interview-today`. Never pass one to `context.go`. `core/router/web_paths.dart` translates them,
+and `openWebPath()` sends anything the app cannot show (an external site, the RSS feed, a signed
+receipt PDF) to the browser instead. `test/web_paths_test.dart` pins the mapping against the live
+menu, because getting this wrong fails silently: the reader just lands on "that page has moved".
+
+**One WebView, on purpose.** `webview_flutter` exists for the map on the Contact screen and
+nothing else. It renders the same Google Maps embed the website does, deliberately without
+gesture recognizers — a live map inside a scrolling form swallows the drag and the page appears
+stuck — so every drag belongs to the page and a tap hands off to the phone's own maps app.
+
 ## Checking it
 
 ```bash

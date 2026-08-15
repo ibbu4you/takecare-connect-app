@@ -76,7 +76,9 @@ void main() {
       await binding.setSurfaceSize(const Size(390, 844));
       addTearDown(() => binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(_App(location: screen.location, snapshot: snapshot));
+      await tester.pumpWidget(
+        _App(location: screen.locationFor(snapshot), snapshot: snapshot),
+      );
 
       // Alternating real delays and pumps, rather than one long wait.
       //
@@ -89,13 +91,33 @@ void main() {
       // spin forever on the progress indicator.
       await _settle(tester, _wait);
 
-      if (screen.scrollBy > 0) {
+      if (screen.scrolls) {
         final scrollable = find.byType(Scrollable);
 
         if (scrollable.evaluate().isNotEmpty) {
-          await tester.drag(scrollable.first, Offset(0, -screen.scrollBy));
-          // Images below the fold have only just been asked for.
-          await _settle(tester, const Duration(seconds: 4));
+          // jumpTo, not drag.
+          //
+          // A drag hands the list a ballistic animation, and `pump()` advances
+          // animation time by zero — so the capture lands mid-fling, past
+          // maxScrollExtent, and the screenshot is a card floating above a
+          // screenful of overscrolled white. Clamping to the real extent and
+          // jumping there is exact and needs no settling.
+          // Twice, because a lazy ListView only knows the extent of what it has
+          // already built. The first jump lands near the end of the known
+          // content, which builds the rest; the second reaches the actual
+          // bottom. One jump leaves a screenful of white below the last card.
+          for (var i = 0; i < 2; i++) {
+            final position = tester.state<ScrollableState>(scrollable.first).position;
+
+            final target = screen.scrollFromEnd > 0
+                ? position.maxScrollExtent - screen.scrollFromEnd
+                : screen.scrollBy;
+
+            position.jumpTo(target.clamp(0.0, position.maxScrollExtent));
+
+            // Images below the fold have only just been asked for.
+            await _settle(tester, const Duration(seconds: 3));
+          }
         }
       }
 
@@ -178,7 +200,14 @@ Future<void> _loadFonts() async {
 bool _fontsLoaded = false;
 
 class _Screen {
-  const _Screen(this.name, this.location, this.file, {this.scrollBy = 0});
+  const _Screen(
+    this.name,
+    this.location,
+    this.file, {
+    this.scrollBy = 0,
+    this.scrollFromEnd = 0,
+    this.slugFrom,
+  });
 
   final String name;
   final String location;
@@ -187,6 +216,28 @@ class _Screen {
   /// How far to scroll before capturing, for screens whose interesting part is
   /// below the fold.
   final double scrollBy;
+
+  /// How far back from the bottom to stop.
+  ///
+  /// For anything positioned relative to the end of a page whose length depends
+  /// on how long today's article happens to be — a fixed offset would land
+  /// somewhere different every time the content changed.
+  final double scrollFromEnd;
+
+  bool get scrolls => scrollBy > 0 || scrollFromEnd > 0;
+
+  /// Pulls a real slug out of the snapshot for a detail screen.
+  ///
+  /// Tests have to be registered synchronously from `main()`, before `setUpAll`
+  /// has fetched anything — so a detail route cannot be a constant. The screen
+  /// declares how to find its slug and resolves it inside the test body.
+  final String Function(_Snapshot)? slugFrom;
+
+  String locationFor(_Snapshot snapshot) {
+    final slug = slugFrom?.call(snapshot);
+
+    return slug == null || slug.isEmpty ? location : '$location/$slug';
+  }
 }
 
 /// Long enough for the images on a screen to arrive.
@@ -210,7 +261,28 @@ const _screens = [
   _Screen('privacy page', '${Routes.more}/pages/privacy-policy', '15-page'),
   _Screen('donate', Routes.donate, '16-donate'),
   _Screen('search', '${Routes.home}search', '17-search'),
+
+  // The detail screens, on whatever the site is publishing today.
+  _Screen('story', Routes.stories, '18-story', slugFrom: _firstStory),
+  // Far enough to clear the article body and land on the share bar, the author
+  // box, and everything the page closes with.
+  _Screen('story footer', Routes.stories, '19-story-footer',
+      slugFrom: _firstStory, scrollBy: 99999),
+  _Screen('craftsman', Routes.craftsmen, '20-craftsman', slugFrom: _firstCraftsman),
+  _Screen('campaign', Routes.give, '21-campaign', slugFrom: _firstCampaign),
+  // Where the share bar and the author box sit, measured back from the end so
+  // it lands in the same place however long today's article runs.
+  _Screen('story author', Routes.stories, '22-story-author',
+      slugFrom: _firstStory, scrollFromEnd: 1480),
 ];
+
+String _firstStory(_Snapshot s) => s.posts.items.isEmpty ? '' : s.posts.items.first.slug;
+
+String _firstCraftsman(_Snapshot s) =>
+    s.businesses.items.isEmpty ? '' : s.businesses.items.first.slug;
+
+String _firstCampaign(_Snapshot s) =>
+    s.campaigns.items.isEmpty ? '' : s.campaigns.items.first.slug;
 
 /// The app, rooted at one location and backed by the snapshot.
 class _App extends StatelessWidget {
@@ -242,6 +314,7 @@ class _Snapshot {
     required this.formOptions,
     required this.posts,
     required this.postCategories,
+    required this.trending,
     required this.businesses,
     required this.categories,
     required this.cities,
@@ -252,6 +325,10 @@ class _Snapshot {
     required this.transparency,
     required this.pages,
     required this.donationOptions,
+    required this.postDetails,
+    required this.businessDetails,
+    required this.campaignDetails,
+    required this.authors,
   });
 
   final HomePayload home;
@@ -259,6 +336,7 @@ class _Snapshot {
   final FormOptions formOptions;
   final CursorPage<PostSummary> posts;
   final List<TaxonomyOption> postCategories;
+  final List<PostSummary> trending;
   final CursorPage<BusinessSummary> businesses;
   final List<TaxonomyOption> categories;
   final List<TaxonomyOption> cities;
@@ -269,6 +347,12 @@ class _Snapshot {
   final TransparencyData transparency;
   final Map<String, PageContent> pages;
   final DonationOptions donationOptions;
+
+  /// The detail screens, fetched for whatever the site is publishing today.
+  final Map<String, PostDetail> postDetails;
+  final Map<String, BusinessDetail> businessDetails;
+  final Map<String, Campaign> campaignDetails;
+  final Map<String, AuthorProfile> authors;
 
   static Future<_Snapshot> fetch() async {
     final repo = Repository(ApiClient());
@@ -281,22 +365,67 @@ class _Snapshot {
       pages[slug] = await repo.page(slug);
     }
 
+    // Tolerated rather than required: this endpoint is newer than the deployed
+    // server may be, and a 404 here should cost one empty section rather than
+    // every screenshot in the run.
+    var trending = <PostSummary>[];
+    try {
+      trending = await repo.trendingStories();
+    } catch (e) {
+      // ignore: avoid_print
+      print('  (trending unavailable: $e)');
+    }
+
+    final posts = await repo.posts();
+    final businesses = await repo.businesses();
+    final campaigns = await repo.campaigns();
+
+    // Only the first of each: these are what the detail screenshots open, and
+    // fetching every one would turn a twenty-second run into a crawl.
+    final postDetails = <String, PostDetail>{};
+    final authors = <String, AuthorProfile>{};
+
+    if (posts.items.isNotEmpty) {
+      final slug = posts.items.first.slug;
+      postDetails[slug] = await repo.post(slug);
+
+      final authorSlug = postDetails[slug]!.author?.slug;
+      if (authorSlug != null) authors[authorSlug] = await repo.author(authorSlug);
+    }
+
+    final businessDetails = <String, BusinessDetail>{};
+    if (businesses.items.isNotEmpty) {
+      final slug = businesses.items.first.slug;
+      businessDetails[slug] = await repo.business(slug);
+    }
+
+    final campaignDetails = <String, Campaign>{};
+    if (campaigns.items.isNotEmpty) {
+      final slug = campaigns.items.first.slug;
+      campaignDetails[slug] = await repo.campaign(slug);
+    }
+
     return _Snapshot(
       home: await repo.home(),
       settings: await repo.settings(),
       formOptions: await repo.formOptions(),
-      posts: await repo.posts(),
+      posts: posts,
       postCategories: await repo.postCategories(),
-      businesses: await repo.businesses(),
+      trending: trending,
+      businesses: businesses,
       categories: await repo.categories(),
       cities: await repo.cities(),
-      campaigns: await repo.campaigns(),
+      campaigns: campaigns,
       galleries: await repo.galleries(),
       press: await repo.press(),
       about: await repo.about(),
       transparency: await repo.transparency(),
       pages: pages,
       donationOptions: await repo.donationOptions(),
+      postDetails: postDetails,
+      businessDetails: businessDetails,
+      campaignDetails: campaignDetails,
+      authors: authors,
     );
   }
 }
@@ -336,6 +465,10 @@ class _SnapshotRepository extends Repository {
   Future<List<TaxonomyOption>> postCategories() async => _s.postCategories;
 
   @override
+  Future<List<PostSummary>> trendingStories({String? exclude}) async =>
+      _s.trending.where((p) => p.slug != exclude).toList();
+
+  @override
   Future<CursorPage<BusinessSummary>> businesses({
     String? category,
     String? city,
@@ -359,6 +492,25 @@ class _SnapshotRepository extends Repository {
 
   @override
   Future<List<PressSection>> press() async => _s.press;
+
+  // The detail screens. A miss throws rather than falling back to the network:
+  // inside a widget test's fake-async zone a real request never completes, so
+  // silently reaching for one would hang the run with no explanation.
+  @override
+  Future<PostDetail> post(String slug) async =>
+      _s.postDetails[slug] ?? (throw StateError('no snapshot for post $slug'));
+
+  @override
+  Future<BusinessDetail> business(String slug) async =>
+      _s.businessDetails[slug] ?? (throw StateError('no snapshot for business $slug'));
+
+  @override
+  Future<Campaign> campaign(String slug) async =>
+      _s.campaignDetails[slug] ?? (throw StateError('no snapshot for campaign $slug'));
+
+  @override
+  Future<AuthorProfile> author(String slug) async =>
+      _s.authors[slug] ?? (throw StateError('no snapshot for author $slug'));
 
   @override
   Future<AboutContent> about() async => _s.about;

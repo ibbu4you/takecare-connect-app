@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api/repository.dart';
 import '../../core/models/donation.dart';
@@ -68,7 +69,13 @@ class _DonateResultScreenState extends ConsumerState<DonateResultScreen> {
         _error = null;
       });
 
-      if (!status.isPending) return;
+      // Keep going a little past "paid" while the receipt is still being
+      // written. The PDF comes from a queued job that runs after the webhook,
+      // so stopping the moment the status flips would show a donor the success
+      // screen without the download and never come back for it. The success
+      // state is already on screen either way — this only adds the button.
+      if (status.hasFailed) return;
+      if (!status.isPending && status.hasReceipt) return;
     } catch (e) {
       if (!mounted) return;
 
@@ -226,10 +233,34 @@ class _Success extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         Text(
-          'An 80G receipt is on its way to your email. It may take a few minutes.',
+          status.hasReceipt
+              ? 'Your 80G receipt has also been emailed to you.'
+              : 'An 80G receipt is on its way to your email. It may take a few minutes.',
           style: AppText.excerpt,
           textAlign: TextAlign.center,
         ),
+
+        // Only once the PDF genuinely exists.
+        //
+        // It is written by a queued job after the webhook lands, so a donor
+        // who reaches this screen a few seconds after paying has a receipt
+        // number and no document. A button that 404s would be worse than no
+        // button; the polling picks the link up when it appears.
+        if (status.hasReceipt) ...[
+          const SizedBox(height: 18),
+          OutlinedButton.icon(
+            // Opened in the browser, not downloaded into the app: it is a PDF
+            // carrying the donor's name and PAN, and it has no business being
+            // cached anywhere this app controls.
+            onPressed: () => launchUrl(
+              Uri.parse(status.receiptUrl!),
+              mode: LaunchMode.externalApplication,
+            ),
+            icon: const Icon(Icons.receipt_long_outlined, size: 18),
+            label: const Text('Download your 80G receipt'),
+          ),
+        ],
+
         const SizedBox(height: 26),
         FilledButton(
           onPressed: () => context.go(Routes.home),

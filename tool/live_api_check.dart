@@ -88,8 +88,12 @@ void main() {
     // donate screen prints them above the submit button.
     expect(settings.credentials, isNotEmpty);
 
+    // The contact screen renders this in a WebView, exactly as the website
+    // embeds it. Not fatal if the office has not set one — the card falls back
+    // to a tappable panel — so this reports rather than asserts.
     // ignore: avoid_print
-    print('  settings: ${settings.name} — ${settings.credentials.join(", ")}');
+    print('  settings: ${settings.name} — ${settings.credentials.join(", ")}'
+        '${settings.mapEmbedUrl == null ? " (no map set)" : ""}');
   });
 
   test('form options cover every select the forms render', () async {
@@ -181,6 +185,28 @@ void main() {
 
     // ignore: avoid_print
     print('  craftsmen: $withProducts of $checked have products');
+  });
+
+  test('trending stories are curated and exclude the article being read', () async {
+    final trending = await repo.trendingStories();
+
+    expect(trending, isNotEmpty, reason: 'the trending list is empty even of fallbacks');
+
+    for (final post in trending) {
+      expect(post.slug, isNotEmpty);
+      expect(post.title, isNotEmpty);
+    }
+
+    final excluded = await repo.trendingStories(exclude: trending.first.slug);
+
+    expect(
+      excluded.every((p) => p.slug != trending.first.slug),
+      isTrue,
+      reason: 'the excluded story came back anyway',
+    );
+
+    // ignore: avoid_print
+    print('  trending: ${trending.length} — "${trending.first.title}"');
   });
 
   test('taxonomies are populated', () async {

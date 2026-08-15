@@ -39,6 +39,7 @@ class Api {
   static const posts = '/posts';
   static String post(String slug) => '/posts/$slug';
   static const postCategories = '/post-categories';
+  static const trendingStories = '/trending-stories';
   static String author(String slug) => '/authors/$slug';
 
   static const businesses = '/businesses';

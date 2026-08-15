@@ -4,11 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api/repository.dart';
+import '../../core/models/site.dart';
 import '../../core/state/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/validators.dart';
 import '../../core/widgets/form_fields.dart';
+import '../../core/widgets/map_card.dart';
 import 'form_scaffold.dart';
 
 /// Write to the office.
@@ -133,6 +135,25 @@ class _ContactDetails extends ConsumerWidget {
 
     if (settings == null) return const SizedBox.shrink();
 
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // The map the website carries. Same embed URL, out of the same setting.
+        if ((settings.mapEmbedUrl?.isNotEmpty ?? false) && settings.address.isNotEmpty)
+          MapCard(embedUrl: settings.mapEmbedUrl!, address: settings.address),
+        _Details(settings: settings),
+      ],
+    );
+  }
+}
+
+class _Details extends StatelessWidget {
+  const _Details({required this.settings});
+
+  final SiteSettings settings;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(

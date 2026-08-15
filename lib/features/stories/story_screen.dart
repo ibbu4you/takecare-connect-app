@@ -128,7 +128,67 @@ class _Article extends ConsumerWidget {
             ),
           ),
         ],
+
+        // Whatever the team has carried across the blog. The website prints
+        // this beside every article; the slugs already shown above are filtered
+        // out here rather than server-side, because the server honours an
+        // editor's choice as made and only its recency fallback excludes.
+        _Trending(
+          exclude: post.slug,
+          alreadyShown: more.map((p) => p.slug).toSet(),
+        ),
+
         const SizedBox(height: 32),
+      ],
+    );
+  }
+}
+
+/// The trending rail, as the website prints it beside every article.
+///
+/// Editor-curated through `is_trending`/`trending_order`, with recency as the
+/// fallback so the section can never be empty because nobody made a choice —
+/// nothing on this site counts views, so "latest" is the honest stand-in for
+/// "trending" rather than a pretence of measurement.
+///
+/// Horizontal, unlike the web's sidebar column: a phone has no sidebar, and
+/// stacking six more cards under "More like this" would turn the foot of every
+/// article into a wall of nine.
+class _Trending extends ConsumerWidget {
+  const _Trending({required this.exclude, required this.alreadyShown});
+
+  final String exclude;
+
+  /// Slugs printed further up the page, filtered here so the reader is not
+  /// shown the same card twice.
+  final Set<String> alreadyShown;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final posts = ref.watch(trendingProvider(exclude)).valueOrNull ?? const [];
+    final visible = posts.where((p) => !alreadyShown.contains(p.slug)).toList();
+
+    if (visible.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        const SectionDivider(),
+        const SectionHeader(eyebrow: 'Doing the rounds', title: 'Trending stories'),
+        SizedBox(
+          height: 288,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: visible.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, i) => PostTile(
+              post: visible[i],
+              onTap: () => context.replace(Routes.story(visible[i].slug)),
+            ),
+          ),
+        ),
       ],
     );
   }
