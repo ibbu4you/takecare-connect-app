@@ -1,0 +1,77 @@
+name: takecare_connect
+description: "Takecare Connect — stories, craftsmen and campaigns from Take Care International Foundation."
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management. No codegen, matching the house style.
+  flutter_riverpod: ^2.5.1
+
+  # Navigation
+  go_router: ^14.2.0
+
+  # Networking
+  dio: ^5.4.3+1
+
+  # DM Sans, the only family the website loads.
+  google_fonts: ^6.2.1
+
+  # Load-bearing here, unlike in Blood Share where it is declared and unused:
+  # this app is mostly photography, over Indian mobile networks.
+  cached_network_image: ^3.3.1
+
+  # The API returns `body`, `intro` and `story` as raw HTML.
+  flutter_widget_from_html_core: ^0.15.2
+
+  # tel:, mailto:, maps, external links, Stripe checkout.
+  url_launcher: ^6.3.0
+
+  # A client id for the rate limiter, so a whole carrier NAT is not one bucket.
+  shared_preferences: ^2.2.3
+
+  # Dates formatted as the site does: "j F Y".
+  intl: ^0.19.0
+
+  share_plus: ^10.0.2
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  # Android crops adaptive icons hard, so the foreground carries more padding
+  # or the laurel tips get clipped by a circular mask.
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+  min_sdk_android: 21
+  # The App Store rejects icons with an alpha channel.
+  remove_alpha_ios: true
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: "assets/icon/app_icon_foreground.png"
+  android_12:
+    color: "#FFFFFF"
+    image: "assets/icon/app_icon_foreground.png"
+    icon_background_color: "#FFFFFF"
+  android: true
+  ios: true
+  web: false
