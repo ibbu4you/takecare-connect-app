@@ -90,6 +90,10 @@ class _Article extends ConsumerWidget {
               HtmlBody(post.body),
               const SizedBox(height: 24),
               ShareBar(path: '/blog/${post.slug}', title: post.title),
+              if (post.author?.slug != null) ...[
+                const SizedBox(height: 20),
+                _AuthorBox(slug: post.author!.slug!),
+              ],
               const SizedBox(height: 8),
             ],
           ),
@@ -126,6 +130,80 @@ class _Article extends ConsumerWidget {
         ],
         const SizedBox(height: 32),
       ],
+    );
+  }
+}
+
+/// "About the author", under the article — the box the website closes every
+/// story with.
+///
+/// Watches the author provider rather than using the byline already in hand,
+/// because the post carries only a name and a slug; the bio and the avatar are
+/// a separate fetch. It renders nothing at all until that arrives and nothing
+/// ever if the author has written no bio, so a thin profile costs the reader a
+/// blank card rather than showing one.
+class _AuthorBox extends ConsumerWidget {
+  const _AuthorBox({required this.slug});
+
+  final String slug;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final author = ref.watch(authorProvider(slug)).valueOrNull;
+
+    if (author == null || (author.bio?.trim().isEmpty ?? true)) {
+      return const SizedBox.shrink();
+    }
+
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      onTap: () => context.push(Routes.author(slug)),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipOval(
+            child: SizedBox(
+              height: 44,
+              width: 44,
+              child: author.avatar == null
+                  ? Container(
+                      color: AppColors.surface,
+                      alignment: Alignment.center,
+                      child: Text(
+                        author.name.trim().isEmpty
+                            ? '?'
+                            : author.name.trim()[0].toUpperCase(),
+                        style: AppText.h3.copyWith(color: AppColors.primary),
+                      ),
+                    )
+                  : AppImage(url: author.avatar, semanticLabel: author.name),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('About ${author.name}', style: AppText.title.copyWith(fontSize: 15)),
+                const SizedBox(height: 4),
+                Text(
+                  author.bio!,
+                  style: AppText.excerpt,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  author.postCount == 1
+                      ? 'Read their 1 story'
+                      : 'Read all ${author.postCount} stories',
+                  style: AppText.metaStrong.copyWith(color: AppColors.primary),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

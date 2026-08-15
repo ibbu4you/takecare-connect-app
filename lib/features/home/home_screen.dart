@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/models/home.dart';
 import '../../core/router/route_names.dart';
+import '../../core/router/web_paths.dart';
 import '../../core/state/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -312,26 +313,7 @@ class _Banner extends StatelessWidget {
 
   final BannerSlide slide;
 
-  void _open(BuildContext context) {
-    final url = slide.ctaUrl;
-    if (url == null || url.isEmpty) return;
-
-    // The API returns site-relative paths for anything the app has a screen
-    // for. Anything absolute belongs to the website and is left alone.
-    if (url.startsWith('/')) context.go(_appPath(url));
-  }
-
-  /// Maps a website path onto the app's equivalent, where they differ.
-  static String _appPath(String path) {
-    if (path.startsWith('/blog')) return path.replaceFirst('/blog', Routes.stories);
-    if (path.startsWith('/businesses')) {
-      return path.replaceFirst('/businesses', Routes.craftsmen);
-    }
-    if (path.startsWith('/campaigns')) return path.replaceFirst('/campaigns', Routes.give);
-    if (path.startsWith('/donate')) return Routes.donate;
-
-    return path;
-  }
+  Future<void> _open(BuildContext context) => openWebPath(context, slide.ctaUrl);
 
   @override
   Widget build(BuildContext context) {
@@ -479,9 +461,14 @@ class _Programmes extends StatelessWidget {
           for (final programme in programmes) ...[
             AppCard(
               padding: const EdgeInsets.all(14),
-              onTap: programme.external || programme.path.isEmpty
+              // Through the translator, never straight to `context.go`. These
+              // paths are the website's — `/blog/category/tales-of-brands`,
+              // `/interview-today` — and three of the four programme cards
+              // landed on the "page has moved" screen when they were passed
+              // through unchanged.
+              onTap: programme.path.isEmpty
                   ? null
-                  : () => context.go(programme.path),
+                  : () => openWebPath(context, programme.path),
               child: Row(
                 children: [
                   Container(
@@ -515,9 +502,13 @@ class _Programmes extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (!programme.external && programme.path.isNotEmpty)
-                    const Icon(
-                      Icons.chevron_right_rounded,
+                  if (programme.path.isNotEmpty)
+                    Icon(
+                      // An external programme leaves the app; say so.
+                      programme.external
+                          ? Icons.open_in_new_rounded
+                          : Icons.chevron_right_rounded,
+                      size: programme.external ? 16 : 24,
                       color: AppColors.mutedForeground,
                     ),
                 ],
