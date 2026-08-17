@@ -30,31 +30,33 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: 16,
-        // One line, and every part of it either fixed or Flexible.
+        // The logo goes in `leading`, not into a Row inside `title`.
         //
-        // This was a logo beside a two-line block holding the app's name and
-        // the foundation's full name. An app bar is the most contested strip in
-        // the app — a leading gap, a title, and an action button, on a phone
-        // that may be 320pt wide with the system font turned up — and stacking
-        // a 33-character second line into it left nothing that could give. It
-        // overflowed on a real device.
+        // This started as a logo beside a two-line block holding both the app's
+        // name and the foundation's full name, packed into the title slot. It
+        // overflowed on a real phone. Replacing the block with a single
+        // Flexible line should have been enough — and by every measurement it
+        // is, at every width from 320pt up — but a hand-built Row in the title
+        // slot competes with the leading gap and the actions for a width it is
+        // never told, which is why it went wrong twice.
+        //
+        // AppBar already has a slot that is measured for it. Using it means
+        // there is no Flex here at all, and so nothing that can overflow.
+        // test/app_bar_fit_test.dart holds it to that.
         //
         // Nothing is lost by dropping the second line: the full name and the
         // tagline are both on the More tab, under the same mark.
-        title: Row(
-          children: [
-            const TcifLogo(size: 30),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                'Takecare Connect',
-                style: AppText.title.copyWith(fontSize: 17),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+        leadingWidth: 58,
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 16),
+          child: Center(child: TcifLogo(size: 30)),
+        ),
+        titleSpacing: 10,
+        title: Text(
+          'Takecare Connect',
+          style: AppText.title.copyWith(fontSize: 17),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         actions: [
           IconButton(
