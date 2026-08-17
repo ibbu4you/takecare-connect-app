@@ -31,18 +31,27 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 16,
+        // One line, and every part of it either fixed or Flexible.
+        //
+        // This was a logo beside a two-line block holding the app's name and
+        // the foundation's full name. An app bar is the most contested strip in
+        // the app — a leading gap, a title, and an action button, on a phone
+        // that may be 320pt wide with the system font turned up — and stacking
+        // a 33-character second line into it left nothing that could give. It
+        // overflowed on a real device.
+        //
+        // Nothing is lost by dropping the second line: the full name and the
+        // tagline are both on the More tab, under the same mark.
         title: Row(
           children: [
             const TcifLogo(size: 30),
             const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Takecare Connect', style: AppText.title.copyWith(fontSize: 16)),
-                  Text('Take Care International Foundation', style: AppText.meta.copyWith(fontSize: 10)),
-                ],
+            Flexible(
+              child: Text(
+                'Takecare Connect',
+                style: AppText.title.copyWith(fontSize: 17),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

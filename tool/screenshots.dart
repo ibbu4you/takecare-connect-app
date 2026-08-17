@@ -73,11 +73,15 @@ void main() {
     testWidgets(screen.name, (tester) async {
       // Inside the test, not setUpAll: setSurfaceSize asserts `inTest`.
       // A phone, not the 800×600 the test binding defaults to.
-      await binding.setSurfaceSize(const Size(390, 844));
+      await binding.setSurfaceSize(screen.size);
       addTearDown(() => binding.setSurfaceSize(null));
 
       await tester.pumpWidget(
-        _App(location: screen.locationFor(snapshot), snapshot: snapshot),
+        _App(
+          location: screen.locationFor(snapshot),
+          snapshot: snapshot,
+          textScale: screen.textScale,
+        ),
       );
 
       // Alternating real delays and pumps, rather than one long wait.
@@ -207,6 +211,8 @@ class _Screen {
     this.scrollBy = 0,
     this.scrollFromEnd = 0,
     this.slugFrom,
+    this.size = const Size(390, 844),
+    this.textScale = 1.0,
   });
 
   final String name;
@@ -232,6 +238,15 @@ class _Screen {
   /// has fetched anything — so a detail route cannot be a constant. The screen
   /// declares how to find its slug and resolves it inside the test body.
   final String Function(_Snapshot)? slugFrom;
+
+  /// The viewport. Defaults to a mainstream phone; set it smaller to prove a
+  /// screen survives the narrowest one people still carry.
+  final Size size;
+
+  /// The system font scale, which the app clamps to 1.3. Worth pushing to that
+  /// ceiling on anything crowded — an app bar overflowed on a real device and
+  /// no screenshot at 1.0 would ever have shown it.
+  final double textScale;
 
   String locationFor(_Snapshot snapshot) {
     final slug = slugFrom?.call(snapshot);
@@ -274,6 +289,15 @@ const _screens = [
   // it lands in the same place however long today's article runs.
   _Screen('story author', Routes.stories, '22-story-author',
       slugFrom: _firstStory, scrollFromEnd: 1480),
+
+  // The squeeze test: the narrowest phone still in use, with the system font at
+  // the ceiling the app allows. This is the combination that overflowed the
+  // home app bar on a real device, and no screenshot at 390pt and 1.0 would
+  // ever have shown it.
+  _Screen('home squeezed', Routes.home, '23-home-squeezed',
+      size: Size(320, 640), textScale: 1.3),
+  _Screen('more squeezed', Routes.more, '24-more-squeezed',
+      size: Size(320, 640), textScale: 1.3),
 ];
 
 String _firstStory(_Snapshot s) => s.posts.items.isEmpty ? '' : s.posts.items.first.slug;
@@ -286,10 +310,15 @@ String _firstCampaign(_Snapshot s) =>
 
 /// The app, rooted at one location and backed by the snapshot.
 class _App extends StatelessWidget {
-  const _App({required this.location, required this.snapshot});
+  const _App({
+    required this.location,
+    required this.snapshot,
+    this.textScale = 1.0,
+  });
 
   final String location;
   final _Snapshot snapshot;
+  final double textScale;
 
   @override
   Widget build(BuildContext context) {
@@ -301,6 +330,12 @@ class _App extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
         routerConfig: buildRouter(initialLocation: location),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(textScale),
+          ),
+          child: child!,
+        ),
       ),
     );
   }

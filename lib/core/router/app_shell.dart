@@ -99,15 +99,24 @@ class _NavItem extends StatelessWidget {
         onTap: onTap,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          // min + Flexible, because the bar's height is fixed and the label's
+          // is not. At the largest font size the app allows, on the narrowest
+          // phone, this column was four pixels taller than the bar.
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(selected ? destination.activeIcon : destination.icon, size: 23, color: colour),
+            Icon(selected ? destination.activeIcon : destination.icon, size: 22, color: colour),
             const SizedBox(height: 3),
-            Text(
-              destination.label,
-              style: AppText.meta.copyWith(
-                color: colour,
-                fontSize: 11,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+            Flexible(
+              child: Text(
+                destination.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.meta.copyWith(
+                  color: colour,
+                  fontSize: 11,
+                  height: 1.1,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                ),
               ),
             ),
           ],
