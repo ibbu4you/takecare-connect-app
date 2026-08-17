@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/repository.dart';
-import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/validators.dart';
 import '../../core/widgets/form_fields.dart';
 import 'form_scaffold.dart';
@@ -82,18 +81,22 @@ class _RegisterInterviewScreenState extends ConsumerState<RegisterInterviewScree
   Widget build(BuildContext context) {
     return FormPage(
       title: 'Register for an interview',
+      introIcon: Icons.storefront_outlined,
       introTitle: 'Tell us what you make',
       intro: 'We interview craftsmen and small businesses across India, publish '
           'the story with photographs, and put your work in front of people who '
           'want to buy it. There is no charge.',
       confirmation: confirmation,
       confirmationTitle: 'Registration received',
-      builder: (context, options) => Form(
-        key: formKey,
-        child: Column(
+      formKey: formKey,
+      busy: busy,
+      submitLabel: 'Send registration',
+      onSubmit: _onSubmit,
+      builder: (context, options) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             FormSection(
+              step: 1,
               title: 'Who is registering',
               children: [
                 AppField(
@@ -130,6 +133,7 @@ class _RegisterInterviewScreenState extends ConsumerState<RegisterInterviewScree
             ),
 
             FormSection(
+              step: 2,
               title: 'The business',
               children: [
                 AppField(
@@ -207,6 +211,7 @@ class _RegisterInterviewScreenState extends ConsumerState<RegisterInterviewScree
             ),
 
             FormSection(
+              step: 3,
               title: 'Your work',
               children: [
                 AppField(
@@ -244,43 +249,29 @@ class _RegisterInterviewScreenState extends ConsumerState<RegisterInterviewScree
               ],
             ),
 
-            AppCheckbox(
+            ConsentBox(
               label: 'I am happy for our story and photographs to be published',
               subtitle: 'On the website, in this app, and on our social media.',
               value: _consent,
               onChanged: (value) => setState(() => _consent = value),
-            ),
-            if (errorFor('consent_to_publish') != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6, left: 36),
-                child: Text(
-                  errorFor('consent_to_publish')!,
-                  style: AppText.meta.copyWith(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-
-            const SizedBox(height: 20),
-            SubmitButton(
-              label: 'Register',
-              busy: busy,
-              icon: Icons.send_rounded,
-              onPressed: () {
-                if (!_consent) {
-                  setState(() => serverErrors = {
-                        ...serverErrors,
-                        'consent_to_publish': 'We can only interview businesses happy '
-                            'for the story and photographs to be published.',
-                      });
-
-                  return;
-                }
-
-                submit(() => ref.read(repositoryProvider).registerForInterview(_body));
-              },
+              error: errorFor('consent_to_publish'),
             ),
           ],
         ),
-      ),
     );
+  }
+
+  void _onSubmit() {
+    if (!_consent) {
+      complain(
+        'consent_to_publish',
+        'We can only interview businesses happy for the story and photographs '
+            'to be published.',
+      );
+
+      return;
+    }
+
+    submit(() => ref.read(repositoryProvider).registerForInterview(_body));
   }
 }

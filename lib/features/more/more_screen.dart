@@ -14,9 +14,15 @@ import '../../core/widgets/tcif_logo.dart';
 
 /// Everything that is not a tab of its own.
 ///
-/// Ends with the website's footer, more or less verbatim — the registrations,
-/// the contact details, the socials — because that block is what tells a
-/// stranger this is a real, registered organisation.
+/// Laid out as grouped cards rather than one long divided list. A flat list of
+/// fifteen identical rows is a menu you read; the same fifteen in labelled
+/// cards is a menu you scan — and this screen is only ever visited on the way
+/// somewhere else.
+///
+/// The two things people actually come here to do — take part, and check the
+/// money — are lifted out of the list entirely and given tiles at the top,
+/// because burying "Volunteer" as the ninth identical row is how it never gets
+/// tapped.
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
@@ -25,120 +31,118 @@ class MoreScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider).valueOrNull;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('More')),
+      backgroundColor: AppColors.surface,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        title: const Text('More'),
+        actions: [
+          IconButton(
+            onPressed: () => context.push('${Routes.home}search'),
+            icon: const Icon(Icons.search_rounded),
+            tooltip: 'Search',
+          ),
+        ],
+      ),
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const _GroupLabel('The foundation'),
-          _Item(
-            icon: Icons.info_outline_rounded,
-            label: 'About us',
-            onTap: () => context.push('${Routes.more}/about'),
-          ),
-          _Item(
-            icon: Icons.groups_outlined,
-            label: 'Our team',
-            onTap: () => context.push('${Routes.more}/pages/team'),
-          ),
-          _Item(
-            icon: Icons.receipt_long_outlined,
-            label: 'Where the money goes',
-            subtitle: 'Every rupee, campaign by campaign',
-            onTap: () => context.push('${Routes.more}/transparency'),
-          ),
-          _Item(
-            icon: Icons.description_outlined,
-            label: 'Annual reports',
-            onTap: () => context.push('${Routes.more}/pages/annual-reports'),
-          ),
-          _Item(
-            icon: Icons.mail_outline_rounded,
-            label: 'Contact us',
-            onTap: () => context.push('${Routes.more}/contact'),
+          _Header(settings: settings),
+
+          const _Group(
+            label: 'Take part',
+            children: [
+              _Row(
+                icon: Icons.volunteer_activism_outlined,
+                label: 'Volunteer with us',
+                subtitle: 'Field visits, events, and the stories in this app',
+                path: '/volunteer',
+              ),
+              _Row(
+                icon: Icons.school_outlined,
+                label: 'Apply for an internship',
+                subtitle: 'Placed in a department, alongside your studies',
+                path: '/intern',
+              ),
+              _Row(
+                icon: Icons.storefront_outlined,
+                label: 'Register for an interview',
+                subtitle: 'For craftsmen and small businesses',
+                path: '/register-interview',
+              ),
+            ],
           ),
 
-          const _GroupLabel('Media'),
-          _Item(
-            icon: Icons.photo_library_outlined,
-            label: 'Galleries',
-            onTap: () => context.push('${Routes.more}/galleries'),
-          ),
-          _Item(
-            icon: Icons.newspaper_outlined,
-            label: 'In the press',
-            onTap: () => context.push('${Routes.more}/press'),
-          ),
-
-          const _GroupLabel('Take part'),
-          _Item(
-            icon: Icons.volunteer_activism_outlined,
-            label: 'Volunteer with us',
-            subtitle: 'Field visits, events, and the stories in this app',
-            onTap: () => context.push('${Routes.more}/volunteer'),
-          ),
-          _Item(
-            icon: Icons.school_outlined,
-            label: 'Apply for an internship',
-            subtitle: 'Placed in a department, alongside your studies',
-            onTap: () => context.push('${Routes.more}/intern'),
-          ),
-          _Item(
-            icon: Icons.storefront_outlined,
-            label: 'Register for an interview',
-            subtitle: 'For craftsmen and small businesses',
-            onTap: () => context.push('${Routes.more}/register-interview'),
+          const _Group(
+            label: 'The foundation',
+            children: [
+              _Row(icon: Icons.info_outline_rounded, label: 'About us', path: '/about'),
+              _Row(icon: Icons.groups_outlined, label: 'Our team', path: '/pages/team'),
+              _Row(
+                icon: Icons.description_outlined,
+                label: 'Annual reports',
+                path: '/pages/annual-reports',
+              ),
+              _Row(icon: Icons.mail_outline_rounded, label: 'Contact us', path: '/contact'),
+            ],
           ),
 
-          const _GroupLabel('This app'),
-          _Item(
-            icon: Icons.search_rounded,
-            label: 'Search',
-            onTap: () => context.push('${Routes.home}search'),
-          ),
-          _Item(
-            icon: Icons.ios_share_rounded,
-            label: 'Tell someone about us',
-            onTap: () {
-              final box = context.findRenderObject() as RenderBox?;
-
-              Share.share(
-                'Take Care International Foundation — stories, craftsmen and '
-                'campaigns from across India.\n${Api.site}',
-                sharePositionOrigin:
-                    box == null ? null : box.localToGlobal(Offset.zero) & box.size,
-              );
-            },
-          ),
-          _Item(
-            icon: Icons.open_in_new_rounded,
-            label: 'Open the website',
-            onTap: () => launchUrl(
-              Uri.parse(Api.site),
-              mode: LaunchMode.externalApplication,
-            ),
+          const _Group(
+            label: 'Media',
+            children: [
+              _Row(icon: Icons.photo_library_outlined, label: 'Galleries', path: '/galleries'),
+              _Row(icon: Icons.newspaper_outlined, label: 'In the press', path: '/press'),
+            ],
           ),
 
-          const _GroupLabel('Legal'),
-          _Item(
-            icon: Icons.shield_outlined,
-            label: 'Privacy policy',
-            onTap: () => context.push('${Routes.more}/pages/privacy-policy'),
-          ),
-          // `terms`, not `terms-of-use`. These slugs are the ones in the pages
-          // table, not the ones the page titles suggest — a mismatch is a dead
-          // row in this menu and nothing but tool/live_api_check.dart notices.
-          _Item(
-            icon: Icons.gavel_rounded,
-            label: 'Terms of use',
-            onTap: () => context.push('${Routes.more}/pages/terms'),
-          ),
-          _Item(
-            icon: Icons.currency_rupee_rounded,
-            label: 'Refund policy',
-            onTap: () => context.push('${Routes.more}/pages/refund-policy'),
+          _Group(
+            label: 'This app',
+            children: [
+              _Row(
+                icon: Icons.ios_share_rounded,
+                label: 'Tell someone about us',
+                onTap: (context) {
+                  final box = context.findRenderObject() as RenderBox?;
+
+                  Share.share(
+                    'Take Care International Foundation — stories, craftsmen and '
+                    'campaigns from across India.\n${Api.site}',
+                    sharePositionOrigin:
+                        box == null ? null : box.localToGlobal(Offset.zero) & box.size,
+                  );
+                },
+              ),
+              _Row(
+                icon: Icons.open_in_new_rounded,
+                label: 'Open the website',
+                external: true,
+                onTap: (_) => launchUrl(
+                  Uri.parse(Api.site),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
+            ],
           ),
 
-          const SizedBox(height: 24),
+          // The slugs are the ones in the pages table, not the ones the titles
+          // suggest — "Terms of use" lives at `terms`.
+          const _Group(
+            label: 'Legal',
+            children: [
+              _Row(
+                icon: Icons.shield_outlined,
+                label: 'Privacy policy',
+                path: '/pages/privacy-policy',
+              ),
+              _Row(icon: Icons.gavel_rounded, label: 'Terms of use', path: '/pages/terms'),
+              _Row(
+                icon: Icons.currency_rupee_rounded,
+                label: 'Refund policy',
+                path: '/pages/refund-policy',
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
           _Footer(settings: settings),
         ],
       ),
@@ -146,72 +150,247 @@ class MoreScreen extends ConsumerWidget {
   }
 }
 
-class _GroupLabel extends StatelessWidget {
-  const _GroupLabel(this.label);
+/// The logo, the tagline, and the two things worth doing from this screen.
+class _Header extends StatelessWidget {
+  const _Header({required this.settings});
 
-  final String label;
+  final SiteSettings? settings;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 22, 16, 8),
-      child: Text(
-        label.toUpperCase(),
-        style: AppText.meta.copyWith(fontSize: 11, letterSpacing: 1.2),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const TcifLogo(size: 46),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      settings?.name ?? 'Take Care International Foundation',
+                      style: AppText.title.copyWith(fontSize: 15, height: 1.25),
+                    ),
+                    if (settings != null && settings!.tagline.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(settings!.tagline, style: AppText.meta),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Two tiles, not two more rows. Giving and accountability are the
+          // reasons somebody opens this tab; as rows nine and ten of a list
+          // they read as admin.
+          Row(
+            children: [
+              Expanded(
+                child: _Tile(
+                  icon: Icons.favorite_rounded,
+                  label: 'Donate',
+                  caption: '80G receipt by email',
+                  accent: true,
+                  onTap: () => context.go(Routes.donate),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _Tile(
+                  icon: Icons.receipt_long_outlined,
+                  label: 'Where it goes',
+                  caption: 'Campaign by campaign',
+                  onTap: () => context.push('${Routes.more}/transparency'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-class _Item extends StatelessWidget {
-  const _Item({
+class _Tile extends StatelessWidget {
+  const _Tile({
     required this.icon,
     required this.label,
+    required this.caption,
     required this.onTap,
-    this.subtitle,
+    this.accent = false,
   });
 
   final IconData icon;
   final String label;
-  final String? subtitle;
+  final String caption;
   final VoidCallback onTap;
+  final bool accent;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        InkWell(
-          onTap: onTap,
+    final foreground = accent ? AppColors.accentForeground : AppColors.foreground;
+
+    return Material(
+      color: accent ? AppColors.accentButton : AppColors.card,
+      borderRadius: BorderRadius.circular(AppRadii.card),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadii.card),
+            border: Border.all(color: accent ? AppColors.accentButton : AppColors.border),
+          ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-            child: Row(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, size: 20, color: AppColors.primary),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(label, style: AppText.body.copyWith(fontSize: 15, height: 1.3)),
-                      if (subtitle != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 1),
-                          child: Text(subtitle!, style: AppText.meta),
-                        ),
-                    ],
+                Icon(icon, size: 20, color: accent ? foreground : AppColors.primary),
+                const SizedBox(height: 10),
+                Text(label, style: AppText.title.copyWith(fontSize: 15, color: foreground)),
+                const SizedBox(height: 2),
+                Text(
+                  caption,
+                  style: AppText.meta.copyWith(
+                    color: accent ? const Color(0xCCFFFFFF) : AppColors.mutedForeground,
                   ),
-                ),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 20,
-                  color: AppColors.mutedForeground,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
         ),
-        const Divider(height: 1, indent: 50),
-      ],
+      ),
+    );
+  }
+}
+
+/// A labelled card of rows.
+class _Group extends StatelessWidget {
+  const _Group({required this.label, required this.children});
+
+  final String label;
+  final List<_Row> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 2, bottom: 8),
+            child: Text(
+              label.toUpperCase(),
+              style: AppText.meta.copyWith(fontSize: 11, letterSpacing: 1.1),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(AppRadii.card),
+              border: Border.all(color: AppColors.border),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (var i = 0; i < children.length; i++) ...[
+                  // Inset to clear the icon column, so the rule reads as a
+                  // separator between rows rather than a line across the card.
+                  if (i > 0) const Divider(height: 1, indent: 54),
+                  children[i],
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Row extends StatelessWidget {
+  const _Row({
+    required this.icon,
+    required this.label,
+    this.subtitle,
+    this.path,
+    this.onTap,
+    this.external = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final String? subtitle;
+
+  /// A route under `/more`, which is where this tab's branch lives.
+  final String? path;
+
+  /// For rows that do something other than navigate.
+  final void Function(BuildContext context)? onTap;
+
+  final bool external;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        if (onTap != null) return onTap!(context);
+        if (path != null) context.push('${Routes.more}$path');
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        child: Row(
+          children: [
+            // A tinted square rather than a bare glyph: it gives the column a
+            // consistent optical width whatever the icon's own proportions,
+            // which is what stops a list like this looking ragged.
+            Container(
+              height: 28,
+              width: 28,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadii.small),
+              ),
+              child: Icon(icon, size: 16, color: AppColors.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: AppText.body.copyWith(fontSize: 15, height: 1.3)),
+                  if (subtitle != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 1),
+                      child: Text(
+                        subtitle!,
+                        style: AppText.meta,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Icon(
+              external ? Icons.open_in_new_rounded : Icons.chevron_right_rounded,
+              size: external ? 15 : 20,
+              color: AppColors.mutedForeground,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -238,13 +417,15 @@ class _Footer extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: AppColors.footer,
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 32),
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 30),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const TcifLogo(size: 34, color: AppColors.footerForeground),
+              // On a white disc: the badge is navy, and against the footer's
+              // dark band it would otherwise all but disappear.
+              const TcifLogo(size: 40, onDark: true),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -255,7 +436,7 @@ class _Footer extends StatelessWidget {
             ],
           ),
           if (site != null && site.footerDescription.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Text(
               site.footerDescription,
               style: AppText.excerpt.copyWith(color: AppColors.footerMuted, height: 1.6),

@@ -228,7 +228,7 @@ class _DonateBar extends StatelessWidget {
                     '&title=${Uri.encodeComponent(campaign.title)}',
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accent,
+                    backgroundColor: AppColors.accentButton,
                     minimumSize: const Size.fromHeight(52),
                   ),
                   icon: const Icon(Icons.favorite_rounded, size: 18),

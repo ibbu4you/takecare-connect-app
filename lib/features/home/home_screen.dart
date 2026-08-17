@@ -434,7 +434,7 @@ class _DonateStrip extends StatelessWidget {
             FilledButton(
               onPressed: () => context.go(Routes.donate),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
+                backgroundColor: AppColors.accentButton,
                 minimumSize: const Size(0, 44),
                 padding: const EdgeInsets.symmetric(horizontal: 18),
               ),

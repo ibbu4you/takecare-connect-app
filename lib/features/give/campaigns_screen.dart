@@ -84,7 +84,7 @@ class _GeneralFundCard extends StatelessWidget {
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: () => context.push(Routes.donate),
-              style: FilledButton.styleFrom(backgroundColor: AppColors.accent),
+              style: FilledButton.styleFrom(backgroundColor: AppColors.accentButton),
               icon: const Icon(Icons.favorite_rounded, size: 18),
               label: const Text('Donate'),
             ),

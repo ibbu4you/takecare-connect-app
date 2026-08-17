@@ -239,7 +239,7 @@ class _DonateScreenState extends ConsumerState<DonateScreen> {
                           ? AppColors.accentForeground
                           : AppColors.foreground,
                     ),
-                    selectedColor: AppColors.accent,
+                    selectedColor: AppColors.accentButton,
                     backgroundColor: AppColors.background,
                     side: BorderSide(
                       color: _preset == amount ? AppColors.accent : AppColors.border,

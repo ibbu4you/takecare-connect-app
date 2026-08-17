@@ -27,8 +27,23 @@ class AppColors {
   static const primaryForeground = Color(0xFFFFFFFF);
 
   /// Donate CTAs, progress bars and eyebrows. Nothing else.
+  ///
+  /// **Not for filled buttons** — use [accentButton] for those. White on this
+  /// red measures 4.2:1, which fails WCAG AA for normal-size text (4.5:1). It
+  /// is fine as a progress bar, a chip tint or an eyebrow, none of which are
+  /// body text a person has to read.
   static const accent = Color(0xFFE63946);
+
   static const accentDark = Color(0xFFC22B38);
+
+  /// The red that carries white text.
+  ///
+  /// One shade down from [accent], which takes white from 4.2:1 to 5.7:1 and
+  /// clears AA. It is a small enough step that the two read as the same red
+  /// side by side — the donate button and the progress bar beneath it still
+  /// belong to each other.
+  static const accentButton = accentDark;
+
   static const accentForeground = Color(0xFFFFFFFF);
 
   static const success = Color(0xFF1B7350);

@@ -303,7 +303,7 @@ class _Failed extends StatelessWidget {
         const SizedBox(height: 26),
         FilledButton(
           onPressed: () => context.go(Routes.donate),
-          style: FilledButton.styleFrom(backgroundColor: AppColors.accent),
+          style: FilledButton.styleFrom(backgroundColor: AppColors.accentButton),
           child: const Text('Try again'),
         ),
         const SizedBox(height: 10),

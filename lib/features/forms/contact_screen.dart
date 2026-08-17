@@ -43,16 +43,30 @@ class _ContactScreenState extends ConsumerState<ContactScreen> with FormControll
       title: 'Contact us',
       confirmation: confirmation,
       confirmationTitle: 'Message sent',
-      builder: (context, options) => Form(
-        key: formKey,
-        child: Column(
+      formKey: formKey,
+      busy: busy,
+      submitLabel: 'Send message',
+      onSubmit: () => submit(
+        () => ref.read(repositoryProvider).sendContact({
+          'name': _name.text.trim(),
+          'email': _email.text.trim(),
+          if (_phone.text.trim().isNotEmpty) 'phone': _phone.text.trim(),
+          'subject': _subject,
+          'message': _message.text.trim(),
+        }),
+      ),
+      builder: (context, options) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _ContactDetails(),
-            const SizedBox(height: 24),
-            Text('Send us a message', style: AppText.h3.copyWith(fontSize: 16)),
-            const SizedBox(height: 14),
-
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: _ContactDetails(),
+            ),
+            FormSection(
+              step: 1,
+              title: 'Send us a message',
+              subtitle: 'We reply to everything, usually within a few days.',
+              children: [
             AppField(
               label: 'Your name',
               controller: _name,
@@ -99,25 +113,10 @@ class _ContactScreenState extends ConsumerState<ContactScreen> with FormControll
               ]),
               serverError: errorFor('message'),
             ),
-
-            const SizedBox(height: 4),
-            SubmitButton(
-              label: 'Send message',
-              busy: busy,
-              icon: Icons.send_rounded,
-              onPressed: () => submit(
-                () => ref.read(repositoryProvider).sendContact({
-                  'name': _name.text.trim(),
-                  'email': _email.text.trim(),
-                  if (_phone.text.trim().isNotEmpty) 'phone': _phone.text.trim(),
-                  'subject': _subject,
-                  'message': _message.text.trim(),
-                }),
-              ),
+              ],
             ),
           ],
         ),
-      ),
     );
   }
 }

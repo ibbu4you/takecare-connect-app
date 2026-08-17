@@ -319,9 +319,15 @@ class SubmitButton extends StatelessWidget {
       child: FilledButton(
         onPressed: busy ? null : onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: accent ? AppColors.accent : AppColors.primary,
-          disabledBackgroundColor:
-              (accent ? AppColors.accent : AppColors.primary).withValues(alpha: 0.5),
+          backgroundColor: accent ? AppColors.accentButton : AppColors.primary,
+          // The *same* colour when busy, not a half-transparent one.
+          //
+          // Fading the fill to 50% over a white page leaves a pale tint, and
+          // the white spinner on top of it all but disappears — at the one
+          // moment the reader most needs to see that something is happening.
+          // The spinner replacing the label is the affordance; the button does
+          // not also need to go grey to say so.
+          disabledBackgroundColor: accent ? AppColors.accentButton : AppColors.primary,
           foregroundColor: AppColors.primaryForeground,
           disabledForegroundColor: AppColors.primaryForeground,
         ),

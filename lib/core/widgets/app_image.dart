@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
-import 'tcif_logo.dart';
 
 /// Every remote image in the app goes through here.
 ///
@@ -74,9 +73,14 @@ class AppImage extends StatelessWidget {
 
 /// The empty and failed state.
 ///
-/// A flat tinted panel with the mark faintly on it, rather than a shimmer:
-/// this design system carries elevation with borders, and a pulsing grey block
-/// is the wrong texture for it.
+/// A flat tinted panel with a plain glyph, rather than a shimmer: this design
+/// system carries elevation with borders, and a pulsing grey block is the
+/// wrong texture for it.
+///
+/// An icon rather than the logo. The badge is a detailed roundel with rim
+/// lettering; faded to 15% behind a card it reads as a smudge, and repeated
+/// down a list of a dozen loading images it makes the whole screen look
+/// broken. A single quiet glyph says "picture" without pretending to be brand.
 class _Placeholder extends StatelessWidget {
   const _Placeholder({this.failed = false});
 
@@ -87,9 +91,10 @@ class _Placeholder extends StatelessWidget {
     return ColoredBox(
       color: AppColors.surface,
       child: Center(
-        child: Opacity(
-          opacity: failed ? 0.35 : 0.18,
-          child: const TcifLogo(size: 40),
+        child: Icon(
+          failed ? Icons.image_not_supported_outlined : Icons.image_outlined,
+          size: 26,
+          color: AppColors.border,
         ),
       ),
     );

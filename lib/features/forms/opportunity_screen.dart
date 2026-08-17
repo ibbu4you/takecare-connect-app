@@ -124,6 +124,7 @@ class _OpportunityScreenState extends ConsumerState<OpportunityScreen> with Form
 
     return FormPage(
       title: _isIntern ? 'Apply for an internship' : 'Volunteer with us',
+      introIcon: _isIntern ? Icons.school_outlined : Icons.volunteer_activism_outlined,
       introTitle: _isIntern ? 'Intern with the foundation' : 'Give us your time',
       intro: _isIntern
           ? 'Internships are placed inside a department and run alongside your '
@@ -132,12 +133,15 @@ class _OpportunityScreenState extends ConsumerState<OpportunityScreen> with Form
               'stories on this app coming. Tell us how you would like to help.',
       confirmation: confirmation,
       confirmationTitle: 'Application received',
-      builder: (context, options) => Form(
-        key: formKey,
-        child: Column(
+      formKey: formKey,
+      busy: busy,
+      submitLabel: _isIntern ? 'Send application' : 'Apply to volunteer',
+      onSubmit: _onSubmit,
+      builder: (context, options) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             FormSection(
+              step: 1,
               title: 'About you',
               children: [
                 AppField(
@@ -203,6 +207,7 @@ class _OpportunityScreenState extends ConsumerState<OpportunityScreen> with Form
             ),
 
             FormSection(
+              step: 2,
               title: 'How you would like to help',
               subtitle: 'Pick up to five, so we know where to place you.',
               children: [
@@ -254,6 +259,7 @@ class _OpportunityScreenState extends ConsumerState<OpportunityScreen> with Form
 
             if (_isIntern)
               FormSection(
+                step: 3,
                 title: 'Your studies',
                 subtitle: 'An internship is placed in a department and usually '
                     'reported back to your college.',
@@ -293,6 +299,8 @@ class _OpportunityScreenState extends ConsumerState<OpportunityScreen> with Form
               ),
 
             FormSection(
+              // Numbered around the studies block, which only interns see.
+              step: _isIntern ? 4 : 3,
               title: 'In your own words',
               children: [
                 AppField(
@@ -352,58 +360,43 @@ class _OpportunityScreenState extends ConsumerState<OpportunityScreen> with Form
               ],
             ),
 
-            AppCheckbox(
+            ConsentBox(
               label: 'You may contact me about a placement',
               subtitle: 'By phone or email. We do not share your details with anyone else.',
               value: _consent,
               onChanged: (value) => setState(() => _consent = value),
-            ),
-            if (errorFor('consent_to_contact') != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6, left: 36),
-                child: Text(
-                  errorFor('consent_to_contact')!,
-                  style: AppText.meta.copyWith(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-
-            const SizedBox(height: 20),
-            SubmitButton(
-              label: _isIntern ? 'Apply for an internship' : 'Apply to volunteer',
-              busy: busy,
-              icon: Icons.send_rounded,
-              // Guarded here rather than by a disabled button: a button that
-              // does nothing when tapped tells the reader nothing about why.
-              onPressed: () {
-                if (!_consent) {
-                  setState(() => serverErrors = {
-                        ...serverErrors,
-                        'consent_to_contact':
-                            'We need your permission to contact you about a placement.',
-                      });
-
-                  return;
-                }
-
-                if (_areas.isEmpty) {
-                  setState(() => serverErrors = {
-                        ...serverErrors,
-                        'areas': 'Please pick at least one area you would like to help with.',
-                      });
-
-                  return;
-                }
-
-                submit(
-                  () => _isIntern
-                      ? ref.read(repositoryProvider).applyIntern(_body)
-                      : ref.read(repositoryProvider).applyVolunteer(_body),
-                );
-              },
+              error: errorFor('consent_to_contact'),
             ),
           ],
         ),
-      ),
+    );
+  }
+
+  /// Checked here rather than by grey-ing out the button.
+  ///
+  /// A submit that does nothing when tapped tells the reader nothing about why;
+  /// these two failures are announced in the same place a server rejection
+  /// would appear, so there is only ever one way a form says "this is wrong".
+  void _onSubmit() {
+    if (_areas.isEmpty) {
+      complain('areas', 'Please pick at least one area you would like to help with.');
+
+      return;
+    }
+
+    if (!_consent) {
+      complain(
+        'consent_to_contact',
+        'We need your permission to contact you about a placement.',
+      );
+
+      return;
+    }
+
+    submit(
+      () => _isIntern
+          ? ref.read(repositoryProvider).applyIntern(_body)
+          : ref.read(repositoryProvider).applyVolunteer(_body),
     );
   }
 }
