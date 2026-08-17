@@ -522,22 +522,15 @@ class _SnapshotRepository extends Repository {
   Future<PageContent> page(String slug) async =>
       _s.pages[slug] ?? PageContent(slug: slug, title: slug, body: null);
 
-  /// Forced open.
+  /// Passed through unchanged, including `donations_open: false`.
   ///
-  /// No payment gateway is enabled on the live site today, so the real answer
-  /// is `donations_open: false` and the donate screen — correctly — renders its
-  /// "Donations are paused" state. That is worth seeing once, but it hides the
-  /// form itself, which is the screen with the most layout in it. The override
-  /// is here in the screenshot harness and nowhere else; the app still believes
-  /// whatever the server says.
+  /// This used to be forced open, because the screen replaced the entire form
+  /// with a "paused" message and there was otherwise nothing to photograph. Now
+  /// that the form renders either way — with a banner over it, as the website
+  /// does — the honest answer is also the useful one, and the screenshot shows
+  /// what a donor actually sees today.
   @override
-  Future<DonationOptions> donationOptions() async => DonationOptions(
-        currencies: _s.donationOptions.currencies,
-        panThreshold: _s.donationOptions.panThreshold,
-        suggestedAmounts: _s.donationOptions.suggestedAmounts,
-        donationsOpen: true,
-        internationalEnabled: _s.donationOptions.internationalEnabled,
-      );
+  Future<DonationOptions> donationOptions() async => _s.donationOptions;
 }
 
 Future<void> _capture(WidgetTester tester, String path) async {

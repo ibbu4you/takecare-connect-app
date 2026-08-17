@@ -300,6 +300,7 @@ class SubmitButton extends StatelessWidget {
     required this.onPressed,
     this.busy = false,
     this.accent = false,
+    this.enabled = true,
     this.icon,
   });
 
@@ -307,29 +308,37 @@ class SubmitButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool busy;
 
+  /// False when the action itself is unavailable — donations switched off, say.
+  ///
+  /// Distinct from [busy], and they must not look the same. Busy means "your
+  /// tap worked, wait"; disabled means "this cannot be tapped". A button that
+  /// showed one state for both would tell a reader their submission was in
+  /// flight when nothing had happened at all.
+  final bool enabled;
+
   /// Donate CTAs only.
   final bool accent;
   final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
+    final fill = accent ? AppColors.accentButton : AppColors.primary;
+
     return SizedBox(
       width: double.infinity,
       height: 52,
       child: FilledButton(
-        onPressed: busy ? null : onPressed,
+        onPressed: busy || !enabled ? null : onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: accent ? AppColors.accentButton : AppColors.primary,
-          // The *same* colour when busy, not a half-transparent one.
-          //
-          // Fading the fill to 50% over a white page leaves a pale tint, and
-          // the white spinner on top of it all but disappears — at the one
-          // moment the reader most needs to see that something is happening.
-          // The spinner replacing the label is the affordance; the button does
-          // not also need to go grey to say so.
-          disabledBackgroundColor: accent ? AppColors.accentButton : AppColors.primary,
+          backgroundColor: fill,
+          // Grey only when genuinely unavailable. While busy it keeps its
+          // colour: fading the fill to a tint over a white page takes the white
+          // spinner with it, at the one moment the reader most needs to see
+          // that something is happening.
+          disabledBackgroundColor: enabled ? fill : AppColors.border,
           foregroundColor: AppColors.primaryForeground,
-          disabledForegroundColor: AppColors.primaryForeground,
+          disabledForegroundColor:
+              enabled ? AppColors.primaryForeground : AppColors.mutedForeground,
         ),
         child: busy
             ? const SizedBox(

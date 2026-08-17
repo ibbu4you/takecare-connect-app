@@ -49,13 +49,21 @@ void main() {
 
       // The adaptive foreground. Android masks this to a circle, a squircle or
       // a teardrop depending on the launcher, and it also *animates* it —
-      // parallax shifts the layer inside the mask. Only the middle 66% is
-      // guaranteed, and the rim lettering is the first thing a mask eats.
+      // parallax shifts the layer inside the mask — so only the middle 66% of
+      // the finished icon is guaranteed, and the rim lettering is the first
+      // thing a mask eats.
+      //
+      // 0.91 of the drawable, not 0.62 of the icon. flutter_launcher_icons
+      // wraps this in `<inset android:inset="16%">`, which already reserves the
+      // safe zone; insetting again on top of it stacks the two and lands the
+      // badge at about 42% of the icon, adrift in a ring of white. Filling the
+      // drawable and letting the XML do the insetting once puts it at ~62%,
+      // which is where a circular mark wants to be.
       await _write(
         logo,
         path: 'assets/icon/app_icon_foreground.png',
         background: null,
-        fill: 0.62,
+        fill: 0.91,
       );
 
       logo.dispose();

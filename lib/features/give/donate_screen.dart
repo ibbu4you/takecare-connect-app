@@ -174,13 +174,14 @@ class _DonateScreenState extends ConsumerState<DonateScreen> {
           error: error,
           onRetry: () => ref.invalidate(donationOptionsProvider),
         ),
-        data: (data) => data.donationsOpen ? _form(data) : const _Closed(),
+        data: _form,
       ),
     );
   }
 
   Widget _form(DonationOptions options) {
     final panNeeded = _panRequired(options);
+    final closed = !options.donationsOpen;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 36),
@@ -189,6 +190,16 @@ class _DonateScreenState extends ConsumerState<DonateScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Shown above the form, not instead of it.
+            //
+            // The screen used to replace everything with "Donations are
+            // paused", which is a dead end: a reader cannot see what they were
+            // about to be asked, cannot tell whether the app is broken or the
+            // charity has simply switched something off, and has nowhere to go.
+            // The website has always shown the form with a banner over it —
+            // this now matches, and the submit stays disabled either way.
+            if (closed) const _PausedBanner(),
+
             if (widget.campaignTitle != null)
               Container(
                 margin: const EdgeInsets.only(bottom: 18),
@@ -386,12 +397,15 @@ class _DonateScreenState extends ConsumerState<DonateScreen> {
 
             const SizedBox(height: 22),
             SubmitButton(
-              label: _amountValue > 0
-                  ? 'Give ${_currency == "INR" ? Fmt.money(_amountValue) : "$_currency $_amountValue"}'
-                  : 'Continue to payment',
+              label: closed
+                  ? 'Donations are paused'
+                  : (_amountValue > 0
+                      ? 'Give ${_currency == "INR" ? Fmt.money(_amountValue) : "$_currency $_amountValue"}'
+                      : 'Continue to payment'),
               accent: true,
               busy: _busy,
-              icon: Icons.lock_outline_rounded,
+              enabled: !closed,
+              icon: closed ? Icons.pause_circle_outline_rounded : Icons.lock_outline_rounded,
               onPressed: () => _submit(options),
             ),
             const SizedBox(height: 12),
@@ -417,23 +431,71 @@ class _DonateScreenState extends ConsumerState<DonateScreen> {
   }
 }
 
-/// Shown when no gateway is live.
+/// Shown above the form when no gateway is live.
 ///
-/// This is not an error — an admin can turn donations off, and a screen that
-/// showed a broken form would be worse than one that says so.
-class _Closed extends StatelessWidget {
-  const _Closed();
+/// Not an error, and not the app's fault — an admin can switch donations off,
+/// and the same banner appears on the website. Amber rather than red for
+/// exactly that reason: this is a notice, not a failure, and colouring it like
+/// a crash would have people reporting a broken app.
+///
+/// It offers a way through rather than just stopping: somebody who arrived here
+/// meaning to give should leave having been able to.
+class _PausedBanner extends StatelessWidget {
+  const _PausedBanner();
 
   @override
   Widget build(BuildContext context) {
-    return EmptyView(
-      title: 'Donations are paused',
-      subtitle: 'We are not taking online donations at the moment. '
-          'Please get in touch and we will arrange it another way.',
-      icon: Icons.pause_circle_outline_rounded,
-      action: OutlinedButton(
-        onPressed: () => context.push('${Routes.more}/contact'),
-        child: const Text('Contact us'),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        border: Border.all(color: const Color(0xFFFCD34D)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.pause_circle_outline_rounded, size: 18, color: Color(0xFF92400E)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Online donations are paused',
+                  style: AppText.bodyStrong.copyWith(
+                    fontSize: 14,
+                    color: const Color(0xFF78350F),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(left: 28),
+            child: Text(
+              'We are not able to take card or UPI payments at the moment. '
+              'Get in touch and we will arrange it another way.',
+              style: AppText.meta.copyWith(color: const Color(0xFF92400E), height: 1.5),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 20, top: 4),
+            child: TextButton.icon(
+              onPressed: () => context.push('${Routes.more}/contact'),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF78350F),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: const Size(0, 34),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: const Icon(Icons.mail_outline_rounded, size: 16),
+              label: const Text('Contact us'),
+            ),
+          ),
+        ],
       ),
     );
   }
