@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:takecare_connect/core/api/cursor_page.dart';
 import 'package:takecare_connect/core/models/campaign.dart';
@@ -126,6 +127,21 @@ void main() {
       expect(Validate.email('', optional: true), isNull);
       expect(Validate.email('not-an-address', optional: true), isNotNull);
     });
+  });
+
+  test('the logo asset is declared and loadable', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+
+    // A missing or misspelled asset does not throw where you would notice: the
+    // Image widget renders nothing, the app bar shows a gap, and the only sign
+    // is a line in the device log. This fails loudly instead.
+    //
+    // It cannot catch every version of the problem — a stale incremental build
+    // shipped an APK whose manifest listed only assets/icon/, and no test can
+    // see inside that. `flutter clean` is the answer to that one.
+    final bytes = await rootBundle.load(TcifLogo.asset);
+
+    expect(bytes.lengthInBytes, greaterThan(1000), reason: 'the logo is empty or truncated');
   });
 
   testWidgets('the logo paints at any size', (tester) async {
