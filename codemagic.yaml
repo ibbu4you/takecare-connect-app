@@ -7,8 +7,12 @@
 #      Developer Portal. The one this references is named "App Store Connect"
 #      (key 4H38UR86J6) and holds Admin, which `--create` below needs. The name
 #      is matched literally: rename it in Codemagic and this stops resolving.
-#   2. Nothing else. Signing certificates and profiles are fetched and applied
-#      by `xcode-project use-profiles`, using that same key.
+#   2. A variable group `appstore_signing` containing CERTIFICATE_PRIVATE_KEY,
+#      marked secure — an RSA private key in PEM form. The certificate this
+#      account already had was created elsewhere and its private key never left
+#      that machine, so it cannot sign here and Apple cannot re-issue the key.
+#      This one exists so a certificate can be created that this build owns
+#      both halves of.
 #
 # The Android half is deliberately not here. Release signing for Play is wired
 # to a keystore that is gitignored, so a Play workflow needs the keystore
@@ -23,6 +27,11 @@ workflows:
       app_store_connect: "App Store Connect"
 
     environment:
+      groups:
+        # Holds CERTIFICATE_PRIVATE_KEY, an RSA key added as a secure variable
+        # in the Codemagic UI. See the note at the top of this file.
+        - appstore_signing
+
       # Pinned, not `stable`. A newer Flutter migrates the Xcode project mid
       # build — deployment target 13 to 15, Swift Package Manager integration,
       # a rewritten Podfile — and those migrations land in project.pbxproj
@@ -77,35 +86,23 @@ workflows:
         script: |
           keychain initialize
 
-          echo "--- distribution certificates Apple already holds ---"
-          app-store-connect list-certificates --type IOS_DISTRIBUTION || true
-
+          # `--certificate-key` is what makes `--create` possible.
+          #
+          # This account already holds a distribution certificate, but its
+          # private key stayed on the machine that made it, so it cannot sign
+          # here — a certificate on its own is only the public half. Apple has
+          # no way to hand the private half back, and `--create` could not make
+          # a replacement because building a signing request needs a key too.
+          #
+          # Supplying one settles both: the fetch creates a certificate bound
+          # to this key on the first run and reuses it afterwards, so builds do
+          # not accumulate certificates against Apple's per-account limit.
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
+            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY \
             --create
+
           keychain add-certificates
-
-          # A certificate is only half of an identity. If the portal already
-          # held a distribution certificate made on somebody else's machine,
-          # the fetch above returns the public certificate and leaves the
-          # private key where it was created — so the keychain gains a
-          # certificate that cannot sign anything, `--create` sees no reason to
-          # make another, and every command downstream reports no identities.
-          #
-          # Apple allows more than one distribution certificate, so making a
-          # fresh one here is legitimate rather than a workaround. It only runs
-          # when the keychain has nothing usable, so repeat builds do not
-          # accumulate certificates.
-          if ! security find-identity -v -p codesigning | grep -q "Apple Distribution"; then
-            echo "--- no usable distribution identity; creating one ---"
-            app-store-connect certificates create --type IOS_DISTRIBUTION --save
-            keychain add-certificates
-            app-store-connect fetch-signing-files "$BUNDLE_ID" \
-              --type IOS_APP_STORE \
-              --create
-            keychain add-certificates
-          fi
-
           xcode-project use-profiles
 
           echo "--- signing identities available to the build ---"
@@ -121,17 +118,14 @@ workflows:
           # with '"Runner" requires a provisioning profile. Select a
           # provisioning profile in the Signing & Capabilities editor' — advice
           # about an editor that does not exist on a build machine, describing
-          # a project that is configured exactly as intended. Failing at the
-          # step that owns the problem costs one line and saves reading the
-          # wrong log.
+          # a project that is configured exactly as intended.
           if ! ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision >/dev/null 2>&1; then
             echo "No provisioning profile was installed for $BUNDLE_ID."
-            echo "Signing cannot succeed; the archive below would fail regardless."
             exit 1
           fi
 
-          if ! security find-identity -v -p codesigning | grep -q "Apple Distribution"; then
-            echo "No Apple Distribution identity in the keychain."
+          if ! security find-identity -v -p codesigning | grep -q "Distribution"; then
+            echo "No distribution identity in the keychain."
             echo "A certificate without its private key cannot sign."
             exit 1
           fi
