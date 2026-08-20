@@ -36,6 +36,19 @@ class AppImage extends StatelessWidget {
   final BoxFit fit;
   final String? semanticLabel;
 
+  /// Swaps the image source out, for `tool/screenshots.dart` only.
+  ///
+  /// Under `flutter test` there is no path_provider, so CachedNetworkImage's
+  /// cache manager fails before it ever reaches the network and every
+  /// photograph renders as the placeholder. Store screenshots full of grey
+  /// panels are worse than useless, so the harness pre-downloads the images in
+  /// a real async zone and hands them back from memory through this hook.
+  ///
+  /// Null in the app, always. It exists because the alternative — faking
+  /// path_provider and an HTTP client deep enough to satisfy the cache manager
+  /// — is far more machinery to get the same picture on the screen.
+  static ImageProvider? Function(String url)? providerOverride;
+
   @override
   Widget build(BuildContext context) {
     Widget child = LayoutBuilder(
@@ -44,6 +57,16 @@ class AppImage extends StatelessWidget {
 
         final dpr = MediaQuery.devicePixelRatioOf(context);
         final width = constraints.maxWidth.isFinite ? constraints.maxWidth : 800.0;
+
+        final override = providerOverride?.call(url!);
+
+        if (override != null) {
+          return Image(
+            image: override,
+            fit: fit,
+            errorBuilder: (_, __, ___) => const _Placeholder(failed: true),
+          );
+        }
 
         return CachedNetworkImage(
           imageUrl: url!,

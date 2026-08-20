@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ import 'package:takecare_connect/core/models/site.dart';
 import 'package:takecare_connect/core/router/app_router.dart';
 import 'package:takecare_connect/core/router/route_names.dart';
 import 'package:takecare_connect/core/theme/app_theme.dart';
+import 'package:takecare_connect/core/widgets/app_image.dart';
 
 /// Renders every screen against the **live** API and writes a PNG per screen.
 ///
@@ -65,7 +67,24 @@ void main() {
     // section that renders blank because a key was renamed, not just a widget
     // that lays out.
     snapshot = await _Snapshot.fetch();
+
+    // The photographs, fetched here for the same reason the data is: under
+    // `flutter test` there is no path_provider, so CachedNetworkImage's cache
+    // manager fails before it reaches the network and every image renders as
+    // the placeholder. Pre-downloading them and serving from memory is what
+    // puts real pictures in the store screenshots.
+    await _loadImages(snapshot);
+
+    // ignore: invalid_use_of_visible_for_testing_member
+    AppImage.providerOverride = (url) {
+      final bytes = _images[url];
+
+      return bytes == null ? null : MemoryImage(bytes);
+    };
   });
+
+  // ignore: invalid_use_of_visible_for_testing_member
+  tearDownAll(() => AppImage.providerOverride = null);
 
   setUp(() async => _loadFonts());
 
@@ -128,6 +147,89 @@ void main() {
       await _capture(tester, '${screen.dir}/${screen.file}.png', screen.pixelRatio);
     });
   }
+}
+
+/// Every photograph the snapshot references, by URL.
+final _images = <String, Uint8List>{};
+
+/// Downloads them once, in the real async zone setUpAll runs in.
+Future<void> _loadImages(_Snapshot s) async {
+  final urls = <String>{};
+
+  void add(String? url) {
+    if (url != null && url.startsWith('http')) urls.add(url);
+  }
+
+  for (final b in s.home.banners) {
+    add(b.bestImage);
+  }
+  for (final p in [...s.home.featuredStories, ...s.posts.items, ...s.trending]) {
+    add(p.thumbnail);
+  }
+  for (final c in s.home.categorySections) {
+    for (final p in c.posts) {
+      add(p.thumbnail);
+    }
+  }
+  for (final b in [...s.home.featuredCraftsmen, ...s.businesses.items]) {
+    add(b.thumbnail);
+  }
+  for (final c in [...s.home.activeCampaigns, ...s.campaigns.items]) {
+    add(c.image);
+  }
+  for (final g in s.galleries.items) {
+    add(g.cover);
+  }
+  for (final section in s.press) {
+    for (final item in section.items) {
+      add(item.image);
+    }
+  }
+  for (final p in s.postDetails.values) {
+    add(p.image);
+  }
+  for (final b in s.businessDetails.values) {
+    for (final photo in b.gallery) {
+      add(photo.url);
+    }
+  }
+  for (final c in s.campaignDetails.values) {
+    add(c.image);
+  }
+  for (final g in s.galleryDetails.values) {
+    for (final photo in g.photos) {
+      add(photo.url);
+    }
+  }
+  for (final a in s.authors.values) {
+    add(a.avatar);
+  }
+
+  final client = HttpClient()..connectionTimeout = const Duration(seconds: 20);
+  var failed = 0;
+
+  // Sequential on purpose: a few dozen images against one shared-hosting box,
+  // fired all at once, is how you get half of them back as timeouts.
+  for (final url in urls) {
+    try {
+      final response = await (await client.getUrl(Uri.parse(url))).close();
+      if (response.statusCode == 200) {
+        _images[url] = Uint8List.fromList(
+          await response.fold<List<int>>([], (a, b) => a..addAll(b)),
+        );
+      } else {
+        failed++;
+      }
+    } catch (_) {
+      failed++;
+    }
+  }
+
+  client.close();
+
+  // ignore: avoid_print
+  print('images: ${_images.length} of ${urls.length} loaded'
+      '${failed > 0 ? ', $failed failed' : ''}');
 }
 
 /// Waits for live data and images by alternating real time with pumps.
