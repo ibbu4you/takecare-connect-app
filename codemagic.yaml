@@ -116,15 +116,37 @@ workflows:
           security find-identity -v -p codesigning
 
       - name: Build the IPA
-        # The build number is taken from what App Store Connect already has,
-        # not from pubspec.yaml. Apple rejects a build whose number it has seen
-        # before, and pubspec's `+2` is committed — so two builds off the same
-        # commit would collide.
+        # Two commands rather than `flutter build ipa`, because that command
+        # will not sign this app however well signing is set up.
+        #
+        # Before archiving it looks for a signing identity itself, and the
+        # pattern it matches wants "Develop" in the identity name — it is
+        # written for development builds onto a device. The identity here is
+        # "Apple Distribution: ELITE BOX PRIVATE LIMITED", which is the correct
+        # certificate for the App Store and can never match, so the build stops
+        # with "No development certificates available". It only takes that path
+        # because the project carries no DEVELOPMENT_TEAM; Flutter tries to
+        # infer the team from the keychain and rejects what it finds.
+        #
+        # So Flutter compiles Dart and assembles the .app unsigned, and
+        # xcodebuild archives and exports it through the profile installed
+        # above, which is the part that actually understands distribution
+        # signing.
+        #
+        # The build number comes from what App Store Connect already has rather
+        # than from pubspec.yaml. Apple rejects a build number it has seen
+        # before, and pubspec's `+2` is committed — two builds off one commit
+        # would collide. An empty answer means no build has ever been uploaded.
         script: |
-          BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID")
-          flutter build ipa --release \
-            --build-number=$((BUILD_NUMBER + 1)) \
-            --export-options-plist=/Users/builder/export_options.plist
+          LATEST=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || true)
+          BUILD_NUMBER=$(( ${LATEST:-0} + 1 ))
+          echo "--- building as build number $BUILD_NUMBER ---"
+
+          flutter build ios --release --no-codesign --build-number="$BUILD_NUMBER"
+
+          xcode-project build-ipa \
+            --workspace ios/Runner.xcworkspace \
+            --scheme Runner
 
     artifacts:
       - build/ios/ipa/*.ipa
