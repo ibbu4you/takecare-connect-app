@@ -125,7 +125,7 @@ void main() {
         }
       }
 
-      await _capture(tester, 'build/screenshots/${screen.file}.png');
+      await _capture(tester, '${screen.dir}/${screen.file}.png', screen.pixelRatio);
     });
   }
 }
@@ -213,6 +213,8 @@ class _Screen {
     this.slugFrom,
     this.size = const Size(390, 844),
     this.textScale = 1.0,
+    this.pixelRatio = 2,
+    this.dir = 'build/screenshots',
   });
 
   final String name;
@@ -248,6 +250,16 @@ class _Screen {
   /// no screenshot at 1.0 would ever have shown it.
   final double textScale;
 
+  /// A multiplier **on top of** the test binding's own 3× device ratio, not an
+  /// absolute scale. 2 gives 6× — plenty to read a layout on. The listing shots
+  /// pass 1 to get a true 3×, which is what keeps 412×800 inside Play's 3840px
+  /// ceiling; passing 3 produced 3708×7200 and would have been rejected.
+  final double pixelRatio;
+
+  /// Where the PNG lands. Listing artwork goes to store/, which is committed;
+  /// the review shots go to build/, which is not.
+  final String dir;
+
   String locationFor(_Snapshot snapshot) {
     final slug = slugFrom?.call(snapshot);
 
@@ -257,6 +269,10 @@ class _Screen {
 
 /// Long enough for the images on a screen to arrive.
 const _wait = Duration(seconds: 5);
+
+/// The viewport the Play Store listing shots are taken at.
+const _play = Size(412, 800);
+const _storeDir = 'store/screenshots';
 
 const _screens = [
   _Screen('home', Routes.home, '01-home'),
@@ -308,6 +324,23 @@ const _screens = [
   _Screen('author', '/authors', '27-author', slugFrom: _firstAuthor),
   _Screen('gallery', '${Routes.more}/galleries', '28-gallery', slugFrom: _firstGallery),
   _Screen('donate result', '/donate/result', '29-donate-result', slugFrom: _anyReference),
+
+  // ------------------------------------------------- Google Play listing
+  //
+  // 412×800 rendered at the binding's native 3× is 1236×2400: a real phone
+  // width, 1.94:1, inside Play's 2:1 ceiling and its 3840px maximum. The review
+  // shots above come out 2.16:1, which Play rejects.
+  _Screen('play home', Routes.home, 'play-1-home', size: _play, pixelRatio: 1, dir: _storeDir),
+  _Screen('play stories', Routes.stories, 'play-2-stories',
+      size: _play, pixelRatio: 1, dir: _storeDir),
+  _Screen('play craftsmen', Routes.craftsmen, 'play-3-craftsmen',
+      size: _play, pixelRatio: 1, dir: _storeDir),
+  _Screen('play craftsman', Routes.craftsmen, 'play-4-craftsman',
+      slugFrom: _firstCraftsman, size: _play, pixelRatio: 1, dir: _storeDir),
+  _Screen('play give', Routes.give, 'play-5-give', size: _play, pixelRatio: 1, dir: _storeDir),
+  _Screen('play donate', Routes.donate, 'play-6-donate',
+      size: _play, pixelRatio: 1, dir: _storeDir),
+  _Screen('play more', Routes.more, 'play-7-more', size: _play, pixelRatio: 1, dir: _storeDir),
 ];
 
 String _firstStory(_Snapshot s) => s.posts.items.isEmpty ? '' : s.posts.items.first.slug;
@@ -617,14 +650,16 @@ class _SnapshotRepository extends Repository {
   Future<DonationOptions> donationOptions() async => _s.donationOptions;
 }
 
-Future<void> _capture(WidgetTester tester, String path) async {
+Future<void> _capture(WidgetTester tester, String path, double pixelRatio) async {
+  Directory(File(path).parent.path).createSync(recursive: true);
+
   final layer = tester.binding.rootElement!.renderObject!.debugLayer! as OffsetLayer;
   final bounds = tester.binding.rootElement!.renderObject!.paintBounds;
 
   // runAsync, because toImage waits on the raster thread and the fake async
   // zone would never deliver the callback.
   await tester.runAsync(() async {
-    final image = await layer.toImage(bounds, pixelRatio: 2);
+    final image = await layer.toImage(bounds, pixelRatio: pixelRatio);
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
 
     File(path).writeAsBytesSync(bytes!.buffer.asUint8List());

@@ -53,3 +53,7 @@ app.*.map.json
 android/key.properties
 **/*.jks
 **/*.keystore
+
+# store/ is committed on purpose — the Play listing artwork is generated from
+# the logo asset and should be reproducible from the repository, not from
+# whoever happened to have the files on their laptop.
