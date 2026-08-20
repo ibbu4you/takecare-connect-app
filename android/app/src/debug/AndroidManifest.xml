@@ -1,7 +1,21 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- The INTERNET permission is required for development. Specifically,
          the Flutter tool needs it to communicate with the running application
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!--
+        Plain HTTP, for talking to a Laravel server on the development machine.
+
+        Android has blocked cleartext by default since Pie, so pointing the app
+        at http://127.0.0.1:8000 fails with a connection error that says nothing
+        about why. This manifest is merged into debug builds only: a release
+        build still refuses plain HTTP, which is what should happen to an app
+        that carries donor names and phone numbers.
+    -->
+    <application
+        android:usesCleartextTraffic="true"
+        tools:ignore="UnusedAttribute" />
 </manifest>
