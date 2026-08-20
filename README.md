@@ -52,7 +52,7 @@ lib/
   features/
     home/ stories/ craftsmen/ give/ media/ about/ forms/ more/ search/
 tool/
-  generate_icons.dart       renders the launcher icons from the app's own logo painter
+  generate_icons.dart       cuts the launcher icons from assets/brand/tcif_logo.png
   live_api_check.dart       parses every live endpoint through the real models
   screenshots.dart          renders every screen to build/screenshots/
 ```
@@ -64,10 +64,13 @@ campaign progress bars, and eyebrow labels. Everything structural — app bars, 
 active states — is `primary` navy. This is the website's own rule; spending the red elsewhere
 makes the donate button ordinary.
 
-**There is no logo file anywhere.** On the website the mark is inline SVG in `Components/Logo.tsx`;
-here it is a `CustomPainter` in `core/widgets/tcif_logo.dart`. The launcher icons are rendered
-from that same painter by `tool/generate_icons.dart`, so the icon and the in-app mark cannot
-drift. After changing the mark:
+**The logo is a bundled asset, and the icons are cut from it.** `assets/brand/tcif_logo.png` is
+the foundation's roundel, taken from the 512px original rather than the lossy WebP in Settings.
+`tool/generate_icons.dart` renders the launcher icons from that same file, so the icon on the home
+screen and the mark inside the app cannot drift. It is a raster badge, so `TcifLogo` offers no
+`color` — a tint on a multi-colour mark would either do nothing or ruin it — and `onDark` sets it
+on a white disc instead, because navy on the footer's dark band all but vanishes. After changing
+the mark:
 
 ```bash
 flutter test tool/generate_icons.dart
@@ -114,10 +117,18 @@ and `openWebPath()` sends anything the app cannot show (an external site, the RS
 receipt PDF) to the browser instead. `test/web_paths_test.dart` pins the mapping against the live
 menu, because getting this wrong fails silently: the reader just lands on "that page has moved".
 
-**One WebView, on purpose.** `webview_flutter` exists for the map on the Contact screen and
-nothing else. It renders the same Google Maps embed the website does, deliberately without
-gesture recognizers — a live map inside a scrolling form swallows the drag and the page appears
-stuck — so every drag belongs to the page and a tap hands off to the phone's own maps app.
+**No WebView, and no embedded map.** The Contact screen briefly rendered the website's Google
+Maps embed in a `webview_flutter` view. Two things were wrong with that: the Embed API refuses to
+render outside an iframe, so a top-level load returns "The Google Maps Embed API must be used in
+an iframe" where the map should be; and a live map inside a scrolling form swallows the drag, so
+the page appears stuck. Tapping the address hands off to the maps app the person already uses,
+which has directions, offline tiles and their saved places. The dependency went with it — there
+is no WebView anywhere in this app, and nothing should add one without a better reason.
+
+**A new asset folder needs `flutter clean`.** Editing a file inside a folder pubspec already
+declares is picked up; adding a whole new folder is not. The incremental build silently reuses the
+previous bundle, ships an APK whose `AssetManifest.json` never mentions it, and the widget simply
+renders nothing.
 
 ## Checking it
 

@@ -4,13 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api/repository.dart';
-import '../../core/models/site.dart';
 import '../../core/state/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/validators.dart';
 import '../../core/widgets/form_fields.dart';
-import '../../core/widgets/map_card.dart';
 import 'form_scaffold.dart';
 
 /// Write to the office.
@@ -134,25 +132,17 @@ class _ContactDetails extends ConsumerWidget {
 
     if (settings == null) return const SizedBox.shrink();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // The map the website carries. Same embed URL, out of the same setting.
-        if ((settings.mapEmbedUrl?.isNotEmpty ?? false) && settings.address.isNotEmpty)
-          MapCard(embedUrl: settings.mapEmbedUrl!, address: settings.address),
-        _Details(settings: settings),
-      ],
-    );
-  }
-}
-
-class _Details extends StatelessWidget {
-  const _Details({required this.settings});
-
-  final SiteSettings settings;
-
-  @override
-  Widget build(BuildContext context) {
+    // No embedded map.
+    //
+    // The website shows one because a browser cannot hand off to anything
+    // better. A phone can, and Google's Embed API refuses to render outside an
+    // iframe anyway — loaded as a top-level document in a WebView it returns
+    // "The Google Maps Embed API must be used in an iframe", which is what a
+    // donor saw where the map should be.
+    //
+    // Tapping the address opens the maps app the person already uses, with
+    // directions, offline tiles and their own saved places. That is the better
+    // answer on a phone, not the fallback.
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
