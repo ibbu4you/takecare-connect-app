@@ -1,0 +1,13 @@
+# Copy to key.properties and fill in. That copy is gitignored, and must be.
+#
+# Create the keystore it points at with:
+#
+#   keytool -genkey -v -keystore upload-keystore.jks -storetype JKS \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# Keep the .jks and these passwords somewhere backed up and off this laptop.
+# They are irreplaceable: Play ties the listing to the key's fingerprint.
+storePassword=
+keyPassword=
+keyAlias=upload
+storeFile=/absolute/path/to/upload-keystore.jks

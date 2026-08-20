@@ -43,3 +43,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# The upload key. Never commit either of these.
+#
+# Anyone holding them can publish an update to this app under the foundation's
+# name, and Play ties the listing to the key's fingerprint — lose it and the app
+# can only be re-published as a different listing that existing users have to
+# find and install again.
+android/key.properties
+**/*.jks
+**/*.keystore
