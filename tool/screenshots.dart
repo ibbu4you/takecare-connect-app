@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show consolidateHttpClientResponseBytes;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart' show FontLoader;
@@ -51,6 +52,8 @@ void main() {
     HttpOverrides.global = null;
 
     Directory('build/screenshots').createSync(recursive: true);
+
+    await _ensureDmSans();
 
     // Fetched **here**, not inside the tests.
     //
@@ -283,23 +286,104 @@ Future<void> _loadFonts() async {
     await loader.load();
   }
 
-  const iconFont = r'C:\flutter\src\flutter\bin\cache\artifacts\material_fonts\materialicons-regular.otf';
-  const regular = r'C:\Windows\Fonts\segoeui.ttf';
-  const bold = r'C:\Windows\Fonts\segoeuib.ttf';
-  const semibold = r'C:\Windows\Fonts\segoeuisl.ttf';
-
-  await register('MaterialIcons', [iconFont]);
+  await register('MaterialIcons', _iconFontPaths());
 
   // Every weight AppText asks for, plus the bare family name.
-  for (final entry in {
-    'DMSans': regular,
-    'DMSans_regular': regular,
-    'DMSans_400': regular,
-    'DMSans_500': semibold,
-    'DMSans_600': semibold,
-    'DMSans_700': bold,
-  }.entries) {
-    await register(entry.key, [entry.value]);
+  //
+  // All six get the same file. DM Sans is published only as a variable font
+  // now — there are no static per-weight TTFs in google/fonts — and a variable
+  // face carries a `wght` axis that Skia instantiates from the TextStyle's
+  // fontWeight. google_fonts sets both the per-weight family name and the
+  // weight, so registering one file under every name renders each at its own
+  // weight rather than flattening the lot to regular.
+  final text = _textFontPaths();
+
+  for (final family in [
+    'DMSans',
+    'DMSans_regular',
+    'DMSans_400',
+    'DMSans_500',
+    'DMSans_600',
+    'DMSans_700',
+  ]) {
+    await register(family, text);
+  }
+}
+
+/// Where the engine's icon font lives, which is wherever Flutter is installed.
+///
+/// `flutter test` exports FLUTTER_ROOT; the rest are the usual install
+/// locations, for anyone running the file some other way.
+List<String> _iconFontPaths() {
+  final roots = [
+    if (Platform.environment['FLUTTER_ROOT'] case final r?) r,
+    '/usr/local/share/flutter',
+    '/opt/homebrew/share/flutter',
+    r'C:\flutter',
+    '${Platform.environment['HOME'] ?? ''}/flutter',
+  ];
+
+  // Two layouts: the packaged SDK, and the source checkout that nests the
+  // engine one level deeper. Two spellings, because the file is capitalised on
+  // a case-sensitive filesystem and was not always.
+  return [
+    for (final root in roots)
+      for (final prefix in ['$root/bin', '$root/src/flutter/bin'])
+        for (final name in ['MaterialIcons-Regular.otf', 'materialicons-regular.otf'])
+          '$prefix/cache/artifacts/material_fonts/$name',
+  ];
+}
+
+/// The real DM Sans if `_ensureDmSans` managed to fetch it, else whatever the
+/// host calls its interface font.
+///
+/// The fallbacks are not DM Sans — metrics differ — so a run that lands on one
+/// is fine for reading a layout and wrong for store artwork. `_ensureDmSans`
+/// prints when it falls back, so a listing shot is never quietly taken in
+/// Arial.
+List<String> _textFontPaths() => [
+      _dmSansFile,
+      // macOS
+      '/System/Library/Fonts/Supplemental/Arial.ttf',
+      // Linux
+      '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+      // Windows
+      r'C:\Windows\Fonts\segoeui.ttf',
+    ];
+
+const _dmSansFile = 'build/fonts/DMSans.ttf';
+
+/// Downloads DM Sans once, into a build directory that is not committed.
+///
+/// Called from `setUpAll`, not from `_loadFonts`, for the same reason the API
+/// data is fetched there: `setUp` runs inside the fake-async zone and an
+/// HttpClient created in it never completes.
+Future<void> _ensureDmSans() async {
+  final file = File(_dmSansFile);
+
+  if (file.existsSync() && file.lengthSync() > 0) return;
+
+  // The variable face, which is the only form google/fonts still ships.
+  final uri = Uri.parse(
+    'https://github.com/google/fonts/raw/main/ofl/dmsans/DMSans%5Bopsz%2Cwght%5D.ttf',
+  );
+
+  try {
+    final client = HttpClient();
+    final response = await client.getUrl(uri).then((r) => r.close());
+
+    if (response.statusCode != 200) {
+      throw HttpException('HTTP ${response.statusCode}');
+    }
+
+    final bytes = await consolidateHttpClientResponseBytes(response);
+    file.parent.createSync(recursive: true);
+    file.writeAsBytesSync(bytes);
+    client.close();
+  } catch (error) {
+    // ignore: avoid_print
+    print('DM Sans download failed ($error) — falling back to a system font. '
+        'Do not ship these as store screenshots.');
   }
 }
 
@@ -374,6 +458,13 @@ const _wait = Duration(seconds: 5);
 
 /// The viewport the Play Store listing shots are taken at.
 const _play = Size(412, 800);
+
+/// The viewport the App Store listing shots are taken at.
+///
+/// 428x926 at the binding's native 3x is 1284x2778 — one of the four sizes
+/// Apple accepts in the 6.5" slot, and the one a 6.7" phone actually renders
+/// at. The Play shots are 1236x2400, which App Store Connect rejects outright.
+const _ios = Size(428, 926);
 const _storeDir = 'store/screenshots';
 
 const _screens = [
@@ -443,6 +534,33 @@ const _screens = [
   _Screen('play donate', Routes.donate, 'play-6-donate',
       size: _play, pixelRatio: 1, dir: _storeDir),
   _Screen('play more', Routes.more, 'play-7-more', size: _play, pixelRatio: 1, dir: _storeDir),
+
+  // ------------------------------------------------- App Store listing
+  //
+  // The same seven screens as Play, at Apple's aspect ratio. Kept as a separate
+  // list rather than reusing the Play files because the two stores disagree on
+  // both the pixel size and the shape: 1236x2400 is 1.94:1, Apple wants 2.16:1.
+  //
+  // These need one post-step before upload, because toImage always writes RGBA
+  // and App Store Connect refuses any screenshot carrying an alpha channel:
+  //
+  //   magick store/screenshots/ios-*.png -background white -alpha remove \
+  //     -alpha off -colorspace sRGB -strip PNG24:store/screenshots/ios-%d.png
+  //
+  // The alpha is fully opaque, so stripping it changes no pixel. Connect
+  // reports the rejection as "the dimensions are wrong", which it is not, and
+  // that message costs an hour if you take it at face value.
+  _Screen('ios home', Routes.home, 'ios-1-home', size: _ios, pixelRatio: 1, dir: _storeDir),
+  _Screen('ios stories', Routes.stories, 'ios-2-stories',
+      size: _ios, pixelRatio: 1, dir: _storeDir),
+  _Screen('ios craftsmen', Routes.craftsmen, 'ios-3-craftsmen',
+      size: _ios, pixelRatio: 1, dir: _storeDir),
+  _Screen('ios craftsman', Routes.craftsmen, 'ios-4-craftsman',
+      slugFrom: _firstCraftsman, size: _ios, pixelRatio: 1, dir: _storeDir),
+  _Screen('ios give', Routes.give, 'ios-5-give', size: _ios, pixelRatio: 1, dir: _storeDir),
+  _Screen('ios donate', Routes.donate, 'ios-6-donate',
+      size: _ios, pixelRatio: 1, dir: _storeDir),
+  _Screen('ios more', Routes.more, 'ios-7-more', size: _ios, pixelRatio: 1, dir: _storeDir),
 ];
 
 String _firstStory(_Snapshot s) => s.posts.items.isEmpty ? '' : s.posts.items.first.slug;
