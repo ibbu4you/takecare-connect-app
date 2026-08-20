@@ -76,15 +76,43 @@ workflows:
         # into an account, and a CI machine has none.
         script: |
           keychain initialize
+
+          echo "--- distribution certificates Apple already holds ---"
+          app-store-connect list-certificates --type IOS_DISTRIBUTION || true
+
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --create
           keychain add-certificates
+
+          # A certificate is only half of an identity. If the portal already
+          # held a distribution certificate made on somebody else's machine,
+          # the fetch above returns the public certificate and leaves the
+          # private key where it was created — so the keychain gains a
+          # certificate that cannot sign anything, `--create` sees no reason to
+          # make another, and every command downstream reports no identities.
+          #
+          # Apple allows more than one distribution certificate, so making a
+          # fresh one here is legitimate rather than a workaround. It only runs
+          # when the keychain has nothing usable, so repeat builds do not
+          # accumulate certificates.
+          if ! security find-identity -v -p codesigning | grep -q "Apple Distribution"; then
+            echo "--- no usable distribution identity; creating one ---"
+            app-store-connect certificates create --type IOS_DISTRIBUTION --save
+            keychain add-certificates
+            app-store-connect fetch-signing-files "$BUNDLE_ID" \
+              --type IOS_APP_STORE \
+              --create
+            keychain add-certificates
+          fi
+
           xcode-project use-profiles
+
           # What the keychain actually ended up holding. `flutter build ipa`
           # reads the same list, and when it is empty the failure surfaces much
           # later as "No valid code signing certificates were found" — which
           # reads like a project misconfiguration rather than an empty keychain.
+          echo "--- signing identities available to the build ---"
           security find-identity -v -p codesigning
 
       - name: Build the IPA
