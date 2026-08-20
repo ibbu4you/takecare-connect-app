@@ -56,7 +56,10 @@ workflows:
         # before compiling. Doing it here means `use-profiles` writes signing
         # into a project that is already in its final shape, instead of having
         # its work overwritten by a migration that runs later.
-        script: flutter build ios --config-only --release
+        #
+        # `--no-codesign` because this runs before the certificate exists, and
+        # `--config-only` still performs Flutter's signing check without it.
+        script: flutter build ios --config-only --release --no-codesign
 
       - name: Set up code signing
         # Done as a script rather than through the `ios_signing` environment
@@ -78,6 +81,11 @@ workflows:
             --create
           keychain add-certificates
           xcode-project use-profiles
+          # What the keychain actually ended up holding. `flutter build ipa`
+          # reads the same list, and when it is empty the failure surfaces much
+          # later as "No valid code signing certificates were found" — which
+          # reads like a project misconfiguration rather than an empty keychain.
+          security find-identity -v -p codesigning
 
       - name: Build the IPA
         # The build number is taken from what App Store Connect already has,
