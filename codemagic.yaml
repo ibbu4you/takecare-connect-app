@@ -108,12 +108,33 @@ workflows:
 
           xcode-project use-profiles
 
-          # What the keychain actually ended up holding. `flutter build ipa`
-          # reads the same list, and when it is empty the failure surfaces much
-          # later as "No valid code signing certificates were found" — which
-          # reads like a project misconfiguration rather than an empty keychain.
           echo "--- signing identities available to the build ---"
           security find-identity -v -p codesigning
+
+          echo "--- provisioning profiles installed ---"
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null || true
+
+          # Stop here rather than three minutes later.
+          #
+          # `use-profiles` does nothing when no profile was installed, and says
+          # so only in passing. The build then reaches xcodebuild, which fails
+          # with '"Runner" requires a provisioning profile. Select a
+          # provisioning profile in the Signing & Capabilities editor' — advice
+          # about an editor that does not exist on a build machine, describing
+          # a project that is configured exactly as intended. Failing at the
+          # step that owns the problem costs one line and saves reading the
+          # wrong log.
+          if ! ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision >/dev/null 2>&1; then
+            echo "No provisioning profile was installed for $BUNDLE_ID."
+            echo "Signing cannot succeed; the archive below would fail regardless."
+            exit 1
+          fi
+
+          if ! security find-identity -v -p codesigning | grep -q "Apple Distribution"; then
+            echo "No Apple Distribution identity in the keychain."
+            echo "A certificate without its private key cannot sign."
+            exit 1
+          fi
 
       - name: Build the IPA
         # Two commands rather than `flutter build ipa`, because that command
