@@ -22,15 +22,13 @@ workflows:
       app_store_connect: takecare-connect-asc
 
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: org.takecareinternational.takecareConnect
       flutter: stable
       xcode: latest
       cocoapods: default
       vars:
         # The Apple ID of the app record, from the App Store Connect URL.
         APP_STORE_APPLE_ID: 6803486367
+        BUNDLE_ID: org.takecareinternational.takecareConnect
 
     triggering:
       events:
@@ -46,11 +44,26 @@ workflows:
       - name: Install pods
         script: find . -name "Podfile" -execdir pod install \;
 
-      - name: Apply the signing profile to the Xcode project
-        # The project is set to Automatic signing, which a CI machine cannot
-        # do — there is no Xcode account to sign into. This rewrites it to the
-        # profile the ios_signing block just fetched.
-        script: xcode-project use-profiles
+      - name: Set up code signing
+        # Done as a script rather than through the `ios_signing` environment
+        # block, because that block only *fetches* profiles that already exist
+        # and this account had never had an App Store profile for the bundle
+        # id — the first build failed with "No matching profiles found".
+        #
+        # `--create` makes the distribution certificate and the provisioning
+        # profile if the portal has neither, which needs the API key to hold
+        # App Manager. It is idempotent: later builds reuse what this made.
+        #
+        # `use-profiles` then rewrites the Xcode project, which is set to
+        # CODE_SIGN_STYLE = Automatic. Automatic signing needs an Xcode signed
+        # into an account, and a CI machine has none.
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
 
       - name: Build the IPA
         # The build number is taken from what App Store Connect already has,
