@@ -23,7 +23,12 @@ workflows:
       app_store_connect: "App Store Connect"
 
     environment:
-      flutter: stable
+      # Pinned, not `stable`. A newer Flutter migrates the Xcode project mid
+      # build — deployment target 13 to 15, Swift Package Manager integration,
+      # a rewritten Podfile — and those migrations land in project.pbxproj
+      # after signing has been written into it. Matching the version the app is
+      # developed and tested against keeps CI building what was tested.
+      flutter: 3.44.0
       xcode: latest
       cocoapods: default
       vars:
@@ -44,6 +49,14 @@ workflows:
 
       - name: Install pods
         script: find . -name "Podfile" -execdir pod install \;
+
+      - name: Prepare the Xcode project
+        # `--config-only` runs everything `flutter build ipa` does to the
+        # project — the migrations above, the generated xcconfigs — and stops
+        # before compiling. Doing it here means `use-profiles` writes signing
+        # into a project that is already in its final shape, instead of having
+        # its work overwritten by a migration that runs later.
+        script: flutter build ios --config-only --release
 
       - name: Set up code signing
         # Done as a script rather than through the `ios_signing` environment
