@@ -115,20 +115,16 @@ workflows:
           ls -la ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/ 2>/dev/null || true
           ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null || true
 
-          # Stop here rather than three minutes later.
+          # No assertion on the profile directory here.
           #
-          # `use-profiles` does nothing when no profile was installed, and says
-          # so only in passing. The build then reaches xcodebuild, which fails
-          # with '"Runner" requires a provisioning profile. Select a
-          # provisioning profile in the Signing & Capabilities editor' — advice
-          # about an editor that does not exist on a build machine, describing
-          # a project that is configured exactly as intended.
-          if ! ls ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/*.mobileprovision \
-                 ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision \
-                 >/dev/null 2>&1; then
-            echo "No provisioning profile was installed for $BUNDLE_ID."
-            exit 1
-          fi
+          # Two builds that had signed perfectly were failed by one, first for
+          # reading the wrong directory and then because `ls dirA/* dirB/*`
+          # reports failure when either pattern matches nothing — and the
+          # second directory is empty whenever the CLI, rather than Xcode,
+          # installed the profile. The listing above already shows what is
+          # there, and `use-profiles` says which profile it applied to which
+          # target, so the guard was duplicating information that was already
+          # on screen while inventing new ways to be wrong.
 
           if ! security find-identity -v -p codesigning | grep -q "Distribution"; then
             echo "No distribution identity in the keychain."
