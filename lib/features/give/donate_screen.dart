@@ -344,13 +344,24 @@ class _DonateScreenState extends ConsumerState<DonateScreen> {
                 // Appears the moment the amount crosses the threshold, and the
                 // reason is stated rather than assumed — most donors have not
                 // memorised Indian tax rules.
-                if (panNeeded)
+                // Shown for every INR donation, not only the large ones.
+                //
+                // It was hidden below the threshold, which quietly cost donors
+                // money: a PAN is what lets somebody actually claim the 80G
+                // exemption, and plenty of people giving ₹2,000 want to. The
+                // threshold decides whether it is *required*, never whether it
+                // is offered — which is what the website does, and what the
+                // server's `requiredIf` rule already encodes.
+                if (_currency == 'INR')
                   AppField(
                     label: 'PAN',
                     controller: _pan,
                     hint: 'ABCDE1234F',
-                    helper: 'Required for donations of '
-                        '${Fmt.money(options.panThreshold)} or more.',
+                    optional: !panNeeded,
+                    helper: panNeeded
+                        ? 'Required for donations of '
+                            '${Fmt.money(options.panThreshold)} or more.'
+                        : 'Needed on your 80G receipt if you claim the exemption.',
                     textCapitalization: TextCapitalization.characters,
                     maxLength: 10,
                     inputFormatters: [
@@ -359,7 +370,7 @@ class _DonateScreenState extends ConsumerState<DonateScreen> {
                         (_, next) => next.copyWith(text: next.text.toUpperCase()),
                       ),
                     ],
-                    validator: (value) => Validate.pan(value),
+                    validator: (value) => Validate.pan(value, optional: !panNeeded),
                     serverError: _serverErrors['pan_number'],
                   ),
 

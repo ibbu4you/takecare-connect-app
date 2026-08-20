@@ -298,6 +298,10 @@ const _screens = [
       size: Size(320, 640), textScale: 1.3),
   _Screen('more squeezed', Routes.more, '24-more-squeezed',
       size: Size(320, 640), textScale: 1.3),
+
+  // Step 2 of the donate form, where the PAN field lives — offered on every
+  // INR donation, required only above the threshold.
+  _Screen('donate details', Routes.donate, '25-donate-details', scrollBy: 950),
 ];
 
 String _firstStory(_Snapshot s) => s.posts.items.isEmpty ? '' : s.posts.items.first.slug;
