@@ -108,7 +108,11 @@ workflows:
           echo "--- signing identities available to the build ---"
           security find-identity -v -p codesigning
 
+          # Both locations. The CLI saves under Xcode's UserData directory;
+          # MobileDevice is where Xcode itself puts them. Checking only the
+          # latter failed a build whose signing had entirely succeeded.
           echo "--- provisioning profiles installed ---"
+          ls -la ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/ 2>/dev/null || true
           ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null || true
 
           # Stop here rather than three minutes later.
@@ -119,7 +123,9 @@ workflows:
           # provisioning profile in the Signing & Capabilities editor' — advice
           # about an editor that does not exist on a build machine, describing
           # a project that is configured exactly as intended.
-          if ! ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision >/dev/null 2>&1; then
+          if ! ls ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/*.mobileprovision \
+                 ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision \
+                 >/dev/null 2>&1; then
             echo "No provisioning profile was installed for $BUNDLE_ID."
             exit 1
           fi
