@@ -88,12 +88,8 @@ void main() {
     // donate screen prints them above the submit button.
     expect(settings.credentials, isNotEmpty);
 
-    // The contact screen renders this in a WebView, exactly as the website
-    // embeds it. Not fatal if the office has not set one — the card falls back
-    // to a tappable panel — so this reports rather than asserts.
     // ignore: avoid_print
-    print('  settings: ${settings.name} — ${settings.credentials.join(", ")}'
-        '${settings.mapEmbedUrl == null ? " (no map set)" : ""}');
+    print('  settings: ${settings.name} — ${settings.credentials.join(", ")}');
   });
 
   test('form options cover every select the forms render', () async {
@@ -304,13 +300,7 @@ void main() {
     // Hard-coded in more_screen.dart, and the slugs are not what the titles
     // suggest — "Terms of use" lives at `terms`. A 404 here is a dead row in
     // the menu, which nothing else in the project would catch.
-    for (final slug in const [
-      'team',
-      'annual-reports',
-      'privacy-policy',
-      'terms',
-      'refund-policy',
-    ]) {
+    for (final slug in const ['privacy-policy', 'terms', 'refund-policy']) {
       final page = await repo.page(slug);
 
       expect(page.title, isNotEmpty, reason: '/pages/$slug is empty');

@@ -302,6 +302,12 @@ const _screens = [
   // Step 2 of the donate form, where the PAN field lives — offered on every
   // INR donation, required only above the threshold.
   _Screen('donate details', Routes.donate, '25-donate-details', scrollBy: 950),
+
+  // The four that had never been rendered at all.
+  _Screen('intern', '${Routes.more}/intern', '26-intern'),
+  _Screen('author', '/authors', '27-author', slugFrom: _firstAuthor),
+  _Screen('gallery', '${Routes.more}/galleries', '28-gallery', slugFrom: _firstGallery),
+  _Screen('donate result', '/donate/result', '29-donate-result', slugFrom: _anyReference),
 ];
 
 String _firstStory(_Snapshot s) => s.posts.items.isEmpty ? '' : s.posts.items.first.slug;
@@ -311,6 +317,15 @@ String _firstCraftsman(_Snapshot s) =>
 
 String _firstCampaign(_Snapshot s) =>
     s.campaigns.items.isEmpty ? '' : s.campaigns.items.first.slug;
+
+String _firstAuthor(_Snapshot s) => s.authors.keys.isEmpty ? '' : s.authors.keys.first;
+
+String _firstGallery(_Snapshot s) =>
+    s.galleries.items.isEmpty ? '' : s.galleries.items.first.slug;
+
+/// Any reference at all — the snapshot repository answers every one with the
+/// same paid donation, because the point is the screen, not the lookup.
+String _anyReference(_Snapshot s) => '01JEXAMPLEREFERENCE';
 
 /// The app, rooted at one location and backed by the snapshot.
 class _App extends StatelessWidget {
@@ -368,6 +383,7 @@ class _Snapshot {
     required this.businessDetails,
     required this.campaignDetails,
     required this.authors,
+    required this.galleryDetails,
   });
 
   final HomePayload home;
@@ -392,6 +408,7 @@ class _Snapshot {
   final Map<String, BusinessDetail> businessDetails;
   final Map<String, Campaign> campaignDetails;
   final Map<String, AuthorProfile> authors;
+  final Map<String, GalleryDetail> galleryDetails;
 
   static Future<_Snapshot> fetch() async {
     final repo = Repository(ApiClient());
@@ -418,6 +435,7 @@ class _Snapshot {
     final posts = await repo.posts();
     final businesses = await repo.businesses();
     final campaigns = await repo.campaigns();
+    final galleries = await repo.galleries();
 
     // Only the first of each: these are what the detail screenshots open, and
     // fetching every one would turn a twenty-second run into a crawl.
@@ -438,6 +456,12 @@ class _Snapshot {
       businessDetails[slug] = await repo.business(slug);
     }
 
+    final galleryDetails = <String, GalleryDetail>{};
+    if (galleries.items.isNotEmpty) {
+      final slug = galleries.items.first.slug;
+      galleryDetails[slug] = await repo.gallery(slug);
+    }
+
     final campaignDetails = <String, Campaign>{};
     if (campaigns.items.isNotEmpty) {
       final slug = campaigns.items.first.slug;
@@ -455,7 +479,7 @@ class _Snapshot {
       categories: await repo.categories(),
       cities: await repo.cities(),
       campaigns: campaigns,
-      galleries: await repo.galleries(),
+      galleries: galleries,
       press: await repo.press(),
       about: await repo.about(),
       transparency: await repo.transparency(),
@@ -465,6 +489,7 @@ class _Snapshot {
       businessDetails: businessDetails,
       campaignDetails: campaignDetails,
       authors: authors,
+      galleryDetails: galleryDetails,
     );
   }
 }
@@ -531,6 +556,26 @@ class _SnapshotRepository extends Repository {
 
   @override
   Future<List<PressSection>> press() async => _s.press;
+
+  @override
+  Future<GalleryDetail> gallery(String slug) async =>
+      _s.galleryDetails[slug] ?? (throw StateError('no snapshot for gallery $slug'));
+
+  /// A donation that went through, so the success screen has something to draw.
+  ///
+  /// Invented rather than fetched: there is no paid donation on production to
+  /// point at, and the one screen a donor sees after paying is the last one
+  /// that should go unlooked-at.
+  @override
+  Future<DonationStatus> donationStatus(String reference) async => DonationStatus(
+        status: 'paid',
+        isPending: false,
+        amount: 2500,
+        currency: 'INR',
+        receiptNumber: 'TCIF/2026/0042',
+        receiptUrl: 'https://takecareconnect.com/donations/r/$reference/receipt?signature=x',
+        paidAt: DateTime(2026, 8, 20),
+      );
 
   // The detail screens. A miss throws rather than falling back to the network:
   // inside a widget test's fake-async zone a real request never completes, so

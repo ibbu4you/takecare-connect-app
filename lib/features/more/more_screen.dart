@@ -75,13 +75,11 @@ class MoreScreen extends ConsumerWidget {
           const _Group(
             label: 'The foundation',
             children: [
+              // Only what the website actually links to. `team` and
+              // `annual-reports` exist as published pages but appear in no menu
+              // on the site, and both are a couple of sentences long — carrying
+              // them here made the app look like it had more than it does.
               _Row(icon: Icons.info_outline_rounded, label: 'About us', path: '/about'),
-              _Row(icon: Icons.groups_outlined, label: 'Our team', path: '/pages/team'),
-              _Row(
-                icon: Icons.description_outlined,
-                label: 'Annual reports',
-                path: '/pages/annual-reports',
-              ),
               _Row(icon: Icons.mail_outline_rounded, label: 'Contact us', path: '/contact'),
             ],
           ),
