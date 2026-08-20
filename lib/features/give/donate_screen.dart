@@ -17,7 +17,7 @@ import '../../core/utils/validators.dart';
 import '../../core/widgets/app_snack.dart';
 import '../../core/widgets/form_fields.dart';
 import '../../core/widgets/state_views.dart';
-import '../../core/widgets/tcif_logo.dart';
+import '../forms/form_scaffold.dart';
 
 /// The donation form.
 ///
@@ -167,7 +167,11 @@ class _DonateScreenState extends ConsumerState<DonateScreen> {
     final options = ref.watch(donationOptionsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Donate')),
+      backgroundColor: AppColors.surface,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        title: const Text('Donate'),
+      ),
       body: options.when(
         loading: () => const LoadingView(height: 400),
         error: (error, _) => ErrorView(
@@ -179,253 +183,489 @@ class _DonateScreenState extends ConsumerState<DonateScreen> {
     );
   }
 
+  /// The screen, laid out section for section against the website's donate page.
+  ///
+  /// Same eyebrow, same headline, same numbered steps, same amount pills, and
+  /// the two panels the site keeps in its sidebar — "What happens next" and the
+  /// registrations — stacked underneath, which is where a sidebar goes on a
+  /// phone. A donor who starts on one and finishes on the other should not have
+  /// to work out that they are the same charity.
   Widget _form(DonationOptions options) {
     final panNeeded = _panRequired(options);
     final closed = !options.donationsOpen;
+    final campaign = widget.campaignTitle;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 36),
+      padding: const EdgeInsets.only(bottom: 36),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Shown above the form, not instead of it.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    campaign == null ? 'SUPPORT OUR WORK' : 'BACK THIS CAMPAIGN',
+                    style: AppText.eyebrow,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    campaign == null ? 'Make a donation' : 'Donate to $campaign',
+                    style: AppText.h1.copyWith(fontSize: 26),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    campaign == null
+                        ? 'General donations fund the reporting: travelling to workshops, '
+                            'photographing the work, and the time it takes to do an '
+                            'interview properly.'
+                        : 'Your donation goes to this campaign and is paid to the supplier '
+                            'directly, not as cash.',
+                    style: AppText.body.copyWith(
+                      fontSize: 15,
+                      color: AppColors.mutedForeground,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Above the form, not instead of it.
             //
-            // The screen used to replace everything with "Donations are
+            // This screen used to replace everything with "Donations are
             // paused", which is a dead end: a reader cannot see what they were
             // about to be asked, cannot tell whether the app is broken or the
-            // charity has simply switched something off, and has nowhere to go.
-            // The website has always shown the form with a banner over it —
-            // this now matches, and the submit stays disabled either way.
+            // charity has switched something off, and has nowhere to go. The
+            // website has always shown the form with a banner over it.
             if (closed) const _PausedBanner(),
 
-            if (widget.campaignTitle != null)
-              Container(
-                margin: const EdgeInsets.only(bottom: 18),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppRadii.field),
-                  border: Border.all(color: AppColors.border),
+            FormSection(
+              step: 1,
+              title: 'How much would you like to give?',
+              children: [
+                _AmountPills(
+                  amounts: options.suggestedAmounts,
+                  selected: _preset,
+                  currency: _currency,
+                  onSelected: (value) => setState(() {
+                    _preset = value;
+                    _amount.text = '$value';
+                  }),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.campaign_outlined, size: 18, color: AppColors.primary),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('You are giving to', style: AppText.meta),
-                          Text(
-                            widget.campaignTitle!,
-                            style: AppText.title.copyWith(fontSize: 15),
+                const SizedBox(height: 18),
+                AppField(
+                  label: 'Or enter your own amount',
+                  controller: _amount,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  prefix: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
+                    child: Text(
+                      _currency == 'INR' ? '₹' : _currency,
+                      style: AppText.bodyStrong,
+                    ),
+                  ),
+                  // Clears the pill highlight the moment the figure stops
+                  // matching it, so the two can never disagree.
+                  onChanged: (value) => setState(() {
+                    _preset =
+                        options.suggestedAmounts.contains(_amountValue) ? _amountValue : null;
+                  }),
+                  validator: (value) => Validate.amount(value),
+                  serverError: _serverErrors['amount'],
+                ),
+
+                if (options.currencies.length > 1) ...[
+                  Text('Currency', style: AppText.metaStrong.copyWith(fontSize: 13)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final currency in options.currencies)
+                        ChoiceChip(
+                          label: Text(currency),
+                          selected: _currency == currency,
+                          showCheckmark: false,
+                          onSelected: (_) => setState(() => _currency = currency),
+                          labelStyle: AppText.button.copyWith(
+                            fontSize: 13,
+                            color: _currency == currency
+                                ? AppColors.primaryForeground
+                                : AppColors.foreground,
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-            Text('How much would you like to give?', style: AppText.h3),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final amount in options.suggestedAmounts)
-                  ChoiceChip(
-                    label: Text(Fmt.money(amount)),
-                    selected: _preset == amount,
-                    showCheckmark: false,
-                    onSelected: (_) => setState(() {
-                      _preset = amount;
-                      _amount.text = '$amount';
-                    }),
-                    labelStyle: AppText.button.copyWith(
-                      fontSize: 14,
-                      color: _preset == amount
-                          ? AppColors.accentForeground
-                          : AppColors.foreground,
-                    ),
-                    selectedColor: AppColors.accentButton,
-                    backgroundColor: AppColors.background,
-                    side: BorderSide(
-                      color: _preset == amount ? AppColors.accent : AppColors.border,
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          selectedColor: AppColors.primary,
+                          backgroundColor: AppColors.background,
+                          side: BorderSide(
+                            color:
+                                _currency == currency ? AppColors.primary : AppColors.border,
+                          ),
+                        ),
+                    ],
                   ),
+                  const SizedBox(height: 16),
+                ],
               ],
             ),
-            const SizedBox(height: 16),
-            AppField(
-              label: 'Amount',
-              controller: _amount,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              prefix: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
-                child: Text(
-                  _currency == 'INR' ? '₹' : _currency,
-                  style: AppText.bodyStrong,
+
+            FormSection(
+              step: 2,
+              title: 'Your details',
+              subtitle: 'Needed for the receipt, which is emailed to you.',
+              children: [
+                AppField(
+                  label: 'Full name',
+                  controller: _name,
+                  textCapitalization: TextCapitalization.words,
+                  validator: Validate.name,
+                  serverError: _serverErrors['donor_name'],
                 ),
-              ),
-              // Clears the pill highlight the moment the figure stops matching
-              // it, so the two can never disagree.
-              onChanged: (value) => setState(() {
-                _preset = options.suggestedAmounts.contains(_amountValue) ? _amountValue : null;
-              }),
-              validator: (value) => Validate.amount(value),
-              serverError: _serverErrors['amount'],
+                AppField(
+                  label: 'Email',
+                  controller: _email,
+                  keyboardType: TextInputType.emailAddress,
+                  textCapitalization: TextCapitalization.none,
+                  helper: 'Your receipt is sent here.',
+                  validator: (value) => Validate.email(value),
+                  serverError: _serverErrors['email'],
+                ),
+                AppField(
+                  label: 'Phone',
+                  controller: _phone,
+                  optional: true,
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\- ]'))],
+                  validator: (value) => Validate.phone(value, optional: true),
+                  serverError: _serverErrors['phone'],
+                ),
+
+                // Appears the moment the amount crosses the threshold, and the
+                // reason is stated rather than assumed — most donors have not
+                // memorised Indian tax rules.
+                if (panNeeded)
+                  AppField(
+                    label: 'PAN',
+                    controller: _pan,
+                    hint: 'ABCDE1234F',
+                    helper: 'Required for donations of '
+                        '${Fmt.money(options.panThreshold)} or more.',
+                    textCapitalization: TextCapitalization.characters,
+                    maxLength: 10,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
+                      TextInputFormatter.withFunction(
+                        (_, next) => next.copyWith(text: next.text.toUpperCase()),
+                      ),
+                    ],
+                    validator: (value) => Validate.pan(value),
+                    serverError: _serverErrors['pan_number'],
+                  ),
+
+                AppCheckbox(
+                  label: 'List my donation anonymously',
+                  subtitle: 'Your name stays off the campaign page. '
+                      'We still need it for the receipt.',
+                  value: _anonymous,
+                  onChanged: (value) => setState(() => _anonymous = value),
+                ),
+
+                // Only offered where the gateway taking this currency can
+                // actually set up a subscription. Cashfree cannot, so INR does
+                // not show it — and the server rejects the flag anyway, rather
+                // than storing a monthly promise it will charge exactly once.
+                if (_currency != 'INR')
+                  AppCheckbox(
+                    label: 'Give this amount every month',
+                    subtitle: 'You can stop at any time.',
+                    value: _recurring,
+                    onChanged: (value) => setState(() => _recurring = value),
+                  ),
+                if (_serverErrors['is_recurring'] != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      _serverErrors['is_recurring']!,
+                      style: AppText.meta.copyWith(color: AppColors.accentDark),
+                    ),
+                  ),
+                const SizedBox(height: 12),
+              ],
             ),
 
-            if (options.currencies.length > 1) ...[
-              Text('Currency', style: AppText.metaStrong.copyWith(fontSize: 13)),
-              const SizedBox(height: 6),
-              Wrap(
-                spacing: 8,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 22, 16, 0),
+              child: Column(
                 children: [
-                  for (final currency in options.currencies)
-                    ChoiceChip(
-                      label: Text(currency),
-                      selected: _currency == currency,
-                      showCheckmark: false,
-                      onSelected: (_) => setState(() => _currency = currency),
-                      labelStyle: AppText.button.copyWith(
-                        fontSize: 13,
-                        color: _currency == currency
-                            ? AppColors.primaryForeground
-                            : AppColors.foreground,
+                  SubmitButton(
+                    label: closed
+                        ? 'Donations are paused'
+                        : (_amountValue > 0
+                            ? 'Donate ${_currency == "INR" ? Fmt.money(_amountValue) : "$_currency $_amountValue"}'
+                            : 'Continue to payment'),
+                    accent: true,
+                    busy: _busy,
+                    enabled: !closed,
+                    icon: closed ? Icons.pause_circle_outline_rounded : null,
+                    onPressed: () => _submit(options),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.shield_outlined,
+                        size: 15,
+                        color: AppColors.mutedForeground,
                       ),
-                      selectedColor: AppColors.primary,
-                      backgroundColor: AppColors.background,
-                      side: BorderSide(
-                        color: _currency == currency ? AppColors.primary : AppColors.border,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Card and bank details are entered on the payment provider’s '
+                          'own page and are never seen or stored by us.',
+                          style: AppText.meta.copyWith(height: 1.5),
+                        ),
                       ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 20),
-            ],
-
-            const Divider(height: 32),
-            Text('Your details', style: AppText.h3),
-            const SizedBox(height: 4),
-            Text(
-              'Needed for the receipt, which is emailed to you.',
-              style: AppText.excerpt,
-            ),
-            const SizedBox(height: 14),
-
-            AppField(
-              label: 'Full name',
-              controller: _name,
-              textCapitalization: TextCapitalization.words,
-              validator: Validate.name,
-              serverError: _serverErrors['donor_name'],
-            ),
-            AppField(
-              label: 'Email',
-              controller: _email,
-              keyboardType: TextInputType.emailAddress,
-              textCapitalization: TextCapitalization.none,
-              helper: 'Your 80G receipt goes here.',
-              validator: (value) => Validate.email(value),
-              serverError: _serverErrors['email'],
-            ),
-            AppField(
-              label: 'Phone',
-              controller: _phone,
-              optional: true,
-              keyboardType: TextInputType.phone,
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\- ]'))],
-              validator: (value) => Validate.phone(value, optional: true),
-              serverError: _serverErrors['phone'],
-            ),
-
-            // Appears the moment the amount crosses the threshold, and the
-            // reason is stated rather than assumed — most donors have not
-            // memorised Indian tax rules.
-            if (panNeeded)
-              AppField(
-                label: 'PAN',
-                controller: _pan,
-                hint: 'ABCDE1234F',
-                helper: 'Indian tax rules require a PAN for gifts of '
-                    '${Fmt.money(options.panThreshold)} or more.',
-                textCapitalization: TextCapitalization.characters,
-                maxLength: 10,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
-                  TextInputFormatter.withFunction(
-                    (_, next) => next.copyWith(text: next.text.toUpperCase()),
+                    ],
                   ),
                 ],
-                validator: (value) => Validate.pan(value),
-                serverError: _serverErrors['pan_number'],
               ),
-
-            const SizedBox(height: 4),
-            AppCheckbox(
-              label: 'Give anonymously',
-              subtitle: 'Your name will not appear on the campaign page.',
-              value: _anonymous,
-              onChanged: (value) => setState(() => _anonymous = value),
             ),
 
-            // Only offered where the gateway taking this currency can actually
-            // set up a subscription. Cashfree cannot, so INR does not show it —
-            // and the server rejects the flag anyway, rather than storing a
-            // monthly promise it will charge exactly once.
-            if (_currency != 'INR')
-              AppCheckbox(
-                label: 'Make this a monthly gift',
-                subtitle: 'You can stop at any time.',
-                value: _recurring,
-                onChanged: (value) => setState(() => _recurring = value),
-              ),
-            if (_serverErrors['is_recurring'] != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  _serverErrors['is_recurring']!,
-                  style: AppText.meta.copyWith(color: AppColors.accentDark),
-                ),
-              ),
-
-            const SizedBox(height: 22),
-            SubmitButton(
-              label: closed
-                  ? 'Donations are paused'
-                  : (_amountValue > 0
-                      ? 'Give ${_currency == "INR" ? Fmt.money(_amountValue) : "$_currency $_amountValue"}'
-                      : 'Continue to payment'),
-              accent: true,
-              busy: _busy,
-              enabled: !closed,
-              icon: closed ? Icons.pause_circle_outline_rounded : Icons.lock_outline_rounded,
-              onPressed: () => _submit(options),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(Icons.open_in_new_rounded, size: 14, color: AppColors.mutedForeground),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Payment opens in your browser on our secure page. Your card '
-                    'details are never handled by this app.',
-                    style: AppText.meta,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            const _Credentials(),
+            const _WhatHappensNext(),
+            const _RegisteredCharity(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The suggested amounts, styled as the website styles them.
+///
+/// A grid rather than a wrapping row of chips: wrapped chips leave a ragged
+/// last line and their widths jump about as the figures change, so five choices
+/// end up looking like an accident. Equal cells read as a set.
+///
+/// Selected is an outline and a tint, not a solid fill. These are five
+/// equal-weight options, and filling one in solid accent makes it look like the
+/// submit button — the reader's eye goes to the wrong red.
+class _AmountPills extends StatelessWidget {
+  const _AmountPills({
+    required this.amounts,
+    required this.selected,
+    required this.currency,
+    required this.onSelected,
+  });
+
+  final List<int> amounts;
+  final int? selected;
+  final String currency;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = 10.0;
+        // Three to a row, measured against the real constraint. Deriving it
+        // from the screen width instead gives cells that sum to exactly the
+        // space available, and Wrap treats "exactly" as "does not fit".
+        final width = (constraints.maxWidth - gap * 2) / 3 - 0.5;
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final amount in amounts)
+              SizedBox(
+                width: width,
+                child: _Pill(
+                  label: Fmt.money(amount, currency: currency),
+                  selected: selected == amount,
+                  onTap: () => onSelected(amount),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({required this.label, required this.selected, required this.onTap});
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? const Color(0x0DE63946) : AppColors.background,
+      borderRadius: BorderRadius.circular(AppRadii.field),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadii.field),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadii.field),
+            border: Border.all(
+              color: selected ? AppColors.accent : AppColors.border,
+              width: 2,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  style: AppText.button.copyWith(
+                    fontSize: 14,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                    color: selected ? AppColors.accent : AppColors.foreground,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The website's sidebar panel, stacked under the form.
+class _WhatHappensNext extends StatelessWidget {
+  const _WhatHappensNext();
+
+  static const _steps = [
+    'You pay on the gateway’s secure page.',
+    'We confirm the payment with the gateway directly.',
+    'Your receipt arrives by email, with 80G details for INR gifts.',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 22, 16, 0),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(AppRadii.card),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('What happens next', style: AppText.h3.copyWith(fontSize: 16)),
+            const SizedBox(height: 14),
+            for (var i = 0; i < _steps.length; i++) ...[
+              if (i > 0) const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 22,
+                    width: 22,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      color: AppColors.surface,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '${i + 1}',
+                      style: AppText.metaStrong.copyWith(
+                        fontSize: 11,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(_steps[i], style: AppText.excerpt.copyWith(height: 1.5)),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The registrations, beside the amount rather than only in the footer.
+///
+/// This is the moment somebody decides whether to trust the form, and sending
+/// them to the More tab to check is a trip they may not come back from.
+class _RegisteredCharity extends StatelessWidget {
+  const _RegisteredCharity();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(AppRadii.card),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('A registered charity', style: AppText.h3.copyWith(fontSize: 16)),
+            const SizedBox(height: 12),
+            const _Credential('Section 8 Company, registered 2019'),
+            const SizedBox(height: 8),
+            const _Credential('12A and 80G certified'),
+            const SizedBox(height: 8),
+            _Credential(
+              'Every rupee published on our transparency page',
+              onTap: () => context.push('${Routes.more}/transparency'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Credential extends StatelessWidget {
+  const _Credential(this.label, {this.onTap});
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.check_rounded, size: 16, color: AppColors.success),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: AppText.excerpt.copyWith(
+                height: 1.5,
+                color: onTap == null ? AppColors.mutedForeground : AppColors.primary,
+                fontWeight: onTap == null ? FontWeight.w400 : FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -446,7 +686,7 @@ class _PausedBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 18),
+      margin: const EdgeInsets.fromLTRB(16, 18, 16, 0),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFFFFFBEB),
@@ -501,34 +741,3 @@ class _PausedBanner extends StatelessWidget {
   }
 }
 
-/// The registrations a donor checks before giving.
-class _Credentials extends ConsumerWidget {
-  const _Credentials();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final credentials = ref.watch(settingsProvider).valueOrNull?.credentials ?? const [];
-
-    if (credentials.isEmpty) return const SizedBox.shrink();
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadii.field),
-      ),
-      child: Row(
-        children: [
-          const TcifLogo(size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              credentials.join('  ·  '),
-              style: AppText.meta.copyWith(height: 1.5),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
