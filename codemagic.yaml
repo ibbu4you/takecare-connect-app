@@ -3,9 +3,10 @@
 # Two things have to exist in the Codemagic UI before this runs, because
 # neither can live in the repository:
 #
-#   1. An App Store Connect API key, added under Teams > Integrations >
-#      Developer Portal, named exactly `takecare-connect-asc`. It needs the
-#      App Manager role — Developer cannot upload builds.
+#   1. An App Store Connect API key, under Settings > Integrations > Apple
+#      Developer Portal. The one this references is named "App Store Connect"
+#      (key 4H38UR86J6) and holds Admin, which `--create` below needs. The name
+#      is matched literally: rename it in Codemagic and this stops resolving.
 #   2. Nothing else. Signing certificates and profiles are fetched and applied
 #      by `xcode-project use-profiles`, using that same key.
 #
@@ -19,7 +20,7 @@ workflows:
     max_build_duration: 60
 
     integrations:
-      app_store_connect: takecare-connect-asc
+      app_store_connect: "App Store Connect"
 
     environment:
       flutter: stable
