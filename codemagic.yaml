@@ -1,0 +1,83 @@
+# Codemagic build for the iOS App Store.
+#
+# Two things have to exist in the Codemagic UI before this runs, because
+# neither can live in the repository:
+#
+#   1. An App Store Connect API key, added under Teams > Integrations >
+#      Developer Portal, named exactly `takecare-connect-asc`. It needs the
+#      App Manager role — Developer cannot upload builds.
+#   2. Nothing else. Signing certificates and profiles are fetched and applied
+#      by `xcode-project use-profiles`, using that same key.
+#
+# The Android half is deliberately not here. Release signing for Play is wired
+# to a keystore that is gitignored, so a Play workflow needs the keystore
+# uploaded to Codemagic as a secure file first.
+workflows:
+  ios-app-store:
+    name: iOS App Store
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    integrations:
+      app_store_connect: takecare-connect-asc
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: org.takecareinternational.takecareConnect
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      vars:
+        # The Apple ID of the app record, from the App Store Connect URL.
+        APP_STORE_APPLE_ID: 6803486367
+
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: 'v*'
+          include: true
+
+    scripts:
+      - name: Fetch packages
+        script: flutter pub get
+
+      - name: Install pods
+        script: find . -name "Podfile" -execdir pod install \;
+
+      - name: Apply the signing profile to the Xcode project
+        # The project is set to Automatic signing, which a CI machine cannot
+        # do — there is no Xcode account to sign into. This rewrites it to the
+        # profile the ios_signing block just fetched.
+        script: xcode-project use-profiles
+
+      - name: Build the IPA
+        # The build number is taken from what App Store Connect already has,
+        # not from pubspec.yaml. Apple rejects a build whose number it has seen
+        # before, and pubspec's `+2` is committed — so two builds off the same
+        # commit would collide.
+        script: |
+          BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID")
+          flutter build ipa --release \
+            --build-number=$((BUILD_NUMBER + 1)) \
+            --export-options-plist=/Users/builder/export_options.plist
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - flutter_drive.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        # TestFlight only. Promoting to the store stays a manual decision in
+        # App Store Connect, so a tag push can never ship to the public.
+        submit_to_testflight: true
+        submit_to_app_store: false
+
+      email:
+        recipients:
+          - eliteboxindia@gmail.com
+        notify:
+          success: true
+          failure: true
