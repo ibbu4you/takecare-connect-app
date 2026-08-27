@@ -1,4 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Every screen in this app is drawn from takecareconnect.com/api/v1, so
+         without this the app installs, opens, and shows nothing at all.
+
+         It has to be declared HERE and not only in src/debug and src/profile.
+         Flutter's template puts it in those two so "flutter run" works, and a
+         release build merges neither — so the app behaved perfectly in every
+         test anyone ran and reached Google Play unable to open a socket. Play
+         rejected it under the Broken Functionality policy: "Your app does not
+         open or load."
+
+         test/android_manifest_test.dart fails if this line goes missing again. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Takecare Connect"
         android:name="${applicationName}"
@@ -40,6 +52,24 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- launchUrl() is how the donation hand-off, the receipt PDF, every
+             outbound story link and the tel:/mailto: buttons leave the app. It
+             always passes LaunchMode.externalApplication and never asks
+             canLaunchUrl, so these are belt-and-braces on API 30+ package
+             visibility rather than a fix — but the flow they cover is the one
+             the app exists for. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.DIAL"/>
+            <data android:scheme="tel"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="mailto"/>
         </intent>
     </queries>
 </manifest>

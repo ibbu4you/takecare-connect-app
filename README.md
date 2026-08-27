@@ -137,8 +137,38 @@ flutter analyze                       # must be clean
 flutter test                          # unit tests: parsing, pagination, money, validators
 flutter test tool/live_api_check.dart # parses every live endpoint through the real models
 flutter test tool/screenshots.dart    # writes build/screenshots/*.png to look at
-flutter build apk --debug
 ```
+
+## Releasing
+
+```bash
+flutter clean                         # a new asset folder is invisible without it
+flutter build apk --release           # RELEASE, never --debug: see below
+grep -rl android.permission.INTERNET build/app/intermediates/merged_manifest/release/
+```
+
+That grep must print a path. Silence means the release manifest is missing the INTERNET
+permission, and the app will install, open, and show the offline error on every screen —
+which is what Google Play rejected on 26 August 2026 under the Broken Functionality
+policy. `build/app/outputs/logs/manifest-merger-release-report.txt` is the other place to
+read what actually merged.
+
+**Smoke-test the release build on a real phone, not the debug one.** This is the whole
+lesson of that rejection: Flutter declares INTERNET in `src/debug` and `src/profile` but
+not in `src/main`, so a debug build proves nothing about what ships. Install the release
+APK, open it cold, and confirm the home screen fills with photographs. Then put the phone
+in aeroplane mode and reopen it — you should get the "Try again" card, never a blank
+screen. `test/android_manifest_test.dart` guards the permission itself.
+
+Then, and only then:
+
+```bash
+flutter build appbundle --release     # no --dart-define; the default is production
+```
+
+The bundle needs `android/key.properties` present or it signs with the debug key, which
+Play refuses on upload. Bump the `+n` build number in `pubspec.yaml` first — Play reserves
+a version code permanently the moment a bundle is uploaded, even one it rejects.
 
 `live_api_check.dart` and `screenshots.dart` live in `tool/` rather than `test/` because they need
 the network and talk to production — a failure there means the server changed, not that the app

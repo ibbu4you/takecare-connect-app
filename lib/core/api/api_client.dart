@@ -24,6 +24,11 @@ class ApiClient {
       baseUrl: Api.base,
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 20),
+      // Without this a stalled upload hangs for ever, and _transform
+      // below has a sendTimeout branch that could never fire. It is the
+      // POSTs that matter: a donation order, an enquiry, or a long form
+      // somebody has just spent ten minutes filling in.
+      sendTimeout: const Duration(seconds: 20),
       headers: {'Accept': 'application/json'},
     ));
 
