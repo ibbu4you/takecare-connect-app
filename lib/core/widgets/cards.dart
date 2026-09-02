@@ -164,11 +164,17 @@ class PostTile extends StatelessWidget {
   }
 }
 
-/// A craftsman in the directory.
+/// A craftsman in the directory, built as [PostCard] is.
 ///
-/// Landscape rather than portrait: the photographs are of workshops and hands
-/// at work, and the trade and city matter as much as the name — a row gives
-/// all three at a glance and fits four to a screen instead of one and a half.
+/// It used to be a 118px landscape row — a small square photograph beside the
+/// name — on the reasoning that a directory wants density and the trade and
+/// city matter as much as the name.
+///
+/// That undersold the work. These are interviews with photographs taken in the
+/// workshop, and at 108px wide a loom, a kiln and a tray of pottery are the
+/// same brown smudge. A story and a profile are the same kind of thing here,
+/// so they are now the same card: the photograph gets the full width, and the
+/// trade, the maker and the town drop to the meta line under the excerpt.
 class BusinessCard extends StatelessWidget {
   const BusinessCard({super.key, required this.business, this.onTap});
 
@@ -179,77 +185,45 @@ class BusinessCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       onTap: onTap,
-      // A fixed row height, so the photograph fills its side of the card.
-      //
-      // The obvious version — `CrossAxisAlignment.stretch` and let the text
-      // decide the height — throws: a Row in a ListView has unbounded height,
-      // and stretching hands the image an infinite height constraint, which
-      // takes the whole directory down to a blank screen with nothing in
-      // `flutter analyze` about it. Bounding the row first makes stretch legal
-      // and gives the list an even rhythm, which is what a directory wants
-      // anyway.
-      child: SizedBox(
-        height: 118,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(
-              width: 108,
-              child: AppImage(url: business.thumbnail, semanticLabel: business.name),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        business.name,
-                        style: AppText.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (business.ownerName != null && business.ownerName!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        business.ownerName!,
-                        style: AppText.meta,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                    const SizedBox(height: 8),
-                    // One row of pills, clipped rather than wrapped: the card
-                    // has a fixed height and a second run would push the name
-                    // out of it.
-                    Row(
-                      children: [
-                        if (business.category != null)
-                          Flexible(child: Pill(business.category!.name, dense: true)),
-                        if (business.category != null && business.city != null)
-                          const SizedBox(width: 6),
-                        if (business.city != null)
-                          Flexible(
-                            child: Pill(
-                              business.city!.name,
-                              icon: Icons.place_outlined,
-                              dense: true,
-                              background: AppColors.surface,
-                              foreground: AppColors.mutedForeground,
-                            ),
-                          ),
-                      ],
-                    ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppImage(url: business.thumbnail, aspectRatio: 16 / 9, semanticLabel: business.name),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (business.category != null) ...[
+                  Pill(business.category!.name, dense: true),
+                  const SizedBox(height: 8),
+                ],
+                Text(business.name, style: AppText.h3, maxLines: 3, overflow: TextOverflow.ellipsis),
+                if (business.excerpt.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    business.excerpt,
+                    style: AppText.excerpt,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                const SizedBox(height: 10),
+                // The maker, the town and the date, where a story puts its
+                // author, its date and its reading time. A profile has no
+                // reading time, and the town is the fact a reader wants in its
+                // place.
+                _MetaLine(
+                  parts: [
+                    if (business.ownerName != null) business.ownerName!,
+                    if (business.city != null) business.city!.name,
+                    if (business.publishedAt != null) Fmt.shortDate(business.publishedAt),
                   ],
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
