@@ -87,7 +87,9 @@ class _Article extends ConsumerWidget {
                 const SizedBox(height: 8),
                 const Divider(height: 32),
               ],
-              HtmlBody(post.body),
+              // The feature image is already on screen above; most bodies
+              // open with the same photograph.
+              HtmlBody(post.body, dropLeadingImage: post.image != null),
               const SizedBox(height: 24),
               ShareBar(path: '/blog/${post.slug}', title: post.title),
               if (post.author?.slug != null) ...[
