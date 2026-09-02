@@ -172,9 +172,16 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        # TestFlight only. Promoting to the store stays a manual decision in
-        # App Store Connect, so a tag push can never ship to the public.
-        submit_to_testflight: true
+        # The build is uploaded and left there. Both submissions stay manual in
+        # App Store Connect, so a tag push can never ship to anyone.
+        #
+        # `submit_to_testflight: true` did upload fine — it then failed the
+        # build submitting to *external* beta review, which needs a feedback
+        # email and a review contact under TestFlight > Test Information. That
+        # is a path for shipping to outside testers, and this app goes to the
+        # store. Internal testers can still install any processed build; it is
+        # only external testing that needs a review.
+        submit_to_testflight: false
         submit_to_app_store: false
 
       email:
