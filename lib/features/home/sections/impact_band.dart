@@ -146,63 +146,119 @@ class ImpactBand extends StatelessWidget {
   }
 }
 
-/// The figures, two across.
+/// The figures, two across and every tile exactly the same size.
 ///
-/// A wrap rather than a grid, so a short last row sits where it falls instead
-/// of leaving half a row of empty panel beside the fifth figure — which is
-/// what a fixed grid does, and it reads as something that failed to load.
+/// Equal tiles are the whole point of this grid, and a [Wrap] could not give
+/// them: it sizes each child to its own content, so "Subjects covered" on one
+/// line sat beside "Businesses interviewed" on two and the row came out
+/// ragged, with the panels visibly different heights.
+///
+/// The fix is to reserve two lines for every label whether it uses them or
+/// not. Every tile is then identical by construction — one line of figure, two
+/// of label, the same padding — with nothing to measure, nothing to fall out
+/// of step at a larger font, and no dependency on how long any particular
+/// label happens to be.
+///
+/// An odd last figure spans the full width rather than sitting alone in a
+/// half-width tile with a hole beside it. The website fits all five in a
+/// single row; on a phone, the closing figure reading right across the foot of
+/// the grid is the nearest honest translation of that, and it is the one
+/// arrangement that leaves no gap.
 class _Figures extends StatelessWidget {
   const _Figures({required this.stats});
 
   final List<ImpactStat> stats;
 
+  /// Set on the label *and* used to reserve its box. If these two ever
+  /// disagree the text overflows the space kept for it, so they are one
+  /// constant rather than two numbers that happen to match today.
+  static const _labelLeading = 1.3;
+
+  static const _gutter = 10.0;
+
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Two across, less the gutter between them.
-        final width = (constraints.maxWidth - 10) / 2;
+    // Scaled here rather than left to the Text, because the reserved height
+    // has to grow with the user's font setting by exactly as much as the words
+    // inside it do.
+    final labelHeight =
+        MediaQuery.textScalerOf(context).scale(AppText.meta.fontSize ?? 12) * _labelLeading * 2;
 
-        return Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          alignment: WrapAlignment.center,
+    final rows = <Widget>[];
+
+    for (var start = 0; start < stats.length; start += 2) {
+      if (rows.isNotEmpty) {
+        rows.add(const SizedBox(height: _gutter));
+      }
+
+      rows.add(
+        // No CrossAxisAlignment.stretch: this sits in a column with no height
+        // of its own, so stretch would be asked to fill an infinite one and
+        // assert. The tiles are the same height anyway, by construction.
+        Row(
           children: [
-            for (final stat in stats)
-              SizedBox(
-                width: width,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: const Color(0x8C1E2C6B),
-                    borderRadius: BorderRadius.circular(AppRadii.tile),
-                    border: Border.all(color: const Color(0x26FFFFFF)),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                    child: Column(
-                      children: [
-                        Text(
-                          stat.value,
-                          style: AppText.figure.copyWith(color: Colors.white, fontSize: 26),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          stat.label,
-                          style: AppText.meta.copyWith(color: const Color(0xB3FFFFFF)),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+            for (var i = start; i < start + 2 && i < stats.length; i++) ...[
+              if (i > start) const SizedBox(width: _gutter),
+              Expanded(child: _Figure(stat: stats[i], labelHeight: labelHeight)),
+            ],
           ],
-        );
-      },
+        ),
+      );
+    }
+
+    return Column(mainAxisSize: MainAxisSize.min, children: rows);
+  }
+}
+
+/// One panel: the number, and what it counts.
+class _Figure extends StatelessWidget {
+  const _Figure({required this.stat, required this.labelHeight});
+
+  final ImpactStat stat;
+
+  /// Two lines' worth, passed in so every tile in the grid agrees on it.
+  final double labelHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0x8C1E2C6B),
+        borderRadius: BorderRadius.circular(AppRadii.tile),
+        border: Border.all(color: const Color(0x26FFFFFF)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              stat.value,
+              style: AppText.figure.copyWith(color: Colors.white),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 6),
+            SizedBox(
+              height: labelHeight,
+              // Full width, so a one-word label is centred in the panel rather
+              // than sized to the word — the panels are meant to read as a
+              // grid of equal cells, not as text that happens to be boxed.
+              width: double.infinity,
+              child: Text(
+                stat.label,
+                style: AppText.meta.copyWith(
+                  color: const Color(0xB3FFFFFF),
+                  height: _Figures._labelLeading,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
