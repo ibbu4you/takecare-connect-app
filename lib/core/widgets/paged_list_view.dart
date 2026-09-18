@@ -27,7 +27,7 @@ class PagedListView<T> extends StatefulWidget {
     this.separator = 12,
     this.endLabel = "That's everything",
     this.columns = 1,
-    this.childAspectRatio = 0.62,
+    this.childAspectRatio = 0.72,
   });
 
   final PagedState<T> state;
@@ -56,7 +56,12 @@ class PagedListView<T> extends StatefulWidget {
   final int columns;
 
   /// Taller than wide: a 4:3 photograph, a name that may wrap to two lines and
-  /// a price under it. Only read when [columns] is greater than one.
+  /// a price under it.
+  ///
+  /// 0.72 rather than the 0.62 this started at — the first render left a band
+  /// of empty white between the maker's name and the price, because the price
+  /// is pinned to the foot of the card so that prices line up across a row.
+  /// Only read when [columns] is greater than one.
   final double childAspectRatio;
 
   @override
