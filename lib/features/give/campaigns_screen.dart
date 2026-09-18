@@ -22,13 +22,9 @@ class CampaignsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Give'),
-        actions: [
-          TextButton(
-            onPressed: () => context.push('${Routes.more}/transparency'),
-            child: const Text('Where it goes'),
-          ),
-          const SizedBox(width: 8),
-        ],
+        // A "Where it goes" action stood here, opening the website's
+        // transparency page. That page is down, and an action that redirects a
+        // reader to the home page is worse than no action.
       ),
       body: PagedListView(
         state: state,

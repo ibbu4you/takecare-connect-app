@@ -640,10 +640,17 @@ class _RegisteredCharity extends StatelessWidget {
             const SizedBox(height: 8),
             const _Credential('12A and 80G certified'),
             const SizedBox(height: 8),
-            _Credential(
-              'Every rupee published on our transparency page',
-              onTap: () => context.push('${Routes.more}/transparency'),
-            ),
+            /*
+             | This read "Every rupee published on our transparency page" and
+             | linked to it. The website has taken that page down, so the claim
+             | is one the foundation can no longer stand behind — and it is on
+             | the screen where somebody is deciding whether to trust us with
+             | money, which is the last place to leave a promise we cannot
+             | keep. Rewritten to what is actually true and still happens: the
+             | receipt is generated and emailed. Restore the original when the
+             | page comes back.
+             */
+            const _Credential('Every donation receipted, by email'),
           ],
         ),
       ),
@@ -651,33 +658,31 @@ class _RegisteredCharity extends StatelessWidget {
   }
 }
 
+/// One fact about the foundation, ticked.
+///
+/// It took an optional `onTap` while the last of these linked to the
+/// transparency page. Nothing links anywhere now, so the parameter and the
+/// two styles that depended on it are gone rather than left as scaffolding for
+/// a tappable row that no longer exists.
 class _Credential extends StatelessWidget {
-  const _Credential(this.label, {this.onTap});
+  const _Credential(this.label);
 
   final String label;
-  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.check_rounded, size: 16, color: AppColors.success),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              label,
-              style: AppText.excerpt.copyWith(
-                height: 1.5,
-                color: onTap == null ? AppColors.mutedForeground : AppColors.primary,
-                fontWeight: onTap == null ? FontWeight.w400 : FontWeight.w600,
-              ),
-            ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Icon(Icons.check_rounded, size: 16, color: AppColors.success),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            style: AppText.excerpt.copyWith(height: 1.5, color: AppColors.mutedForeground),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

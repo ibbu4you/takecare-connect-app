@@ -120,14 +120,12 @@ class _About extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
           child: Column(
             children: [
+              // "See where the money goes" stood above this until the website
+              // took its transparency page down. Removed rather than pointed at
+              // the redirect: a button that silently lands somebody on the home
+              // page is worse than one button fewer.
               FilledButton.icon(
-                onPressed: () => context.push('${Routes.more}/transparency'),
-                icon: const Icon(Icons.receipt_long_outlined, size: 18),
-                label: const Text('See where the money goes'),
-              ),
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: () => context.push('${Routes.more}/contact'),
+                onPressed: () => context.push(Routes.contact),
                 icon: const Icon(Icons.mail_outline_rounded, size: 18),
                 label: const Text('Get in touch'),
               ),
