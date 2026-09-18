@@ -377,18 +377,35 @@ class _ContactBar extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
           child: Row(
             children: [
-              // WhatsApp only where they gave us a number for it. The link is
-              // built server-side, already a wa.me URL — the app never has to
-              // guess a country code.
+              /*
+               | WhatsApp only where they gave us a number for it. The link is
+               | built server-side, already a wa.me URL — the app never has to
+               | guess a country code.
+               |
+               | The SizedBox is load-bearing, not spacing. A Row measures its
+               | non-flexible children with an unbounded main axis before it
+               | shares what is left among the Expanded ones, and a button
+               | handed an infinite width fails layout outright — so this bar
+               | crashed for every maker who had given us a WhatsApp number.
+               | Giving the icon button a width of its own is what makes it
+               | measurable.
+               */
               if (contact != null && contact.hasWhatsapp)
                 Padding(
                   padding: const EdgeInsets.only(right: 10),
-                  child: OutlinedButton(
-                    onPressed: () => launchUrl(
-                      Uri.parse(contact.whatsapp!),
-                      mode: LaunchMode.externalApplication,
+                  child: SizedBox(
+                    width: 52,
+                    child: OutlinedButton(
+                      onPressed: () => launchUrl(
+                        Uri.parse(contact.whatsapp!),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(52, 44),
+                      ),
+                      child: const Icon(Icons.chat_outlined, size: 18),
                     ),
-                    child: const Icon(Icons.chat_outlined, size: 18),
                   ),
                 ),
               if (product.canCall)

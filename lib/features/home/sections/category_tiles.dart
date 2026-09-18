@@ -29,17 +29,30 @@ class CategoryTiles extends StatelessWidget {
   Widget build(BuildContext context) {
     final colours = CategoryColours.run([for (final c in categories) c.slug]);
 
+    /*
+     | The tile gets taller as the reader's font does.
+     |
+     | At 1.35 a two-line subject name and its count fit comfortably at the
+     | normal font size, and overflowed by a few pixels at the largest one on a
+     | 320pt phone — which Flutter paints as hazard stripes and carries on
+     | from, so nothing failed and nothing logged. Dividing by the text scale
+     | gives the words the room they actually asked for instead of guessing a
+     | number that works for one setting.
+     */
+    final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+    final ratio = 1.35 / scale.clamp(1.0, 1.6);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         padding: EdgeInsets.zero,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 1.35,
+          childAspectRatio: ratio,
         ),
         itemCount: categories.length,
         itemBuilder: (context, i) => _Tile(
@@ -88,21 +101,29 @@ class _Tile extends StatelessWidget {
               ),
             Padding(
               padding: const EdgeInsets.all(14),
+              // Flexible on the name as well as a taller tile: between them,
+              // a long subject at a large font ellipsises rather than pushing
+              // the count out of the bottom of the card.
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    category.name,
-                    style: AppText.title.copyWith(color: Colors.white, fontSize: 15),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  Flexible(
+                    child: Text(
+                      category.name,
+                      style: AppText.title.copyWith(color: Colors.white, fontSize: 15),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   if (category.countLabel != null) ...[
                     const SizedBox(height: 2),
                     Text(
                       category.countLabel!,
                       style: AppText.meta.copyWith(color: const Color(0xCCFFFFFF)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ],

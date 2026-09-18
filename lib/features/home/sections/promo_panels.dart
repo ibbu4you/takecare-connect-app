@@ -113,11 +113,20 @@ class _Panel extends StatelessWidget {
                     style: AppText.excerpt.copyWith(color: AppColors.footerMuted),
                   ),
                   const SizedBox(height: 14),
+                  // Flexible, because "Register for an interview" beside an
+                  // arrow is wider than the panel at a large font — and a Row
+                  // whose text cannot shrink overflows by however much it
+                  // needs, which Flutter paints as hazard stripes and carries
+                  // on from. Nothing fails and nothing logs.
                   Row(
                     children: [
-                      Text(
-                        actionLabel,
-                        style: AppText.button.copyWith(color: Colors.white, fontSize: 14),
+                      Flexible(
+                        child: Text(
+                          actionLabel,
+                          style: AppText.button.copyWith(color: Colors.white, fontSize: 14),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       const SizedBox(width: 4),
                       const Icon(Icons.arrow_forward_rounded, size: 16, color: Colors.white),

@@ -1,0 +1,1150 @@
+{
+  "title": "Takecare Connect — app test checklist",
+  "subtitle": "Every screen of the phone app, in the order somebody would meet them. Written to be followed by anybody, on a real phone, with no knowledge of how any of it is built.",
+  "version": "1.1.0+5",
+  "intro": {
+    "before": [
+      "Install the app on a real Android phone from the APK you were sent, or open it if it is already installed.",
+      "Be on a connection that works. A slow one is fine and worth testing on; no connection at all is its own section below.",
+      "If a step says 'tap' and nothing happens, wait two seconds and tap once more before writing it down as a failure — a first tap sometimes only dismisses the keyboard."
+    ],
+    "recording": [
+      "Mark each case PASS, FAIL or BLOCKED.",
+      "BLOCKED means you could not get far enough to judge — the thing it depends on is empty, or it needs a card, or it needs somebody with a login.",
+      "For a FAIL, write down what you saw instead. A screenshot is worth more than a sentence."
+    ]
+  },
+  "glossary": [
+    {
+      "term": "Tab bar",
+      "meaning": "The five buttons along the bottom: Home, Stories, Shop, Give, More."
+    },
+    {
+      "term": "Band",
+      "meaning": "One horizontal section of the home page — the pictures at the top are one band, the coloured squares below are another."
+    },
+    {
+      "term": "Rail",
+      "meaning": "A row of cards you swipe sideways."
+    },
+    {
+      "term": "Pull to refresh",
+      "meaning": "Put your finger on the middle of the screen, drag it down about three centimetres, let go. A circle spins and the page reloads."
+    },
+    {
+      "term": "Sheet",
+      "meaning": "A panel that slides up from the bottom over the screen. Swipe it down to dismiss it."
+    },
+    {
+      "term": "Maker",
+      "meaning": "A craftsman or small business. Also called a brand where they are selling through us."
+    }
+  ],
+  "areas": [
+    {
+      "id": "nav",
+      "title": "Getting around"
+    },
+    {
+      "id": "home",
+      "title": "The home page"
+    },
+    {
+      "id": "stories",
+      "title": "Stories"
+    },
+    {
+      "id": "shop",
+      "title": "The shop"
+    },
+    {
+      "id": "give",
+      "title": "Giving"
+    },
+    {
+      "id": "more",
+      "title": "The More tab"
+    },
+    {
+      "id": "forms",
+      "title": "Filling things in"
+    },
+    {
+      "id": "states",
+      "title": "When things go wrong"
+    },
+    {
+      "id": "rules",
+      "title": "What the app must never say"
+    }
+  ],
+  "sections": [
+    {
+      "id": "A1",
+      "area": "nav",
+      "title": "The five tabs",
+      "cases": [
+        {
+          "id": "A1.1",
+          "title": "The app opens on the home page",
+          "steps": [
+            "Tap the app's icon on your phone.",
+            "Wait until it stops loading."
+          ],
+          "expected": "Within about five seconds you see the round logo at the top left, the words 'Takecare Connect' beside it, and a magnifying glass at the top right. Underneath is a large photograph with writing over it. Along the bottom are five buttons: Home, Stories, Shop, Give, More. 'Home' is the one that is coloured in.",
+          "blocker": true
+        },
+        {
+          "id": "A1.2",
+          "title": "Every tab opens something",
+          "steps": [
+            "Tap each of the five buttons along the bottom in turn: Stories, Shop, Give, More, then Home again.",
+            "Wait for each to finish loading before tapping the next."
+          ],
+          "expected": "Each one shows a different screen with a heading that matches the button you pressed. None of them is blank, and none shows a red or grey error panel. The button you last pressed is the coloured one.",
+          "blocker": true
+        },
+        {
+          "id": "A1.3",
+          "title": "Nothing is called Craftsmen at the bottom any more",
+          "steps": [
+            "Look at the five buttons along the bottom."
+          ],
+          "expected": "The third one says 'Shop', with a small shop-front icon. There is no button called 'Craftsmen' — the interviews now live inside Shop, and there is a row that says 'Read the interviews' when you go there."
+        },
+        {
+          "id": "A1.4",
+          "title": "Each tab remembers where you were",
+          "steps": [
+            "Tap Stories. Tap any story to open it.",
+            "Tap Shop at the bottom.",
+            "Tap Stories again."
+          ],
+          "expected": "You are back on the story you had opened, not on the list. Each tab keeps its own place."
+        },
+        {
+          "id": "A1.5",
+          "title": "Tapping the tab you are already on takes you back to the top",
+          "steps": [
+            "In Stories, open a story.",
+            "Now tap Stories at the bottom again."
+          ],
+          "expected": "You go back to the list of stories."
+        },
+        {
+          "id": "A1.6",
+          "title": "The back gesture goes back one screen at a time",
+          "steps": [
+            "From Shop, tap a product. From the product, tap the maker's card to open the maker.",
+            "Now swipe from the left edge of the screen to the right, or press the phone's back button — three times."
+          ],
+          "expected": "You go maker → product → shop, one step per gesture. You never jump to the home page unexpectedly, and the app does not close until you are back at the beginning."
+        },
+        {
+          "id": "A1.7",
+          "title": "The labels fit at a large font size",
+          "steps": [
+            "Leave the app. In your phone's Settings, find Display, then Font size, and set it to the largest.",
+            "Open the app again and look at the five buttons along the bottom, and at the top of the home page.",
+            "Put the font size back afterwards."
+          ],
+          "expected": "All five labels are still readable and none is cut off. Nothing shows black-and-yellow striped bars, which is what this app draws when something does not fit."
+        }
+      ]
+    },
+    {
+      "id": "A2",
+      "area": "home",
+      "title": "The home page, band by band",
+      "cases": [
+        {
+          "id": "A2.1",
+          "title": "The pictures at the top change on their own and when you swipe",
+          "steps": [
+            "On the home page, look at the large photograph at the top.",
+            "Wait about six seconds without touching anything.",
+            "Then swipe the picture sideways with your finger."
+          ],
+          "expected": "It changes by itself after about six seconds, and the small dots underneath move along. After you swipe it once, it stops changing by itself and waits for you."
+        },
+        {
+          "id": "A2.2",
+          "title": "The writing over the picture is readable",
+          "steps": [
+            "Swipe through every picture at the top, one at a time."
+          ],
+          "expected": "On any picture that has words over it, the words are white and clearly readable — never white writing on a pale sky. Some pictures are designs with the words already printed in them; those correctly have no extra writing added on top."
+        },
+        {
+          "id": "A2.3",
+          "title": "Both buttons on a picture work",
+          "steps": [
+            "Find a picture at the top that has two buttons on it — one filled in, one outlined.",
+            "Tap the filled one. Come back. Tap the outlined one."
+          ],
+          "expected": "Each opens the thing it names, inside the app. Neither does nothing, and neither opens a web browser unless it is plainly an outside website."
+        },
+        {
+          "id": "A2.4",
+          "title": "The coloured squares under the pictures",
+          "steps": [
+            "Scroll down a little from the top of the home page.",
+            "Look at the grid of coloured squares.",
+            "Tap one."
+          ],
+          "expected": "Each square has a subject written on it and, underneath, how many stories there are — for example '21 stories'. None says '0 stories'. Tapping one opens the Stories tab already showing only that subject."
+        },
+        {
+          "id": "A2.5",
+          "title": "Each subject keeps its own colour",
+          "steps": [
+            "Note the colour of the first two squares.",
+            "Pull the page down to refresh it, and look again."
+          ],
+          "expected": "The same subjects have the same colours as before. No two squares next to each other are the same colour."
+        },
+        {
+          "id": "A2.6",
+          "title": "The numbers band",
+          "steps": [
+            "Keep scrolling down past the coloured squares."
+          ],
+          "expected": "A dark band with 'WHAT WE HAVE DONE' above a heading, then several figures with a short label under each — for example a number of stories published. One of them reads 'One / Brighter India'. Every figure has both a number and a label; none is blank."
+        },
+        {
+          "id": "A2.7",
+          "title": "The Donate button in that band",
+          "steps": [
+            "In the dark band, find the red button and tap it."
+          ],
+          "expected": "The donation screen opens. The line under the button says every rupee is receipted and mentions the 80G tax benefit."
+        },
+        {
+          "id": "A2.8",
+          "title": "A quote from a real person",
+          "steps": [
+            "Look inside the dark band for a quotation in speech marks."
+          ],
+          "expected": "If the office has added one, you see the quote with a name under it, and either a small round photograph or that person's initials in a circle. If there is no quote yet, the band simply has no quotation — not an empty box.",
+          "blocker": false
+        },
+        {
+          "id": "A2.9",
+          "title": "The stories band and its subject buttons",
+          "steps": [
+            "Scroll to the band headed 'Stories'.",
+            "Tap the small oval buttons above the cards — 'All' first, then one of the subjects."
+          ],
+          "expected": "One large story card sits above a row you can swipe sideways. Tapping a subject changes the cards to that subject's stories. Tapping 'All' brings back the newest from everywhere. The cards change without the whole page reloading."
+        },
+        {
+          "id": "A2.10",
+          "title": "The craftsmen row",
+          "steps": [
+            "Scroll to 'Craftsmen and makers'.",
+            "Swipe the row of square cards sideways, then tap one.",
+            "Come back, and tap 'All' at the top right of that band."
+          ],
+          "expected": "The row swipes smoothly. Tapping a card opens that person's interview. 'All' opens the full list of craftsmen."
+        },
+        {
+          "id": "A2.11",
+          "title": "The two invitation panels",
+          "steps": [
+            "Scroll to the two large dark panels.",
+            "Tap the first, come back, then tap the second."
+          ],
+          "expected": "The first opens the Shop. The second opens the form for a craftsman to put themselves forward for an interview. Each panel has a heading, a sentence and an arrow."
+        },
+        {
+          "id": "A2.12",
+          "title": "The four programmes",
+          "steps": [
+            "Scroll to 'Our programmes'.",
+            "Tap each of the four rows in turn, coming back each time."
+          ],
+          "expected": "Four rows, each with a different small icon — not the same icon four times. Each opens something. The one that leads to an outside website shows a small 'open outwards' arrow instead of a '>' and opens your web browser."
+        },
+        {
+          "id": "A2.13",
+          "title": "The campaigns row",
+          "steps": [
+            "Scroll to 'Campaigns you can back'.",
+            "Swipe the row sideways and count the cards.",
+            "Tap one."
+          ],
+          "expected": "Up to six cards, each with a picture, a title and a progress bar. Tapping one opens that campaign. A campaign that has closed says 'Closed' on its picture."
+        },
+        {
+          "id": "A2.14",
+          "title": "The strip at the very bottom",
+          "steps": [
+            "Scroll to the very end of the home page."
+          ],
+          "expected": "If the office has set one, there is a single wide picture with rounded corners, and tapping it opens whatever it advertises. If they have not, the page simply ends. There is never an empty grey band."
+        },
+        {
+          "id": "A2.15",
+          "title": "Pull to refresh",
+          "steps": [
+            "Scroll back to the top of the home page.",
+            "Drag the page down and let go."
+          ],
+          "expected": "A spinning circle appears, then the page reloads. Nothing disappears permanently and no error appears."
+        },
+        {
+          "id": "A2.16",
+          "title": "The top bar comes back when you scroll up",
+          "steps": [
+            "Scroll a long way down the home page.",
+            "Now flick upwards a little."
+          ],
+          "expected": "The bar with the logo and the magnifying glass slides back into view straight away, without having to scroll all the way to the top."
+        },
+        {
+          "id": "A2.17",
+          "title": "There is no app store badge inside the app",
+          "steps": [
+            "Scroll the whole home page and look for a 'Get it on Google Play' or 'App Store' badge."
+          ],
+          "expected": "There is none. You are already in the app, so a badge for the shop you installed it from would be pointless. (There is a 'Rate this app' row on the More tab instead, once the office fills in the link.)"
+        },
+        {
+          "id": "A2.18",
+          "title": "The whole home page lays out at the largest font",
+          "steps": [
+            "Set your phone's font size to the largest, in Settings → Display.",
+            "Open the app and scroll the home page slowly from top to bottom.",
+            "Put the font size back afterwards."
+          ],
+          "expected": "Nothing anywhere on the page shows black-and-yellow striped bars, and no text is chopped off mid-word. Headings may wrap onto more lines and the page will be longer — that is fine.",
+          "blocker": true
+        }
+      ]
+    },
+    {
+      "id": "A3",
+      "area": "stories",
+      "title": "Stories",
+      "cases": [
+        {
+          "id": "A3.1",
+          "title": "The list loads and keeps loading as you scroll",
+          "steps": [
+            "Tap Stories.",
+            "Scroll down steadily to the bottom of what has loaded, and keep going."
+          ],
+          "expected": "Cards with pictures, titles and a line saying who wrote it and how long it takes to read. As you near the bottom more arrive on their own. At the very end it says something like \"That's everything\" rather than spinning for ever."
+        },
+        {
+          "id": "A3.2",
+          "title": "Filtering by subject",
+          "steps": [
+            "At the top of Stories, tap one of the oval subject buttons.",
+            "Then tap 'All'."
+          ],
+          "expected": "The list narrows to that subject and, if the office wrote a description for it, a short paragraph appears above the list. 'All' brings everything back."
+        },
+        {
+          "id": "A3.3",
+          "title": "The story list explains itself when a filter empties it",
+          "steps": [
+            "In Stories, tap one of the oval subject buttons.",
+            "If that subject has stories, try each in turn until you find one that is empty — or skip to the search test below."
+          ],
+          "expected": "A subject with nothing in it says so in a sentence and suggests trying another, rather than leaving a blank screen. Note that the Stories tab has no search box of its own: searching is the magnifying glass at the top right, which is the next section."
+        },
+        {
+          "id": "A3.4",
+          "title": "Opening a story",
+          "steps": [
+            "Tap any story."
+          ],
+          "expected": "The article opens with its picture, its title, who wrote it, and the writing itself properly laid out — headings bigger, paragraphs spaced. Pictures inside the article are the right way up and not squashed."
+        },
+        {
+          "id": "A3.5",
+          "title": "Sharing a story",
+          "steps": [
+            "In an open story, tap the share icon at the top right.",
+            "Choose any app, or dismiss the panel."
+          ],
+          "expected": "Your phone's usual share panel appears, carrying the story's title and a link to it on the website."
+        },
+        {
+          "id": "A3.6",
+          "title": "The author's name opens their page",
+          "steps": [
+            "In an open story, tap the writer's name.",
+            "Scroll that page."
+          ],
+          "expected": "A page about that writer with their photograph if they have one, a short description, and a list of their other stories. Tapping one of those opens it."
+        },
+        {
+          "id": "A3.7",
+          "title": "The suggested stories at the end",
+          "steps": [
+            "Scroll to the very bottom of an open story."
+          ],
+          "expected": "A few other stories are suggested. The one you are reading is not among them."
+        }
+      ]
+    },
+    {
+      "id": "A12",
+      "area": "nav",
+      "title": "Searching",
+      "cases": [
+        {
+          "id": "A12.1",
+          "title": "The magnifying glass opens a search",
+          "steps": [
+            "On the home page, tap the magnifying glass at the top right.",
+            "Look at the row of words under the box."
+          ],
+          "expected": "A box you can type in straight away, with three headings under it: Stories, Products and Makers."
+        },
+        {
+          "id": "A12.2",
+          "title": "Searching finds stories",
+          "steps": [
+            "Type a word you know appears in a story title.",
+            "Wait a second without typing."
+          ],
+          "expected": "Matching stories appear under Stories shortly after you stop typing — not on every letter."
+        },
+        {
+          "id": "A12.3",
+          "title": "Searching finds things in the shop",
+          "steps": [
+            "With a word typed, tap the Products heading."
+          ],
+          "expected": "Matching products appear, each with its price. This is the half that was missing until the shop was added to the app — searching used to cover only stories and craftsmen."
+        },
+        {
+          "id": "A12.4",
+          "title": "Searching finds makers",
+          "steps": [
+            "Tap the Makers heading."
+          ],
+          "expected": "Matching craftsmen appear."
+        },
+        {
+          "id": "A12.5",
+          "title": "A search that matches nothing says so",
+          "steps": [
+            "Clear the box and type something that cannot match, such as qqzzqq.",
+            "Look at all three headings."
+          ],
+          "expected": "Each says nothing matched, naming what you typed. None is a blank white screen and none spins for ever."
+        },
+        {
+          "id": "A12.6",
+          "title": "Clearing the search",
+          "steps": [
+            "Tap the small cross at the right of the box."
+          ],
+          "expected": "The box empties and the screen goes back to inviting you to search."
+        }
+      ]
+    },
+    {
+      "id": "A4",
+      "area": "shop",
+      "title": "The shop — what they make",
+      "cases": [
+        {
+          "id": "A4.1",
+          "title": "The shop opens with two halves",
+          "steps": [
+            "Tap Shop.",
+            "Look at the two buttons under the heading."
+          ],
+          "expected": "A pair of buttons, 'Products' and 'Makers', with 'Products' selected. Under them a search box, then cards in two columns.",
+          "blocker": true
+        },
+        {
+          "id": "A4.2",
+          "title": "There is nothing to buy anywhere",
+          "steps": [
+            "Look carefully at the whole shop screen, and at a product's own page.",
+            "Look for a 'Buy' button, a basket or trolley icon, a quantity box, or anything about payment."
+          ],
+          "expected": "There is none of it, anywhere. The foundation takes no part in the sale — you contact the maker and settle it with them. The only buttons are about getting in touch.",
+          "blocker": true
+        },
+        {
+          "id": "A4.3",
+          "title": "Prices read properly",
+          "steps": [
+            "Read the price on several product cards."
+          ],
+          "expected": "Prices read like '₹450 / piece' or '₹900 – ₹1,400 / piece'. Large numbers are grouped the Indian way — ₹12,34,567, not ₹1,234,567. Anything made to order says 'Ask the maker'. Nothing says '₹0' and no price is blank."
+        },
+        {
+          "id": "A4.4",
+          "title": "A tidied-up photograph says so",
+          "steps": [
+            "Look for a product card with a small dark badge in the corner of its picture.",
+            "Open that product and look under the photographs."
+          ],
+          "expected": "The badge says 'AI enhanced'. On the product's own page there is a full sentence: 'Photograph enhanced with AI. The item itself is unchanged.' Products whose photographs were not touched carry no badge."
+        },
+        {
+          "id": "A4.5",
+          "title": "Searching the shop",
+          "steps": [
+            "Type the name of something you know is listed into the search box.",
+            "Then clear it with the cross."
+          ],
+          "expected": "The cards narrow to what matches, shortly after you stop typing. Clearing brings everything back."
+        },
+        {
+          "id": "A4.6",
+          "title": "The craft buttons",
+          "steps": [
+            "Tap one of the oval craft buttons above the cards, then tap 'All crafts'."
+          ],
+          "expected": "The shelf narrows to that craft and back. If the office has not set up any crafts yet, this row is simply absent — which is a job for them, not a fault in the app.",
+          "blocker": false
+        },
+        {
+          "id": "A4.7",
+          "title": "The filter panel",
+          "steps": [
+            "Tap the sliders icon at the top right.",
+            "Tick two different crafts. Note what the note under 'Craft' says.",
+            "Tap 'Show these'."
+          ],
+          "expected": "A panel slides up with Craft, Where they are, Maker and Price. The note under Craft says ticking more than one shows more, not fewer — and that is what happens. The icon at the top right then carries a small number showing how many filters are on.",
+          "blocker": false
+        },
+        {
+          "id": "A4.8",
+          "title": "Dismissing the filter panel keeps your filters",
+          "steps": [
+            "Open the filter panel, tick something, and tap 'Show these'.",
+            "Open it again, tick something else, but this time swipe the panel down to dismiss it."
+          ],
+          "expected": "Your original filters are still applied. Swiping the panel away does not silently wipe what you had chosen."
+        },
+        {
+          "id": "A4.9",
+          "title": "Clearing the filters",
+          "steps": [
+            "With filters applied, tap 'Clear' beside the count, or open the panel and tap 'Clear all'."
+          ],
+          "expected": "Everything comes back and the number on the sliders icon disappears."
+        },
+        {
+          "id": "A4.10",
+          "title": "Filtering down to nothing is explained",
+          "steps": [
+            "Use the filter panel to pick a combination you expect nothing to match — a high 'From ₹' price, for instance."
+          ],
+          "expected": "A short friendly message and a 'Clear filters' button — never a blank white screen."
+        },
+        {
+          "id": "A4.11",
+          "title": "A product's own page",
+          "steps": [
+            "Tap any product."
+          ],
+          "expected": "Photographs you can swipe, the craft in a small red label, the name, the price, any bullet points ticked off, and a description. Further down: the maker, what it is made of and how it is made."
+        },
+        {
+          "id": "A4.12",
+          "title": "The photographs open full screen",
+          "steps": [
+            "On a product's page, tap one of its photographs.",
+            "Swipe sideways, then close it."
+          ],
+          "expected": "The picture fills the screen and you can move between the others. Closing returns you to the product."
+        },
+        {
+          "id": "A4.13",
+          "title": "The maker's card on a product",
+          "steps": [
+            "On a product's page, scroll to 'The maker' and read it.",
+            "Then tap the card."
+          ],
+          "expected": "Their name, their town, a short description, and a badge saying how long they have been with us — for example 'With us since 2021'. Nothing says 'verified' or 'certified'. Tapping it opens their own page."
+        },
+        {
+          "id": "A4.14",
+          "title": "Reading their interview from a product",
+          "steps": [
+            "On a maker's card, look for 'Read their interview' and tap it if it is there."
+          ],
+          "expected": "It opens the article about them. If we never published one, the button is simply not there — it never appears and then fails."
+        },
+        {
+          "id": "A4.15",
+          "title": "More from the same maker",
+          "steps": [
+            "Scroll to the bottom of a product's page."
+          ],
+          "expected": "A row of other things by the same maker, which you can swipe. The product you are already looking at is not among them. Tapping one opens it."
+        },
+        {
+          "id": "A4.16",
+          "title": "The two buttons at the bottom of a product",
+          "steps": [
+            "Look at the bar pinned along the bottom of a product's page.",
+            "Try this on two or three different products, by different makers."
+          ],
+          "expected": "Up to two buttons: 'Their number' and 'Ask about this'. A maker who gave us no telephone number shows no 'Their number' button — it is never shown and then unable to produce a number. If neither is possible there is no bar at all, rather than an empty strip."
+        },
+        {
+          "id": "A4.17",
+          "title": "Sharing a product",
+          "steps": [
+            "Tap the share icon at the top of a product's page."
+          ],
+          "expected": "Your phone's share panel appears with the product's name and a link to it on the website."
+        }
+      ]
+    },
+    {
+      "id": "A5",
+      "area": "shop",
+      "title": "The shop — asking about something",
+      "cases": [
+        {
+          "id": "A5.1",
+          "title": "Asking a question about a product",
+          "steps": [
+            "On a product's page, tap 'Ask about this'.",
+            "Fill in your name, your telephone number, your email and a couple of sentences.",
+            "Tap 'Send enquiry'."
+          ],
+          "expected": "A panel slides up naming the maker and the product. After sending, the panel closes and a green message confirms it, in the foundation's own words. The office receives it with the product's name on it."
+        },
+        {
+          "id": "A5.2",
+          "title": "The form says which box is wrong",
+          "steps": [
+            "Open 'Ask about this' again.",
+            "Leave your name empty, type '123' as the telephone number, and tap the send button."
+          ],
+          "expected": "Red writing appears under the specific boxes that are wrong, naming what is wrong with each. It does not send, and it does not show one vague message at the top."
+        },
+        {
+          "id": "A5.3",
+          "title": "Getting a maker's number",
+          "steps": [
+            "On a product whose maker has a telephone number, tap 'Their number'.",
+            "Choose 'Call them' if the choice is offered, fill in your name and number, and tap 'Show the number'."
+          ],
+          "expected": "The panel is replaced by the number itself, large and selectable, with 'Copy' and 'Call now' buttons and a line asking you to mention the foundation. 'Call now' opens your phone's dialler with the number already in it."
+        },
+        {
+          "id": "A5.4",
+          "title": "Copying the number",
+          "steps": [
+            "With a number showing, tap 'Copy'.",
+            "Open your phone's messaging app and paste."
+          ],
+          "expected": "The number pastes correctly, and the app confirmed 'Number copied' when you tapped."
+        },
+        {
+          "id": "A5.5",
+          "title": "The same form on an interview",
+          "steps": [
+            "Go to Shop → Makers → 'Read the interviews', open somebody, and use the buttons at the bottom of their article."
+          ],
+          "expected": "The same two-part form behaves the same way. On an interview the buttons are 'Call' and 'Send an enquiry'."
+        },
+        {
+          "id": "A5.6",
+          "title": "The promise under the form",
+          "steps": [
+            "Read the small line at the very bottom of the enquiry panel."
+          ],
+          "expected": "It says the foundation does not sell or share your details."
+        }
+      ]
+    },
+    {
+      "id": "A6",
+      "area": "shop",
+      "title": "The makers",
+      "cases": [
+        {
+          "id": "A6.1",
+          "title": "The Makers half of the shop",
+          "steps": [
+            "Tap Shop, then 'Makers'."
+          ],
+          "expected": "A row at the top offering 'Read the interviews', then cards in two columns — each with a picture or mark, a name, their craft and town, and how many things they list."
+        },
+        {
+          "id": "A6.2",
+          "title": "The busiest maker is first",
+          "steps": [
+            "Read the 'N items' figure on each card from top to bottom."
+          ],
+          "expected": "The numbers never go up as you scroll down. Whoever lists the most is at the top, so nobody is buried for having a name beginning with Z."
+        },
+        {
+          "id": "A6.3",
+          "title": "Reading the interviews from here",
+          "steps": [
+            "Tap the 'Read the interviews' row at the top."
+          ],
+          "expected": "The full list of craftsman interviews opens — the same list that used to have its own button at the bottom of the screen."
+        },
+        {
+          "id": "A6.4",
+          "title": "A maker's own page",
+          "steps": [
+            "Tap any maker."
+          ],
+          "expected": "Their banner and mark, their name, the person who runs it, and small badges: their craft, their town, how many things they list, and how long they have been with us. Then their description, then everything they sell in two columns."
+        },
+        {
+          "id": "A6.5",
+          "title": "What a maker's page must not claim",
+          "steps": [
+            "Read every word on a maker's page."
+          ],
+          "expected": "Nothing describes them as verified, certified or approved, and nothing mentions secure payment. Every badge is a plain fact — their trade, their town, their count, their years with us.",
+          "blocker": true
+        },
+        {
+          "id": "A6.6",
+          "title": "The ways to reach a maker",
+          "steps": [
+            "On a maker's page, look at the buttons under their description.",
+            "Tap WhatsApp if it is there. Come back and tap Call if it is there."
+          ],
+          "expected": "Only the ways they actually gave us. WhatsApp opens WhatsApp with a conversation with them already started. Call opens your dialler. A maker who gave us nothing says so in a plain sentence instead of showing dead buttons."
+        },
+        {
+          "id": "A6.7",
+          "title": "A maker with an empty shelf",
+          "steps": [
+            "If you can find a maker with nothing listed, open their page.",
+            "(If not, mark this BLOCKED.)"
+          ],
+          "expected": "Their page still works and says nothing is listed just now, suggesting you get in touch directly. They do not appear in the Makers grid, but their page is not broken.",
+          "blocker": false
+        }
+      ]
+    },
+    {
+      "id": "A7",
+      "area": "give",
+      "title": "Campaigns and donating",
+      "cases": [
+        {
+          "id": "A7.1",
+          "title": "The Give tab",
+          "steps": [
+            "Tap Give."
+          ],
+          "expected": "A card about the general fund at the top, then campaign cards each with a picture, a title, and a bar showing how much has been raised against the goal."
+        },
+        {
+          "id": "A7.2",
+          "title": "A campaign's own page",
+          "steps": [
+            "Tap a campaign.",
+            "Scroll the whole page."
+          ],
+          "expected": "Its picture, the amount raised against the goal, how many people have given, how the money will be used if the office listed it, the story, and any updates. A red Donate button."
+        },
+        {
+          "id": "A7.3",
+          "title": "Starting a donation",
+          "steps": [
+            "Tap Donate on a campaign.",
+            "Choose one of the suggested amounts, then type a different amount instead.",
+            "Fill in your name and email."
+          ],
+          "expected": "The campaign you came from is already named on the form. The suggested amounts fill the box when tapped. Typing your own works too."
+        },
+        {
+          "id": "A7.4",
+          "title": "The PAN question appears when it should",
+          "steps": [
+            "On the donation form, enter an amount below ten thousand rupees, then change it to above ten thousand."
+          ],
+          "expected": "Above the threshold a PAN box appears and is required, because Indian tax rules require it for larger donations. Below it, the box is not demanded."
+        },
+        {
+          "id": "A7.5",
+          "title": "The donation form checks what you typed",
+          "steps": [
+            "Try to send the form with the email box empty, and with '12345' as your telephone number."
+          ],
+          "expected": "Red writing under the specific boxes. It does not proceed to payment."
+        },
+        {
+          "id": "A7.6",
+          "title": "Paying",
+          "steps": [
+            "Complete the form properly and tap the button to continue.",
+            "This needs a real card or UPI — if you cannot, mark this BLOCKED."
+          ],
+          "expected": "A payment page opens. After paying, you come back into the app and it tells you the donation succeeded, with a receipt number and a way to get the receipt.",
+          "blocker": false
+        },
+        {
+          "id": "A7.7",
+          "title": "Abandoning a payment",
+          "steps": [
+            "Start a donation, reach the payment page, and close it without paying.",
+            "Return to the app."
+          ],
+          "expected": "The app says the payment was not completed and offers to try again. It does not claim you donated, and it does not hang on a spinner for ever."
+        },
+        {
+          "id": "A7.8",
+          "title": "Giving without choosing a campaign",
+          "steps": [
+            "Tap Give, then the general fund card at the top."
+          ],
+          "expected": "The same donation form, with no campaign named — the money goes to the general fund."
+        },
+        {
+          "id": "A7.9",
+          "title": "The claims on the donation screen",
+          "steps": [
+            "Scroll to the bottom of the donation screen and read the ticked lines."
+          ],
+          "expected": "They say the foundation is a Section 8 Company registered in 2019, is 12A and 80G certified, and that every donation is receipted by email. Nothing points at a 'transparency page', because the website has taken that page down."
+        }
+      ]
+    },
+    {
+      "id": "A8",
+      "area": "more",
+      "title": "The More tab",
+      "cases": [
+        {
+          "id": "A8.1",
+          "title": "Everything on More opens",
+          "steps": [
+            "Tap More.",
+            "Tap every single row on the screen in turn, coming back each time. There are about seventeen."
+          ],
+          "expected": "Every row opens a screen with content on it. None opens a blank page, an error, or a page saying it has moved.",
+          "blocker": true
+        },
+        {
+          "id": "A8.2",
+          "title": "The two tiles at the top",
+          "steps": [
+            "Look at the two large tiles under the logo, and tap each."
+          ],
+          "expected": "A red 'Donate' tile and a 'Sell with us' tile. There is no tile called 'Where it goes' — the website has taken that page down."
+        },
+        {
+          "id": "A8.3",
+          "title": "The shop group",
+          "steps": [
+            "In the group headed 'The shop', tap each of the five rows in turn."
+          ],
+          "expected": "They open: the shop, the makers, the craftsman interviews, what membership costs, and the form to sell with us. The first three switch you to the Shop tab — and the Shop button at the bottom becomes the coloured one, rather than leaving 'More' lit while you look at the shop."
+        },
+        {
+          "id": "A8.4",
+          "title": "What membership costs",
+          "steps": [
+            "Open 'Membership for craftsmen' and read the whole screen."
+          ],
+          "expected": "The plans with their real prices — for instance free for a first period, a monthly price and a yearly one — then an explanation of what happens if it lapses, then a button to apply. There is no way to pay from here, which is correct: that happens in the seller area on the website.",
+          "blocker": false
+        },
+        {
+          "id": "A8.5",
+          "title": "Galleries",
+          "steps": [
+            "Open Galleries, tap a gallery, tap a photograph, swipe, and close."
+          ],
+          "expected": "The albums list, then the photographs, then a full-screen viewer you can swipe through and close."
+        },
+        {
+          "id": "A8.6",
+          "title": "In the press",
+          "steps": [
+            "Open 'In the press' and scroll it.",
+            "Tap a video if there is one, and a newspaper link if there is one."
+          ],
+          "expected": "Items grouped by kind. A video plays or opens; a link opens your web browser at the article. Nothing is an empty card."
+        },
+        {
+          "id": "A8.7",
+          "title": "About us",
+          "steps": [
+            "Open 'About us' and scroll to the end."
+          ],
+          "expected": "The foundation's vision, mission, values and areas of work, each with a heading and a paragraph — no blank cards. At the bottom, one button: 'Get in touch'."
+        },
+        {
+          "id": "A8.8",
+          "title": "The legal pages",
+          "steps": [
+            "Open each of Privacy policy, Terms of use and Refund policy."
+          ],
+          "expected": "Each has a title and real text. None is empty and none fails to load."
+        },
+        {
+          "id": "A8.9",
+          "title": "The newsletter box",
+          "steps": [
+            "Scroll to the bottom of More.",
+            "Type your email address and tap 'Keep me posted'.",
+            "Then try the same address a second time."
+          ],
+          "expected": "The box is replaced by a thank-you in the foundation's own words. The second attempt gives exactly the same answer — it never says 'you are already subscribed', because that would tell a stranger whose address is on the list."
+        },
+        {
+          "id": "A8.10",
+          "title": "Telling somebody about the app",
+          "steps": [
+            "Tap 'Tell someone about us'."
+          ],
+          "expected": "Your phone's share panel opens with a sentence about the foundation and a link to the website."
+        },
+        {
+          "id": "A8.11",
+          "title": "Opening the website",
+          "steps": [
+            "Tap 'Open the website'."
+          ],
+          "expected": "Your web browser opens at takecareconnect.com."
+        },
+        {
+          "id": "A8.12",
+          "title": "Nothing about transparency is offered any more",
+          "steps": [
+            "Look through the whole More tab, the About screen and the Give tab for anything called 'Where it goes' or 'Transparency'."
+          ],
+          "expected": "There is nothing. The website has taken that page down, and the app no longer offers a button that would land you somewhere else."
+        }
+      ]
+    },
+    {
+      "id": "A9",
+      "area": "forms",
+      "title": "The forms",
+      "cases": [
+        {
+          "id": "A9.1",
+          "title": "Sell with us — filling it in properly",
+          "steps": [
+            "More → 'Sell with us'.",
+            "Fill in all four numbered sections, tick both agreements, and send it."
+          ],
+          "expected": "Four numbered sections: you, your shop, your work, your agreement. The trade is a list to choose from. After sending, a confirmation in the foundation's own words. The office receives the application."
+        },
+        {
+          "id": "A9.2",
+          "title": "Sell with us — the agreements are not optional",
+          "steps": [
+            "Fill the form in but leave the second tick box unticked, and send."
+          ],
+          "expected": "It refuses, and says so under the tick box that is missing. Both agreements are required because one covers publishing your details and the other the terms of being listed."
+        },
+        {
+          "id": "A9.3",
+          "title": "Sell with us — your own website is not mistaken for spam",
+          "steps": [
+            "Fill the form in and put your real website in the 'Your website' box.",
+            "Send it."
+          ],
+          "expected": "It sends, and your website is kept. (There is a hidden trap for automated spam on this form, and it is a different box — your real website must never be caught by it.)"
+        },
+        {
+          "id": "A9.4",
+          "title": "Sell with us — 'about you' has to say something",
+          "steps": [
+            "Type just 'pots' in the 'About you and your work' box and try to send."
+          ],
+          "expected": "It asks for a few sentences, so the office knows who they are listing."
+        },
+        {
+          "id": "A9.5",
+          "title": "Contact us",
+          "steps": [
+            "More → 'Contact us'. Choose a subject, fill it in and send.",
+            "Then look at the rest of the screen."
+          ],
+          "expected": "It sends and confirms. The screen also shows the office's email, telephone, address and opening days, and a map if the office has set one."
+        },
+        {
+          "id": "A9.6",
+          "title": "Volunteering",
+          "steps": [
+            "More → 'Volunteer with us'. Complete every section and send."
+          ],
+          "expected": "The areas you can help with, how you are available and how many hours are all lists to choose from, not free typing. It sends and confirms."
+        },
+        {
+          "id": "A9.7",
+          "title": "An internship",
+          "steps": [
+            "More → 'Apply for an internship'. Complete it and send."
+          ],
+          "expected": "It additionally asks about your institution and year of study, and will not send without them. It sends and confirms."
+        },
+        {
+          "id": "A9.8",
+          "title": "Registering for an interview",
+          "steps": [
+            "More → 'Register for an interview'. Complete it and send."
+          ],
+          "expected": "It asks about your business, your trade, your team size and turnover, and requires you to agree to being published. It sends and confirms."
+        },
+        {
+          "id": "A9.9",
+          "title": "Every form survives the keyboard",
+          "steps": [
+            "On any form, tap the last box on the screen so the keyboard covers the lower half.",
+            "Type, then scroll."
+          ],
+          "expected": "The box you are typing in is never hidden behind the keyboard, and the send button can always be reached."
+        },
+        {
+          "id": "A9.10",
+          "title": "Sending twice is not possible",
+          "steps": [
+            "On any form, tap the send button and immediately tap it again."
+          ],
+          "expected": "The button goes quiet and shows it is working. The office receives one message, not two."
+        },
+        {
+          "id": "A9.11",
+          "title": "The trade list on \"Sell with us\" is filled in",
+          "steps": [
+            "More → Sell with us → the second section.",
+            "Tap \"What you make\"."
+          ],
+          "expected": "A list of ten trades — pottery, handloom, bamboo and so on, ending with \"Something else\". It is never empty: the server sends the same ten the website offers, so the app cannot drift out of step with what the server will accept."
+        }
+      ]
+    },
+    {
+      "id": "A10",
+      "area": "states",
+      "title": "When things go wrong",
+      "cases": [
+        {
+          "id": "A10.1",
+          "title": "With no connection at all",
+          "steps": [
+            "Turn on aeroplane mode.",
+            "Open the app, or pull to refresh if it is already open.",
+            "Visit each of the five tabs."
+          ],
+          "expected": "Each screen says something went wrong and offers a 'Try again' button. Nothing crashes, nothing spins for ever, and no screen is blank white.",
+          "blocker": true
+        },
+        {
+          "id": "A10.2",
+          "title": "Coming back online",
+          "steps": [
+            "With an error showing, turn aeroplane mode off.",
+            "Tap 'Try again'."
+          ],
+          "expected": "The screen fills in properly."
+        },
+        {
+          "id": "A10.3",
+          "title": "On a slow connection",
+          "steps": [
+            "If your phone's developer options allow it, throttle the network; otherwise try somewhere with one bar.",
+            "Open the home page and the shop."
+          ],
+          "expected": "Placeholders appear where pictures will be, and the text arrives first. Nothing jumps about violently as pictures load."
+        },
+        {
+          "id": "A10.4",
+          "title": "Sending a form with no connection",
+          "steps": [
+            "Fill in the contact form, turn on aeroplane mode, and tap send."
+          ],
+          "expected": "A clear message that it could not be sent. What you typed is still in the boxes, so you can send it again once you are back online."
+        },
+        {
+          "id": "A10.5",
+          "title": "A page that does not exist",
+          "steps": [
+            "If you can, open a link to the app with a made-up address — otherwise mark this BLOCKED."
+          ],
+          "expected": "A screen saying that page has moved, with a button back to the start. Not a crash.",
+          "blocker": false
+        },
+        {
+          "id": "A10.6",
+          "title": "Asking too often",
+          "steps": [
+            "Send four enquiries in quick succession from the same phone."
+          ],
+          "expected": "At some point it says you have tried too many times and to wait — politely, and without losing what you typed. This is the foundation protecting its makers' telephone numbers from being harvested."
+        },
+        {
+          "id": "A10.7",
+          "title": "Leaving and coming back",
+          "steps": [
+            "Scroll halfway down the shop.",
+            "Switch to another app, wait a minute, and come back."
+          ],
+          "expected": "You are where you left off. The app does not restart at the home page."
+        }
+      ]
+    },
+    {
+      "id": "A11",
+      "area": "rules",
+      "title": "What the app must never say",
+      "cases": [
+        {
+          "id": "A11.1",
+          "title": "Nobody is verified or certified",
+          "steps": [
+            "Look through the shop, a product, a maker and an interview for the words 'verified', 'certified' or 'approved' applied to a person or a business."
+          ],
+          "expected": "They appear nowhere. The foundation publishes listings; it does not guarantee anybody's goods, and saying otherwise would be a promise it cannot keep.",
+          "blocker": true
+        },
+        {
+          "id": "A11.2",
+          "title": "Nothing claims a payment is secure",
+          "steps": [
+            "Look for the words 'secure payment' or a padlock beside a price, anywhere in the shop."
+          ],
+          "expected": "There is none. No money passes between a buyer and a maker anywhere in this app, so the claim would simply be false.",
+          "blocker": true
+        },
+        {
+          "id": "A11.3",
+          "title": "No figure is invented",
+          "steps": [
+            "Read the numbers in the dark band on the home page."
+          ],
+          "expected": "They are things that can be counted — stories published, businesses interviewed, subjects covered, live campaigns. There is nothing about 'lives touched' or 'people reached', which nobody here can measure."
+        },
+        {
+          "id": "A11.4",
+          "title": "The app and the website agree",
+          "steps": [
+            "Open takecareconnect.com in a web browser beside the app.",
+            "Compare the figures in the dark band, the number of campaigns, and the price of one product you can find on both."
+          ],
+          "expected": "They match. Both read the same figures from the same place, so they cannot disagree."
+        },
+        {
+          "id": "A11.5",
+          "title": "No login is ever demanded",
+          "steps": [
+            "Use the whole app and look for a sign-in or register screen."
+          ],
+          "expected": "There is none. Everything a visitor can do needs no account. A craftsman's own seller area lives on the website, and a link to it correctly opens your web browser rather than asking you to log in here."
+        }
+      ]
+    }
+  ]
+}

@@ -7,11 +7,14 @@ import 'package:go_router/go_router.dart';
 import '../../core/api/cursor_page.dart';
 import '../../core/models/business.dart';
 import '../../core/models/post.dart';
+import '../../core/models/shop.dart';
 import '../../core/router/route_names.dart';
+import '../../core/state/products_query.dart';
 import '../../core/state/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/cards.dart';
+import '../../core/widgets/shop_cards.dart';
 import '../../core/widgets/state_views.dart';
 
 /// One search box across both things worth searching: stories and craftsmen.
@@ -59,7 +62,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      // Three, since the shop arrived. A reader who taps the magnifying
+      // glass and types "bowl" was finding nothing at all from it.
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           titleSpacing: 8,
@@ -70,7 +75,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             textInputAction: TextInputAction.search,
             style: AppText.body.copyWith(fontSize: 16),
             decoration: InputDecoration(
-              hintText: 'Search stories and craftsmen',
+              hintText: 'Search stories, makers and what they make',
               filled: false,
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
@@ -94,7 +99,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             // Material 3 draws a near-black rule under the tabs by default,
             // which is the heaviest line anywhere in this app.
             dividerColor: AppColors.border,
-            tabs: [Tab(text: 'Stories'), Tab(text: 'Craftsmen')],
+            tabs: [
+              Tab(text: 'Stories'),
+              Tab(text: 'Products'),
+              Tab(text: 'Makers'),
+            ],
           ),
         ),
         body: _query == null
@@ -111,6 +120,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     builder: (post) => PostCard(
                       post: post,
                       onTap: () => context.push(Routes.story(post.slug)),
+                    ),
+                    query: _query!,
+                  ),
+                  // The shop, searched by the same term. `ProductsQuery`
+                  // rather than a record, for the reason its own file gives:
+                  // a record holding a list has no structural equality, so the
+                  // family would refetch on every rebuild.
+                  _Results<ShopProduct>(
+                    columns: 2,
+                    state: ref.watch(productsProvider(ProductsQuery(q: _query))),
+                    onLoadMore: () =>
+                        ref.read(productsProvider(ProductsQuery(q: _query)).notifier).loadMore(),
+                    builder: (product) => ProductCard(
+                      product: product,
+                      onTap: () => context.push(Routes.product(product.slug)),
                     ),
                     query: _query!,
                   ),
@@ -158,12 +182,22 @@ class _Results<T> extends StatefulWidget {
     required this.onLoadMore,
     required this.builder,
     required this.query,
+    this.columns = 1,
   });
 
   final PagedState<T> state;
   final VoidCallback onLoadMore;
   final Widget Function(T item) builder;
   final String query;
+
+  /// Two for products, so they read as the same shelf the Shop tab shows.
+  ///
+  /// Not decoration: `ProductCard` divides a fixed height between its
+  /// photograph and its text so that prices line up across a row, which means
+  /// it needs a height to divide. A one-column list has none to give — the
+  /// card asserts outright rather than looking wrong, which is how this was
+  /// found.
+  final int columns;
 
   @override
   State<_Results<T>> createState() => _ResultsState<T>();
@@ -208,6 +242,40 @@ class _ResultsState<T> extends State<_Results<T>> {
       );
     }
 
+    final footer = ListFooter(
+      loading: state.loadingMore,
+      endReached: state.endReached,
+      error: state.error,
+      onRetry: widget.onLoadMore,
+    );
+
+    if (widget.columns > 1) {
+      return CustomScrollView(
+        controller: _controller,
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            sliver: SliverGrid(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: widget.columns,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.72,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => widget.builder(state.items[index]),
+                childCount: state.items.length,
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            sliver: SliverToBoxAdapter(child: footer),
+          ),
+        ],
+      );
+    }
+
     return ListView.separated(
       controller: _controller,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -216,12 +284,7 @@ class _ResultsState<T> extends State<_Results<T>> {
       itemBuilder: (context, index) {
         if (index < state.items.length) return widget.builder(state.items[index]);
 
-        return ListFooter(
-          loading: state.loadingMore,
-          endReached: state.endReached,
-          error: state.error,
-          onRetry: widget.onLoadMore,
-        );
+        return footer;
       },
     );
   }
