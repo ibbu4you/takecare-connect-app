@@ -66,6 +66,41 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     );
   }
 
+  /*
+   | A filter arriving from somewhere else has to be adopted, not just read
+   | once.
+   |
+   | `initState` runs when this screen is first created, and a tab in a
+   | StatefulShellRoute is created once and then kept alive — which is what
+   | makes each tab remember its place. So the second time somebody arrives
+   | here carrying a filter, the widget is rebuilt with the new query but the
+   | State is the same object and its field still holds whatever it had.
+   |
+   | The visible symptom was that tapping a subject on the home page opened
+   | the full list of stories: it worked the first time and never again.
+   */
+  /// A craft tapped on a product page, or `?segment=makers` from a link, has to
+  /// land even when this tab has been open all along.
+  @override
+  void didUpdateWidget(ShopScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.initialCategory != oldWidget.initialCategory) {
+      setState(() {
+        _query = ProductsQuery(
+          categories: widget.initialCategory == null ? const [] : [widget.initialCategory!],
+        );
+      });
+    }
+
+    if (widget.initialSegment != oldWidget.initialSegment) {
+      setState(() {
+        _segment =
+            widget.initialSegment == 'makers' ? ShopSegment.makers : ShopSegment.products;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _debounce?.cancel();

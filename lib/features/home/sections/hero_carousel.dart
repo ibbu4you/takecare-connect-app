@@ -109,15 +109,16 @@ class _BannerCarouselState extends State<BannerCarousel> {
   }
 }
 
-/// One banner. Shared with the footer strip, which is the same thing in a
-/// different place on the screen.
+/// One banner.
+///
+/// It took an `aspectRatio` while the home page also drew the website's
+/// before-footer strip. That band is not shown in the app — see the note in
+/// home_screen.dart — so the only caller is the carousel above, which sizes
+/// its own frame.
 class BannerFrame extends StatelessWidget {
-  const BannerFrame({super.key, required this.slide, this.aspectRatio});
+  const BannerFrame({super.key, required this.slide});
 
   final BannerSlide slide;
-
-  /// Set by the footer strip, which is a band rather than a full slide.
-  final double? aspectRatio;
 
   Future<void> _open(BuildContext context, String? url) => openWebPath(context, url);
 
@@ -249,8 +250,6 @@ class BannerFrame extends StatelessWidget {
       ),
     );
 
-    return aspectRatio == null
-        ? frame
-        : AspectRatio(aspectRatio: aspectRatio!, child: frame);
+    return frame;
   }
 }

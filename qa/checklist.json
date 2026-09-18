@@ -277,11 +277,12 @@
         },
         {
           "id": "A2.14",
-          "title": "The strip at the very bottom",
+          "title": "The website’s footer strip is not shown in the app",
           "steps": [
-            "Scroll to the very end of the home page."
+            "Open the website in a browser and scroll to the bottom of any page. Note the wide promotional strip just above the footer, if the office has set one.",
+            "Now scroll to the very end of the app’s home page."
           ],
-          "expected": "If the office has set one, there is a single wide picture with rounded corners, and tapping it opens whatever it advertises. If they have not, the page simply ends. There is never an empty grey band."
+          "expected": "The app does not show that strip. The home page simply ends after the campaigns. This is deliberate: on a phone the foot of the home page is where somebody has just read nine sections, and an advertisement there is what stops them scrolling. It also must never appear among the pictures at the top — that was a real fault, and it is the next case."
         },
         {
           "id": "A2.15",

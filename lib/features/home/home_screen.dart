@@ -125,15 +125,19 @@ class HomeScreen extends ConsumerWidget {
       if (data.activeCampaigns.isNotEmpty)
         _Band(surface: true, child: _CampaignsRail(campaigns: data.activeCampaigns)),
 
-      if (data.footerBanner != null)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadii.card),
-            child: BannerFrame(slide: data.footerBanner!, aspectRatio: 16 / 9),
-          ),
-        ),
-
+      /*
+       | The website's before-footer strip is deliberately not drawn here.
+       |
+       | It is a promotional band the site carries at the foot of every page,
+       | and on a phone the foot of the home page is where somebody has just
+       | finished reading nine bands — an advertisement there is the thing that
+       | stops them scrolling rather than the thing that rewards it.
+       |
+       | `footer_banner` is still sent and still parsed, so bringing it back is
+       | this block and nothing else. What the payload is *also* for is the
+       | check that it never leaks into the hero carousel, which is the defect
+       | that started all of this — see the case in qa/checklist.json.
+       */
       const SizedBox(height: 28),
     ];
 

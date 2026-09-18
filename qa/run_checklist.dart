@@ -360,17 +360,36 @@ void main() {
       noRenderErrors(tester, 'the campaigns rail');
     });
 
-    await runCase(tester, 'A2.14', 'The strip at the bottom is separate from the hero', () async {
+    await runCase(tester, 'A2.14', "The website's footer strip is not shown", () async {
+      final footer = live.home.footerBanner;
+
+      if (footer == null) return;
+
       await open(tester, Routes.home);
 
-      final footer = live.home.footerBanner;
-      if (footer != null) {
-        // The defect this whole round of work started with: a banner meant for
-        // the foot of a web page rotating at the top of the app.
+      /*
+       | Two things, and the first is the defect this whole round of work
+       | started with: a banner meant for the foot of a web page was rotating
+       | at the top of the app, because the query filtered the dates and the
+       | active flag and not the placement.
+       */
+      expect(
+        live.home.banners.every((b) => b.bestImage != footer.bestImage),
+        isTrue,
+        reason: 'the footer strip is also a hero slide',
+      );
+
+      // And the second: the app does not draw that strip at all. It is still
+      // sent and still parsed, so it can come back — but on a phone the foot
+      // of the home page is where somebody stops scrolling.
+      final onScreen = await allTexts(tester, steps: 20);
+      final title = footer.title?.trim() ?? '';
+
+      if (title.isNotEmpty) {
         expect(
-          live.home.banners.every((b) => b.bestImage != footer.bestImage),
-          isTrue,
-          reason: 'the footer strip is also a hero slide',
+          onScreen.any((t) => t.contains(title)),
+          isFalse,
+          reason: 'the before-footer strip is being drawn on the home page',
         );
       }
     });
