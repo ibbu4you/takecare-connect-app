@@ -167,6 +167,20 @@ Future<void> _loadImages(_Snapshot s) async {
   for (final b in s.home.banners) {
     add(b.bestImage);
   }
+  // The rest of the front page. The category tiles are the visible ones —
+  // without them the home screenshot is a grid of grey rectangles where the
+  // subjects should be — but every one of these renders a placeholder just as
+  // quietly if it is missed.
+  add(s.home.footerBanner?.bestImage);
+  add(s.home.ctaImage);
+  add(s.home.promoImages.craft);
+  add(s.home.promoImages.discover);
+  for (final tile in s.home.postCategories) {
+    add(tile.image);
+  }
+  for (final t in s.home.testimonials) {
+    add(t.avatar);
+  }
   for (final p in [...s.home.featuredStories, ...s.posts.items, ...s.trending]) {
     add(p.thumbnail);
   }
@@ -183,6 +197,21 @@ Future<void> _loadImages(_Snapshot s) async {
   }
   for (final g in s.galleries.items) {
     add(g.cover);
+  }
+  // The shop. Without these every product card renders its placeholder, and
+  // the listing screenshot is a grid of empty grey boxes — which is what it
+  // was, because a card that cannot reach its photograph still lays out
+  // perfectly and nothing in the run says a word.
+  for (final product in s.products.items) {
+    add(product.thumbnail);
+  }
+  for (final brand in s.brands) {
+    add(brand.logo);
+  }
+  for (final detail in s.productDetails.values) {
+    for (final photo in detail.images) {
+      add(photo.url);
+    }
   }
   for (final section in s.press) {
     for (final item in section.items) {
@@ -297,7 +326,13 @@ Future<void> _loadFonts() async {
   // fontWeight. google_fonts sets both the per-weight family name and the
   // weight, so registering one file under every name renders each at its own
   // weight rather than flattening the lot to regular.
-  final text = _textFontPaths();
+  // The emoji face is registered into each family rather than alongside them.
+  // A FontLoader given several files makes one family of them, and the engine
+  // falls through to the next when a glyph is missing — which is the only way
+  // to get a fallback under `flutter test`, where there is no system chain to
+  // borrow. Editors put emoji in headings; without this they render as tofu
+  // boxes in a store screenshot while looking fine on the phone.
+  final text = [..._textFontPaths(), _emojiFontPath];
 
   for (final family in [
     'DMSans',
@@ -353,6 +388,10 @@ List<String> _textFontPaths() => [
     ];
 
 const _dmSansFile = 'build/fonts/DMSans.ttf';
+
+/// macOS only. `register` skips a path that does not exist, so a Linux CI box
+/// simply renders the tofu it renders today rather than failing.
+const _emojiFontPath = '/System/Library/Fonts/Apple Color Emoji.ttc';
 
 /// Downloads DM Sans once, into a build directory that is not committed.
 ///
