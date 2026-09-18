@@ -11,6 +11,7 @@ import '../../core/state/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/tcif_logo.dart';
+import 'newsletter_card.dart';
 
 /// Everything that is not a tab of its own.
 ///
@@ -47,6 +48,44 @@ class MoreScreen extends ConsumerWidget {
         padding: EdgeInsets.zero,
         children: [
           _Header(settings: settings),
+
+          // The shop, gathered in one place even though its own tab is a tap
+          // away: a reader who opens More is looking for a list of everything,
+          // and membership and selling have no home in the tab bar.
+          const _Group(
+            label: 'The shop',
+            children: [
+              _Row(
+                icon: Icons.inventory_2_outlined,
+                label: 'Browse what they make',
+                branchPath: Routes.shop,
+              ),
+              _Row(
+                icon: Icons.handshake_outlined,
+                label: 'The makers',
+                subtitle: 'Every craftsman selling through us',
+                branchPath: Routes.brands,
+              ),
+              _Row(
+                icon: Icons.menu_book_outlined,
+                label: 'Craftsmen interviews',
+                subtitle: 'How they learned their trade, in their own words',
+                branchPath: Routes.craftsmen,
+              ),
+              _Row(
+                icon: Icons.card_membership_outlined,
+                label: 'Membership for craftsmen',
+                subtitle: 'What listing your work costs',
+                path: '/membership',
+              ),
+              _Row(
+                icon: Icons.storefront_outlined,
+                label: 'Sell with us',
+                subtitle: 'No commission — buyers contact you directly',
+                path: '/sell-with-us',
+              ),
+            ],
+          ),
 
           const _Group(
             label: 'Take part',
@@ -118,6 +157,19 @@ class MoreScreen extends ConsumerWidget {
                   mode: LaunchMode.externalApplication,
                 ),
               ),
+              // Only once there is a listing behind it. A link to a store page
+              // that does not exist is a dead end dressed up as a feature, so
+              // the office filling in the setting is what makes this appear.
+              if (settings?.playUrl != null)
+                _Row(
+                  icon: Icons.star_outline_rounded,
+                  label: 'Rate this app',
+                  external: true,
+                  onTap: (_) => launchUrl(
+                    Uri.parse(settings!.playUrl!),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
             ],
           ),
 
@@ -141,6 +193,7 @@ class MoreScreen extends ConsumerWidget {
           ),
 
           const SizedBox(height: 8),
+          const NewsletterCard(),
           _Footer(settings: settings),
         ],
       ),
@@ -200,12 +253,17 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
+              // "Where it goes" stood here until the website took its
+              // transparency page down. Replaced rather than left blank: this
+              // is the second thing a reader looks for on this tab, and a
+              // craftsman who has found the app is exactly who "sell with us"
+              // is written for.
               Expanded(
                 child: _Tile(
-                  icon: Icons.receipt_long_outlined,
-                  label: 'Where it goes',
-                  caption: 'Campaign by campaign',
-                  onTap: () => context.push('${Routes.more}/transparency'),
+                  icon: Icons.storefront_outlined,
+                  label: 'Sell with us',
+                  caption: 'List your work, no commission',
+                  onTap: () => context.push(Routes.sellWithUs),
                 ),
               ),
             ],
@@ -323,6 +381,7 @@ class _Row extends StatelessWidget {
     required this.label,
     this.subtitle,
     this.path,
+    this.branchPath,
     this.onTap,
     this.external = false,
   });
@@ -334,6 +393,15 @@ class _Row extends StatelessWidget {
   /// A route under `/more`, which is where this tab's branch lives.
   final String? path;
 
+  /// A full path in another tab's branch — the shop, the makers, the
+  /// interviews.
+  ///
+  /// `go` rather than `push`, and that is the point of having a second
+  /// parameter: pushing a route that belongs to another branch onto this one
+  /// would leave the reader on the Shop screen with the More tab still lit, and
+  /// the back gesture would take them somewhere neither of them expects.
+  final String? branchPath;
+
   /// For rows that do something other than navigate.
   final void Function(BuildContext context)? onTap;
 
@@ -344,6 +412,7 @@ class _Row extends StatelessWidget {
     return InkWell(
       onTap: () {
         if (onTap != null) return onTap!(context);
+        if (branchPath != null) return context.go(branchPath!);
         if (path != null) context.push('${Routes.more}$path');
       },
       child: Padding(

@@ -26,6 +26,8 @@ class PagedListView<T> extends StatefulWidget {
     this.padding = const EdgeInsets.fromLTRB(16, 16, 16, 8),
     this.separator = 12,
     this.endLabel = "That's everything",
+    this.columns = 1,
+    this.childAspectRatio = 0.62,
   });
 
   final PagedState<T> state;
@@ -42,6 +44,20 @@ class PagedListView<T> extends StatefulWidget {
   final EdgeInsets padding;
   final double separator;
   final String endLabel;
+
+  /// One column means the list this widget was written for; more than one turns
+  /// it into a grid, for the shop.
+  ///
+  /// The grid is a separate branch rather than a rewrite of the list: three
+  /// screens — stories, craftsmen and galleries — already depend on the list's
+  /// exact behaviour, and a photograph-led product shelf is the only thing that
+  /// wants two across. Everything the widget owns (the eager scroll trigger,
+  /// the footer, pull-to-refresh, the scrollable empty state) is shared.
+  final int columns;
+
+  /// Taller than wide: a 4:3 photograph, a name that may wrap to two lines and
+  /// a price under it. Only read when [columns] is greater than one.
+  final double childAspectRatio;
 
   @override
   State<PagedListView<T>> createState() => _PagedListViewState<T>();
@@ -87,6 +103,55 @@ class _PagedListViewState<T> extends State<PagedListView<T>> {
       body = _fill(ErrorView(error: state.error, onRetry: widget.onRefresh));
     } else if (state.isEmpty) {
       body = _fill(widget.emptyView ?? const EmptyView(title: 'Nothing here yet'));
+    } else if (widget.columns > 1) {
+      body = CustomScrollView(
+        controller: _controller,
+        slivers: [
+          if (widget.header != null)
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                widget.padding.left,
+                widget.padding.top,
+                widget.padding.right,
+                12,
+              ),
+              sliver: SliverToBoxAdapter(child: widget.header!),
+            ),
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(
+              widget.padding.left,
+              widget.header == null ? widget.padding.top : 0,
+              widget.padding.right,
+              0,
+            ),
+            sliver: SliverGrid(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: widget.columns,
+                crossAxisSpacing: widget.separator,
+                mainAxisSpacing: widget.separator,
+                childAspectRatio: widget.childAspectRatio,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => widget.itemBuilder(context, state.items[index], index),
+                childCount: state.items.length,
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(widget.padding.left, 0, widget.padding.right,
+                widget.padding.bottom),
+            sliver: SliverToBoxAdapter(
+              child: ListFooter(
+                loading: state.loadingMore,
+                endReached: state.endReached,
+                error: state.error,
+                onRetry: widget.onLoadMore,
+                endLabel: widget.endLabel,
+              ),
+            ),
+          ),
+        ],
+      );
     } else {
       body = ListView.separated(
         controller: _controller,

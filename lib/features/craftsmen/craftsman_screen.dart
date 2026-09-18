@@ -9,16 +9,17 @@ import '../../core/state/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/widgets/ai_note.dart';
 import '../../core/widgets/app_image.dart';
 import '../../core/widgets/author_box.dart';
 import '../../core/widgets/cards.dart';
+import '../../core/widgets/enquiry_sheet.dart';
 import '../../core/widgets/html_body.dart';
 import '../../core/widgets/pill.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/share_sheet.dart';
 import '../../core/widgets/state_views.dart';
 import '../media/photo_viewer.dart';
-import 'enquiry_sheet.dart';
 
 /// One craftsman: their interview, their workshop photographs, what they make,
 /// and the two ways to reach them.
@@ -163,6 +164,16 @@ class _Profile extends ConsumerWidget {
           ),
         ),
 
+        // Their shop, where they have one. A craftsman we only interviewed has
+        // none, and that is not a gap in the record.
+        if (business.brand != null) ...[
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _BrandStrip(brand: business.brand!),
+          ),
+        ],
+
         if (business.products.isNotEmpty) ...[
           SectionHeader(
             eyebrow: 'What they make',
@@ -175,7 +186,7 @@ class _Profile extends ConsumerWidget {
             child: Column(
               children: [
                 for (final product in business.products) ...[
-                  ProductCard(product: product),
+                  _InterviewProductCard(product: product),
                   const SizedBox(height: 12),
                 ],
               ],
@@ -352,49 +363,108 @@ class _Byline extends StatelessWidget {
   }
 }
 
-/// A single thing the craftsman makes.
-class ProductCard extends StatelessWidget {
-  const ProductCard({super.key, required this.product});
+/// "They sell through us" — the bridge from the journalism to the shop.
+class _BrandStrip extends StatelessWidget {
+  const _BrandStrip({required this.brand});
+
+  final BusinessBrand brand;
+
+  @override
+  Widget build(BuildContext context) {
+    final count = brand.productCount ?? 0;
+
+    return AppCard(
+      padding: const EdgeInsets.all(14),
+      onTap: () => context.push(Routes.brand(brand.slug)),
+      child: Row(
+        children: [
+          if (brand.logo != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadii.small),
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: AppImage(url: brand.logo, semanticLabel: brand.name),
+              ),
+            )
+          else
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadii.small),
+              ),
+              child: const Icon(Icons.storefront_outlined, size: 22, color: AppColors.primary),
+            ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('They sell through us', style: AppText.metaStrong),
+                const SizedBox(height: 2),
+                Text(
+                  count > 0
+                      ? '$count ${count == 1 ? 'thing' : 'things'} in the shop'
+                      : 'See their shop',
+                  style: AppText.title.copyWith(fontSize: 15),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right_rounded, color: AppColors.mutedForeground),
+        ],
+      ),
+    );
+  }
+}
+
+/// A single thing the craftsman makes, as their article shows it.
+///
+/// Private, and renamed from a public `ProductCard` when the shop arrived:
+/// that name now belongs to the shelf card in widgets/shop_cards.dart, which is
+/// a different thing — this one sits inside an article where the maker is
+/// already established, and carries the whole specification rather than a
+/// price and a thumbnail.
+///
+/// Two things changed with it. The price is the server's `priceLabel` rather
+/// than a string composed here — the old version reimplemented the rule and
+/// printed "MRP", which is nobody's wording but this file's — and the card is
+/// tappable when the product has a page of its own.
+class _InterviewProductCard extends StatelessWidget {
+  const _InterviewProductCard({required this.product});
 
   final Product product;
-
-  String get _price {
-    if (!product.hasPrice) return '';
-
-    final min = product.priceMin;
-    final max = product.priceMax;
-
-    if (min != null && max != null && min != max) {
-      return '${Fmt.money(min, currency: product.currency)} – ${Fmt.money(max, currency: product.currency)}';
-    }
-
-    return Fmt.money((min ?? max)!, currency: product.currency);
-  }
 
   @override
   Widget build(BuildContext context) {
     return AppCard(
+      onTap: product.canOpen ? () => context.push(Routes.product(product.slug!)) : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (product.image != null)
-            AppImage(url: product.image, aspectRatio: 4 / 3, semanticLabel: product.name),
+            Stack(
+              children: [
+                AppImage(url: product.image, aspectRatio: 4 / 3, semanticLabel: product.name),
+                if (product.aiAssisted)
+                  const Positioned(right: 8, top: 8, child: AiNote.badge()),
+              ],
+            ),
           Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(product.name, style: AppText.h3.copyWith(fontSize: 17)),
-                if (product.hasPrice) ...[
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Text(_price, style: AppText.bodyStrong.copyWith(color: AppColors.primary)),
-                      const SizedBox(width: 6),
-                      Text('MRP', style: AppText.meta.copyWith(fontSize: 10)),
-                    ],
-                  ),
-                ],
+                const SizedBox(height: 6),
+                Text(
+                  product.priceLabel,
+                  style: AppText.bodyStrong.copyWith(color: AppColors.primary),
+                ),
                 if (product.description != null && product.description!.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Text(product.description!, style: AppText.body.copyWith(fontSize: 15)),
@@ -449,6 +519,17 @@ class _Spec extends StatelessWidget {
 /// form asking the *reader* for theirs — so the common case is a written
 /// enquiry the office passes on, and "Call" only appears when there is genuinely
 /// a number to call.
+/// The two ways to reach a craftsman, or neither.
+///
+/// Both buttons are gated on the server's own answer rather than on what this
+/// screen can see. "Send an enquiry" used to be drawn unconditionally, and for
+/// a craftsman with no email and no office fallback that was a form with
+/// nowhere to go: the reader filled it in and nothing happened. Whether an
+/// enquiry lands depends on fields the app is not sent, so it cannot be worked
+/// out here.
+///
+/// `canCall` falls back to the number the screen can see, for an app running
+/// against a server that predates the flags.
 class _EnquiryBar extends StatelessWidget {
   const _EnquiryBar({required this.business});
 
@@ -456,6 +537,12 @@ class _EnquiryBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final canCall = business.canCall || business.contact.hasPhone;
+
+    // Nothing to offer: no bar at all rather than an empty strip above the
+    // navigation.
+    if (!canCall && !business.canEnquire) return const SizedBox.shrink();
+
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.background,
@@ -467,7 +554,7 @@ class _EnquiryBar extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
           child: Row(
             children: [
-              if (business.contact.hasPhone)
+              if (canCall)
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => launchUrl(Uri.parse('tel:${business.contact.phone}')),
@@ -475,15 +562,16 @@ class _EnquiryBar extends StatelessWidget {
                     label: const Text('Call'),
                   ),
                 ),
-              if (business.contact.hasPhone) const SizedBox(width: 10),
-              Expanded(
-                flex: 2,
-                child: FilledButton.icon(
-                  onPressed: () => EnquirySheet.open(context, business: business),
-                  icon: const Icon(Icons.mail_outline_rounded, size: 18),
-                  label: const Text('Send an enquiry'),
+              if (canCall && business.canEnquire) const SizedBox(width: 10),
+              if (business.canEnquire)
+                Expanded(
+                  flex: 2,
+                  child: FilledButton.icon(
+                    onPressed: () => EnquirySheet.forCraftsman(context, business),
+                    icon: const Icon(Icons.mail_outline_rounded, size: 18),
+                    label: const Text('Send an enquiry'),
+                  ),
                 ),
-              ),
             ],
           ),
         ),

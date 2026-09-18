@@ -97,6 +97,35 @@ String? appPathFor(String? webPath) {
 
       return Routes.craftsman(segments[1]);
 
+    // ---------------------------------------------------------------- Shop
+    case 'shop':
+      if (segments.length == 1) return Routes.shop;
+
+      // /shop/category/{slug} is a page of its own on the web; here it is the
+      // Shop tab with that craft already ticked.
+      if (segments[1] == 'category' && segments.length > 2) {
+        return Routes.shopCategory(segments[2]);
+      }
+
+      // /shop/maker/{slug} 301s to /brands/{slug} on the website. Resolved
+      // here so the app never has to follow a redirect to find that out.
+      if (segments[1] == 'maker' && segments.length > 2) {
+        return Routes.brand(segments[2]);
+      }
+
+      if (segments[1] == 'makers') return Routes.makers;
+
+      return Routes.product(segments[1]);
+
+    case 'brands':
+      return segments.length == 1 ? Routes.brands : Routes.brand(segments[1]);
+
+    case 'membership':
+      return Routes.membership;
+
+    case 'sell-with-us':
+      return Routes.sellWithUs;
+
     // ---------------------------------------------------------- Campaigns
     case 'campaigns':
       return segments.length == 1 ? Routes.give : Routes.campaign(segments[1]);
@@ -108,32 +137,33 @@ String? appPathFor(String? webPath) {
 
     // -------------------------------------------------------------- Media
     case 'photo-gallery':
-      return segments.length == 1
-          ? '${Routes.more}/galleries'
-          : '${Routes.more}/galleries/${segments[1]}';
+      return segments.length == 1 ? Routes.galleries : Routes.gallery(segments[1]);
 
     case 'press-release':
-      return '${Routes.more}/press';
+      return Routes.press;
 
     // ------------------------------------------------------ The foundation
     case 'about':
-      return '${Routes.more}/about';
+      return Routes.about;
 
+    // Hidden on the website, which now redirects it to the front page, and
+    // hidden here. Home rather than null: null would open a browser at a URL
+    // that redirects, which is a worse way to show somebody the home page.
     case 'transparency':
-      return '${Routes.more}/transparency';
+      return Routes.home;
 
     case 'contact':
-      return '${Routes.more}/contact';
+      return Routes.contact;
 
     // --------------------------------------------------------- Take part
     case 'volunteer-opportunities':
-      return '${Routes.more}/volunteer';
+      return Routes.volunteer;
 
     case 'intern-opportunities':
-      return '${Routes.more}/intern';
+      return Routes.intern;
 
     case 'interview-today':
-      return '${Routes.more}/register-interview';
+      return Routes.registerInterview;
 
     // ------------------------------------------------------------- Other
     // Machine-readable, or the donor's signed receipt PDF — none of which is a
@@ -144,10 +174,20 @@ String? appPathFor(String? webPath) {
     case 'donations':
       return null;
 
+    // A craftsman's invitation link, which ends in a signed-in seller panel.
+    // The app has no login and must not grow one here, so this opens in a
+    // browser where their session can actually exist.
+    case 'seller':
+      return null;
+
+    // POST-only on the website. There is nothing to show at it.
+    case 'newsletter':
+      return null;
+
     default:
       // Everything left is the website's catch-all static page route, which is
       // the app's /more/pages/{slug}. A single unknown segment is the only
       // shape that can be one.
-      return segments.length == 1 ? '${Routes.more}/pages/${segments.first}' : null;
+      return segments.length == 1 ? Routes.pageFor(segments.first) : null;
   }
 }

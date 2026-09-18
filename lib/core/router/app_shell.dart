@@ -15,10 +15,17 @@ class AppShell extends StatelessWidget {
 
   final StatefulNavigationShell navigationShell;
 
+  /// Five, still.
+  ///
+  /// The Shop tab replaced Craftsmen rather than joining it: the makers, the
+  /// things they sell and the interviews with them are one errand, and they now
+  /// share a tab — with the interviews a segment inside it, and still linked
+  /// from Home and from More. A sixth tab was the alternative and it is cramped
+  /// on a small phone, which is the reader paying for our filing.
   static const _destinations = <_Destination>[
     _Destination(Icons.home_outlined, Icons.home_rounded, 'Home'),
     _Destination(Icons.article_outlined, Icons.article_rounded, 'Stories'),
-    _Destination(Icons.handshake_outlined, Icons.handshake_rounded, 'Craftsmen'),
+    _Destination(Icons.storefront_outlined, Icons.storefront_rounded, 'Shop'),
     _Destination(Icons.favorite_outline_rounded, Icons.favorite_rounded, 'Give'),
     _Destination(Icons.menu_rounded, Icons.menu_rounded, 'More'),
   ];

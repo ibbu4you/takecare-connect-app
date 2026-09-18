@@ -48,6 +48,21 @@ class Api {
   static const categories = '/categories';
   static const cities = '/cities';
 
+  // The shop. `products/categories` is the crafts — a separate vocabulary from
+  // `categories` above, which is the taxonomy behind the interviews.
+  static const products = '/products';
+  static String product(String slug) => '/products/$slug';
+  static String productEnquiries(String slug) => '/products/$slug/enquiries';
+  static const productCategories = '/products/categories';
+  static const shopFilters = '/products/filters';
+
+  static const brands = '/brands';
+  static String brand(String slug) => '/brands/$slug';
+
+  static const membership = '/membership';
+  static const vendorApplications = '/vendor-applications';
+  static const newsletter = '/newsletter';
+
   static const campaigns = '/campaigns';
   static String campaign(String slug) => '/campaigns/$slug';
 

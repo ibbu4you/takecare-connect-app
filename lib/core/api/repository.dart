@@ -6,6 +6,7 @@ import '../models/donation.dart';
 import '../models/home.dart';
 import '../models/media.dart';
 import '../models/post.dart';
+import '../models/shop.dart';
 import '../models/site.dart';
 import 'api_client.dart';
 import 'api_endpoints.dart';
@@ -132,8 +133,47 @@ class Repository {
     required String intent,
     String? email,
     String? message,
+  }) =>
+      _enquiry(
+        Api.businessEnquiries(slug),
+        name: name,
+        phone: phone,
+        intent: intent,
+        email: email,
+        message: message,
+      );
+
+  /// The same question, asked about one particular product.
+  ///
+  /// Shares [_enquiry] with the interview above rather than repeating it: the
+  /// two answer in the same envelope and the reveal-versus-send rule is the
+  /// same, so a second copy would only be somewhere for them to diverge.
+  Future<({String? phone, String message})> sendProductEnquiry({
+    required String slug,
+    required String name,
+    required String phone,
+    required String intent,
+    String? email,
+    String? message,
+  }) =>
+      _enquiry(
+        Api.productEnquiries(slug),
+        name: name,
+        phone: phone,
+        intent: intent,
+        email: email,
+        message: message,
+      );
+
+  Future<({String? phone, String message})> _enquiry(
+    String path, {
+    required String name,
+    required String phone,
+    required String intent,
+    String? email,
+    String? message,
   }) async {
-    final json = await _api.post(Api.businessEnquiries(slug), body: {
+    final json = await _api.post(path, body: {
       'name': name,
       'phone': phone,
       'intent': intent,
@@ -148,6 +188,78 @@ class Repository {
       phone: data['phone'] as String?,
       message: (data['message'] ?? '') as String,
     );
+  }
+
+  // ------------------------------------------------------------------- Shop
+
+  /// Products, filtered the way the website filters them.
+  ///
+  /// The plural parameters are sent as repeated keys (`categories[]=a&
+  /// categories[]=b`), which is what the server's validator expects — see the
+  /// `listFormat` note in ApiClient. Two ticked crafts widen the results rather
+  /// than narrowing them to nothing, because a product has one category.
+  Future<CursorPage<ShopProduct>> products({
+    List<String> categories = const [],
+    List<String> makers = const [],
+    String? city,
+    String? query,
+    double? priceMin,
+    double? priceMax,
+    String? cursor,
+  }) async {
+    final json = await _api.get(Api.products, query: {
+      if (categories.isNotEmpty) 'categories[]': categories,
+      if (makers.isNotEmpty) 'makers[]': makers,
+      if (city != null) 'city': city,
+      if (query != null && query.isNotEmpty) 'q': query,
+      if (priceMin != null) 'price_min': priceMin,
+      if (priceMax != null) 'price_max': priceMax,
+      if (cursor != null) 'cursor': cursor,
+    });
+
+    return CursorPage.fromJson(json, ShopProduct.fromJson);
+  }
+
+  Future<ShopProductDetail> product(String slug) async {
+    final json = await _api.get(Api.product(slug));
+
+    return ShopProductDetail.fromJson(_object(json));
+  }
+
+  Future<ShopFilters> shopFilters() async {
+    final json = await _api.get(Api.shopFilters);
+
+    return ShopFilters.fromJson(_object(json));
+  }
+
+  Future<List<TaxonomyOption>> productCategories() async =>
+      _list(await _api.get(Api.productCategories), TaxonomyOption.fromJson);
+
+  /// A plain list, not a page.
+  ///
+  /// The server orders these by how much each maker has on the shelf, which a
+  /// cursor cannot encode — see its BrandController. The set is bounded by
+  /// paying members with something listed.
+  Future<List<Brand>> brands({String? craft, String? city, String? query}) async {
+    final json = await _api.get(Api.brands, query: {
+      if (craft != null) 'craft': craft,
+      if (city != null) 'city': city,
+      if (query != null && query.isNotEmpty) 'q': query,
+    });
+
+    return _list(json, Brand.fromJson);
+  }
+
+  Future<Brand> brand(String slug) async {
+    final json = await _api.get(Api.brand(slug));
+
+    return Brand.fromJson(_object(json));
+  }
+
+  Future<MembershipContent> membership() async {
+    final json = await _api.get(Api.membership);
+
+    return MembershipContent.fromJson(_object(json));
   }
 
   // -------------------------------------------------------------- Campaigns
@@ -240,6 +352,19 @@ class Repository {
 
   Future<String> registerForInterview(Map<String, dynamic> body) =>
       _message(Api.interviewRegistrations, {...body, ..._decoyUrl});
+
+  /// `_decoyUrl`, not `_honeypot` — a craftsman applying to sell is asked for
+  /// their real `website`, so the decoy on this form is `website_url`. See the
+  /// note below; getting it the wrong way round fails silently.
+  Future<String> applyToSell(Map<String, dynamic> body) =>
+      _message(Api.vendorApplications, {...body, ..._decoyUrl});
+
+  Future<String> subscribeToNewsletter({required String email, String? name}) =>
+      _message(Api.newsletter, {
+        'email': email,
+        if (name != null && name.isNotEmpty) 'name': name,
+        ..._honeypot,
+      });
 
   Future<String> _message(String path, Map<String, dynamic> body) async {
     final json = await _api.post(path, body: body);

@@ -30,6 +30,16 @@ class ApiClient {
       // somebody has just spent ten minutes filling in.
       sendTimeout: const Duration(seconds: 20),
       headers: {'Accept': 'application/json'},
+      /*
+       | Repeated keys for a list, stated rather than assumed.
+       |
+       | The shop's filters send `categories[]=a&categories[]=b`, which is the
+       | only shape Laravel's `categories.*` rules read as an array. It happens
+       | to be dio's default, and that is exactly why it is written down here:
+       | a default is somebody else's decision, and a change to it would make
+       | two ticked crafts silently filter as none.
+       */
+      listFormat: ListFormat.multi,
     ));
 
     _dio.interceptors.add(InterceptorsWrapper(

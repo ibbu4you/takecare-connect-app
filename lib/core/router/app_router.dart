@@ -4,12 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/about/about_screen.dart';
 import '../../features/about/page_screen.dart';
-import '../../features/about/transparency_screen.dart';
 import '../../features/craftsmen/craftsman_screen.dart';
 import '../../features/craftsmen/craftsmen_screen.dart';
 import '../../features/forms/contact_screen.dart';
 import '../../features/forms/opportunity_screen.dart';
 import '../../features/forms/register_interview_screen.dart';
+import '../../features/forms/sell_with_us_screen.dart';
 import '../../features/give/campaign_screen.dart';
 import '../../features/give/campaigns_screen.dart';
 import '../../features/give/donate_result_screen.dart';
@@ -18,8 +18,13 @@ import '../../features/home/home_screen.dart';
 import '../../features/media/galleries_screen.dart';
 import '../../features/media/gallery_screen.dart';
 import '../../features/media/press_screen.dart';
+import '../../features/more/membership_screen.dart';
 import '../../features/more/more_screen.dart';
 import '../../features/search/search_screen.dart';
+import '../../features/shop/brand_screen.dart';
+import '../../features/shop/brands_screen.dart';
+import '../../features/shop/product_screen.dart';
+import '../../features/shop/shop_screen.dart';
 import '../../features/stories/author_screen.dart';
 import '../../features/stories/stories_screen.dart';
 import '../../features/stories/story_screen.dart';
@@ -96,8 +101,35 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
             ),
           ]),
 
-          // ------------------------------------------------------- Craftsmen
+          /*
+           | ------------------------------------------------------------ Shop
+           |
+           | Three route trees in one branch: what our makers sell, the makers
+           | themselves, and the interviews with them. They share a navigator,
+           | so moving from a product to its maker to the article about them
+           | and back is one history rather than three.
+           |
+           | `/craftsmen` keeps its path. Every share link the app has produced
+           | points at it, as does every `appPathFor('/businesses/...')` result
+           | — only which tab owns it has changed.
+           */
           StatefulShellBranch(routes: [
+            GoRoute(
+              path: Routes.shop,
+              builder: (context, state) => ShopScreen(
+                initialCategory: state.uri.queryParameters['category'],
+                // The Makers segment is a query, never a path segment, so a
+                // product slug can never shadow it.
+                initialSegment: state.uri.queryParameters['segment'],
+              ),
+              routes: [
+                GoRoute(
+                  path: ':slug',
+                  builder: (context, state) =>
+                      ProductScreen(slug: state.pathParameters['slug']!),
+                ),
+              ],
+            ),
             GoRoute(
               path: Routes.craftsmen,
               builder: (context, state) => CraftsmenScreen(
@@ -109,6 +141,16 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
                   path: ':slug',
                   builder: (context, state) =>
                       CraftsmanScreen(slug: state.pathParameters['slug']!),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: Routes.brands,
+              builder: (context, state) => const BrandsScreen(),
+              routes: [
+                GoRoute(
+                  path: ':slug',
+                  builder: (context, state) => BrandScreen(slug: state.pathParameters['slug']!),
                 ),
               ],
             ),
@@ -161,11 +203,29 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
                 ),
                 GoRoute(path: 'press', builder: (context, state) => const PressScreen()),
                 GoRoute(path: 'about', builder: (context, state) => const AboutScreen()),
+                /*
+                 | Retired, along with the website's own page.
+                 |
+                 | The route is kept and redirected rather than deleted: an
+                 | installed 1.0.1 has this path in its More menu and in any
+                 | link a reader saved, and a deleted route would land them on
+                 | "that page has moved". TransparencyScreen itself is left in
+                 | the tree, unreferenced — deleting this redirect and putting
+                 | the builder back is the whole of bringing it back.
+                 */
                 GoRoute(
                   path: 'transparency',
-                  builder: (context, state) => const TransparencyScreen(),
+                  redirect: (context, state) => Routes.home,
                 ),
                 GoRoute(path: 'contact', builder: (context, state) => const ContactScreen()),
+                GoRoute(
+                  path: 'membership',
+                  builder: (context, state) => const MembershipScreen(),
+                ),
+                GoRoute(
+                  path: 'sell-with-us',
+                  builder: (context, state) => const SellWithUsScreen(),
+                ),
                 GoRoute(
                   path: 'volunteer',
                   builder: (context, state) => const OpportunityScreen(intern: false),

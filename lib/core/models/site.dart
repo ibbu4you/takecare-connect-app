@@ -1,7 +1,9 @@
+library;
+
 import 'campaign.dart';
 
-/// Site-level content: settings, static pages, about, transparency, and the
-/// option lists the forms render.
+/// Site-level content: settings, static pages, about, membership, transparency,
+/// and the option lists the forms render.
 
 class PageContent {
   const PageContent({required this.slug, required this.title, this.body, this.updatedAtLabel});
@@ -25,11 +27,15 @@ class SiteSettings {
     this.tagline = '',
     this.footerDescription = '',
     this.credentials = const [],
+    this.logo,
     this.email = '',
     this.phone = '',
     this.address = '',
     this.openingDays = '',
     this.mapEmbedUrl,
+    this.internationalDonationsEnabled = false,
+    this.playUrl,
+    this.appStoreUrl,
     this.social = const {},
   });
 
@@ -40,16 +46,38 @@ class SiteSettings {
   /// "Section 8 Company", "12A", "80G" — what a donor checks before giving.
   final List<String> credentials;
 
+  /// The mark the office uploaded. The app bar uses its own drawn logo, so this
+  /// is for the places that should show whatever branding they have set.
+  final String? logo;
+
   final String email;
   final String phone;
   final String address;
   final String openingDays;
   final String? mapEmbedUrl;
+
+  /// Whether to offer a currency other than rupees.
+  ///
+  /// Two things have to be true and the server ANDs them: FCRA registration,
+  /// which is what makes a foreign contribution lawful for an Indian NGO, and
+  /// Stripe being switched on, which is what makes it possible. Defaults to
+  /// false — offering a payment path that cannot complete is worse than not
+  /// offering it.
+  final bool internationalDonationsEnabled;
+
+  /// The store listing, for a "Rate this app" row. Null until the office fills
+  /// it in, and then the row simply is not drawn — a link to a store with
+  /// nothing behind it is a dead end dressed up as a feature.
+  final String? playUrl;
+  final String? appStoreUrl;
+
   final Map<String, String> social;
 
   factory SiteSettings.fromJson(Map<String, dynamic> json) {
     final site = (json['site'] as Map<String, dynamic>?) ?? const {};
     final contact = (json['contact'] as Map<String, dynamic>?) ?? const {};
+    final donations = (json['donations'] as Map<String, dynamic>?) ?? const {};
+    final app = (json['app'] as Map<String, dynamic>?) ?? const {};
 
     // `social` is keyed by network — but when the office has set none, PHP's
     // empty array serialises as `[]`, not `{}`, and a straight cast to a map
@@ -64,11 +92,15 @@ class SiteSettings {
       tagline: (site['tagline'] ?? '') as String,
       footerDescription: (site['footer_description'] ?? '') as String,
       credentials: ((site['credentials'] as List?) ?? const []).map((e) => e.toString()).toList(),
+      logo: site['logo'] as String?,
       email: (contact['email'] ?? '') as String,
       phone: (contact['phone'] ?? '') as String,
       address: (contact['address'] ?? '') as String,
       openingDays: (contact['opening_days'] ?? '') as String,
       mapEmbedUrl: contact['map_embed_url'] as String?,
+      internationalDonationsEnabled: (donations['international_enabled'] ?? false) as bool,
+      playUrl: app['play'] as String?,
+      appStoreUrl: app['appstore'] as String?,
       social: {
         for (final entry in social.entries) entry.key.toString(): entry.value.toString(),
       },
@@ -212,6 +244,82 @@ class AboutContent {
       extraBody: json['extra_body'] as String?,
     );
   }
+}
+
+/// One membership plan, priced from the table rather than from page copy.
+class MembershipPlan {
+  const MembershipPlan({
+    required this.name,
+    required this.amount,
+    this.currency = 'INR',
+    this.months,
+    this.description,
+    this.isFree = false,
+  });
+
+  final String name;
+  final double amount;
+  final String currency;
+  final int? months;
+  final String? description;
+  final bool isFree;
+
+  /// "Free", or the fee and how long it lasts.
+  String get priceLabel {
+    if (isFree || amount <= 0) return 'Free';
+
+    final rupees = '₹${amount.toStringAsFixed(0)}';
+
+    if (months == null || months == 0) return rupees;
+    if (months == 12) return '$rupees a year';
+    if (months == 1) return '$rupees a month';
+
+    return '$rupees for $months months';
+  }
+
+  factory MembershipPlan.fromJson(Map<String, dynamic> json) => MembershipPlan(
+        name: (json['name'] ?? '') as String,
+        amount: ((json['amount'] ?? 0) as num).toDouble(),
+        currency: (json['currency'] ?? 'INR') as String,
+        months: json['months'] as int?,
+        description: json['description'] as String?,
+        isFree: (json['isFree'] ?? false) as bool,
+      );
+}
+
+/// What listing in the shop costs a craftsman.
+///
+/// There is no way to pay from here, deliberately: membership is paid in the
+/// seller panel, behind a login this app does not have. This screen explains
+/// and then points at the application form.
+class MembershipContent {
+  const MembershipContent({
+    required this.title,
+    this.plans = const [],
+    this.graceDays = 0,
+    this.contactEmail,
+    this.body,
+  });
+
+  final String title;
+  final List<MembershipPlan> plans;
+
+  /// How long a lapsed membership keeps a shop listed before it comes down.
+  final int graceDays;
+
+  final String? contactEmail;
+  final String? body;
+
+  factory MembershipContent.fromJson(Map<String, dynamic> json) => MembershipContent(
+        title: (json['title'] ?? 'Membership for craftsmen') as String,
+        plans: ((json['plans'] as List?) ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map(MembershipPlan.fromJson)
+            .toList(),
+        graceDays: (json['grace_days'] ?? 0) as int,
+        contactEmail: json['contact_email'] as String?,
+        body: json['body'] as String?,
+      );
 }
 
 class TransparencyLedgerRow {

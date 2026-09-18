@@ -1,16 +1,25 @@
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/api/api_exception.dart';
-import '../../core/api/repository.dart';
-import '../../core/models/business.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
-import '../../core/utils/validators.dart';
-import '../../core/widgets/app_snack.dart';
-import '../../core/widgets/form_fields.dart';
+import '../api/api_exception.dart';
+import '../api/repository.dart';
+import '../models/business.dart';
+import '../models/shop.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
+import '../utils/validators.dart';
+import 'app_snack.dart';
+import 'form_fields.dart';
+
+/// Which endpoint a sheet posts to.
+///
+/// The two answer in the same envelope and follow the same reveal-versus-send
+/// rule, so this is the whole difference between them.
+enum EnquiryAbout { craftsman, product }
 
 /// The lead-capture form.
 ///
@@ -24,16 +33,67 @@ import '../../core/widgets/form_fields.dart';
 /// and message become required, because there is nowhere to send a reply
 /// without them.
 ///
-/// Which one is offered depends on whether the craftsman has a number stored at
-/// all. Most imported ones do not — the old site's "View Number" button was
-/// itself a lead form, so the maker's number was never recorded — and offering
-/// a reveal that cannot reveal anything would be a lie.
+/// Which one is offered depends on whether there is genuinely a number behind
+/// it. Most imported craftsmen have none — the old site's "View Number" button
+/// was itself a lead form, so the maker's number was never recorded — and
+/// offering a reveal that cannot reveal anything would be a lie.
+///
+/// Moved here from the craftsmen feature when the shop gained the same form.
+/// Generalised rather than copied: the 422-to-field mapping, the reveal panel
+/// and the two intents are the fiddly parts, and a second copy of them is a
+/// second place for the shop and the interviews to start disagreeing about how
+/// a maker is contacted.
 class EnquirySheet extends ConsumerStatefulWidget {
-  const EnquirySheet({super.key, required this.business});
+  const EnquirySheet({
+    super.key,
+    required this.slug,
+    required this.about,
+    required this.ownerLabel,
+    required this.canCall,
+    this.subject,
+  });
 
-  final BusinessDetail business;
+  /// The craftsman's slug, or the product's.
+  final String slug;
 
-  static Future<void> open(BuildContext context, {required BusinessDetail business}) {
+  final EnquiryAbout about;
+
+  /// Who the reader is writing to, in their own name where we have it.
+  final String ownerLabel;
+
+  /// Whether to offer the reveal at all.
+  final bool canCall;
+
+  /// What the question is about, when it is one particular thing — shown so a
+  /// reader can see the sheet is about the piece they were looking at.
+  final String? subject;
+
+  static Future<void> forCraftsman(BuildContext context, BusinessDetail business) {
+    return _open(
+      context,
+      EnquirySheet(
+        slug: business.slug,
+        about: EnquiryAbout.craftsman,
+        ownerLabel: business.ownerName ?? business.name,
+        canCall: business.canCall || business.contact.hasPhone,
+      ),
+    );
+  }
+
+  static Future<void> forProduct(BuildContext context, ShopProductDetail product) {
+    return _open(
+      context,
+      EnquirySheet(
+        slug: product.slug,
+        about: EnquiryAbout.product,
+        ownerLabel: product.maker?.ownerName ?? product.maker?.name ?? 'the maker',
+        canCall: product.canCall,
+        subject: product.name,
+      ),
+    );
+  }
+
+  static Future<void> _open(BuildContext context, EnquirySheet sheet) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -43,7 +103,7 @@ class EnquirySheet extends ConsumerStatefulWidget {
         // Lifts the sheet clear of the keyboard, which otherwise covers the
         // message field and the submit button together.
         padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-        child: EnquirySheet(business: business),
+        child: sheet,
       ),
     );
   }
@@ -59,7 +119,7 @@ class _EnquirySheetState extends ConsumerState<EnquirySheet> {
   final _email = TextEditingController();
   final _message = TextEditingController();
 
-  late String _intent = widget.business.contact.hasPhone ? 'call' : 'enquiry';
+  late String _intent = widget.canCall ? 'call' : 'enquiry';
   bool _busy = false;
   Map<String, String> _serverErrors = {};
 
@@ -87,14 +147,28 @@ class _EnquirySheetState extends ConsumerState<EnquirySheet> {
     });
 
     try {
-      final result = await ref.read(repositoryProvider).sendEnquiry(
-            slug: widget.business.slug,
+      final repository = ref.read(repositoryProvider);
+      final email = _email.text.trim();
+      final message = _message.text.trim();
+
+      final result = switch (widget.about) {
+        EnquiryAbout.craftsman => await repository.sendEnquiry(
+            slug: widget.slug,
             name: _name.text.trim(),
             phone: _phone.text.trim(),
             intent: _intent,
-            email: _email.text.trim().isEmpty ? null : _email.text.trim(),
-            message: _message.text.trim().isEmpty ? null : _message.text.trim(),
-          );
+            email: email.isEmpty ? null : email,
+            message: message.isEmpty ? null : message,
+          ),
+        EnquiryAbout.product => await repository.sendProductEnquiry(
+            slug: widget.slug,
+            name: _name.text.trim(),
+            phone: _phone.text.trim(),
+            intent: _intent,
+            email: email.isEmpty ? null : email,
+            message: message.isEmpty ? null : message,
+          ),
+      };
 
       if (!mounted) return;
 
@@ -130,7 +204,9 @@ class _EnquirySheetState extends ConsumerState<EnquirySheet> {
 
   @override
   Widget build(BuildContext context) {
-    if (_revealed != null) return _Revealed(phone: _revealed!, business: widget.business);
+    if (_revealed != null) {
+      return _Revealed(phone: _revealed!, ownerLabel: widget.ownerLabel);
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
@@ -147,14 +223,16 @@ class _EnquirySheetState extends ConsumerState<EnquirySheet> {
             const SizedBox(height: 4),
             Text(
               _isEnquiry
-                  ? 'We will pass this to ${widget.business.ownerName ?? widget.business.name} and they will reply to you directly.'
+                  ? widget.subject == null
+                      ? 'We will pass this to ${widget.ownerLabel} and they will reply to you directly.'
+                      : 'We will pass this to ${widget.ownerLabel} about ${widget.subject}, and they will reply to you directly.'
                   : 'Tell us who is calling, and the number is yours.',
               style: AppText.excerpt,
             ),
             const SizedBox(height: 18),
 
             // Only offered when there is genuinely a number behind it.
-            if (widget.business.contact.hasPhone) ...[
+            if (widget.canCall) ...[
               SegmentedButton<String>(
                 segments: const [
                   ButtonSegment(
@@ -244,10 +322,10 @@ class _EnquirySheetState extends ConsumerState<EnquirySheet> {
 
 /// What replaces the form once a reveal succeeds.
 class _Revealed extends StatelessWidget {
-  const _Revealed({required this.phone, required this.business});
+  const _Revealed({required this.phone, required this.ownerLabel});
 
   final String phone;
-  final BusinessDetail business;
+  final String ownerLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -258,7 +336,7 @@ class _Revealed extends StatelessWidget {
         children: [
           const Icon(Icons.call_rounded, size: 34, color: AppColors.success),
           const SizedBox(height: 12),
-          Text(business.ownerName ?? business.name, style: AppText.h3),
+          Text(ownerLabel, style: AppText.h3),
           const SizedBox(height: 8),
           SelectableText(phone, style: AppText.figure.copyWith(color: AppColors.primary)),
           const SizedBox(height: 10),

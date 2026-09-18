@@ -8,7 +8,9 @@ import '../models/donation.dart' show DonationOptions;
 import '../models/home.dart';
 import '../models/media.dart';
 import '../models/post.dart';
+import '../models/shop.dart';
 import '../models/site.dart';
+import 'products_query.dart';
 
 /// Every provider the screens read.
 ///
@@ -106,6 +108,37 @@ final donationOptionsProvider = FutureProvider.autoDispose<DonationOptions>(
   (ref) => ref.read(repositoryProvider).donationOptions(),
 );
 
+/// Not auto-disposed: the Shop tab's pill row, its filter sheet and the brands
+/// grid all read this, and the crafts on offer change when a maker joins, not
+/// when a reader taps.
+final shopFiltersProvider = FutureProvider<ShopFilters>(
+  (ref) => ref.read(repositoryProvider).shopFilters(),
+);
+
+final productProvider = FutureProvider.autoDispose.family<ShopProductDetail, String>(
+  (ref, slug) => ref.read(repositoryProvider).product(slug),
+);
+
+/// The brand directory. A plain list rather than a paged one, because the
+/// server orders it by an aggregate — see Repository.brands.
+typedef BrandsQuery = ({String? craft, String? city, String? q});
+
+final brandsProvider = FutureProvider.autoDispose.family<List<Brand>, BrandsQuery>(
+  (ref, query) => ref.read(repositoryProvider).brands(
+        craft: query.craft,
+        city: query.city,
+        query: query.q,
+      ),
+);
+
+final brandProvider = FutureProvider.autoDispose.family<Brand, String>(
+  (ref, slug) => ref.read(repositoryProvider).brand(slug),
+);
+
+final membershipProvider = FutureProvider.autoDispose<MembershipContent>(
+  (ref) => ref.read(repositoryProvider).membership(),
+);
+
 // Donation status has no provider on purpose. It is polled on a widening
 // schedule that gives up after about two minutes, and that timing is the
 // screen's own business — a FutureProvider would have to be invalidated from
@@ -186,6 +219,32 @@ class GalleriesNotifier extends PagedNotifier<GallerySummary, String> {
 final galleriesProvider =
     NotifierProvider.autoDispose.family<GalleriesNotifier, PagedState<GallerySummary>, String>(
   GalleriesNotifier.new,
+);
+
+class ProductsNotifier extends PagedNotifier<ShopProduct, ProductsQuery> {
+  @override
+  Future<CursorPage<ShopProduct>> fetch(ProductsQuery query, String? cursor) {
+    return ref.read(repositoryProvider).products(
+          categories: query.categories,
+          makers: query.makers,
+          city: query.city,
+          query: query.q,
+          priceMin: query.priceMin,
+          priceMax: query.priceMax,
+          cursor: cursor,
+        );
+  }
+
+  @override
+  String keyOf(ShopProduct item) => item.slug;
+}
+
+/// Keyed on [ProductsQuery], which has hand-written equality for the reason
+/// its own docblock gives: a record holding a list would mint a new notifier
+/// on every rebuild.
+final productsProvider =
+    NotifierProvider.autoDispose.family<ProductsNotifier, PagedState<ShopProduct>, ProductsQuery>(
+  ProductsNotifier.new,
 );
 
 /// The key those two unfiltered lists are registered under.
