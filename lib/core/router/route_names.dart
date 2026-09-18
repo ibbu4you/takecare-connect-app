@@ -31,15 +31,16 @@ class Routes {
    | app has ever produced, every deep link, and every `appPathFor('/businesses
    | /...')` result points at it. Only which tab owns them has changed, which is
    | what "craftsmen moved inside the Shop tab" should mean — and it means the
-   | Makers segment, a maker's page and a product share one back stack.
+   | Brands segment, a maker's page and a product share one back stack.
    |
-   | The Makers segment is `/shop?segment=makers`, never `/shop/makers`, so a
+   | The Brands segment is `/shop?segment=brands`, never `/shop/brands`, so a
    | product slug can never shadow it. The website needs a reserved-slug list
    | for exactly this collision; there is no reason for the app to inherit it.
+   | `?segment=makers` is still read, because older links say that.
    */
   static const productDetail = '/shop/:slug';
   static String product(String slug) => '/shop/$slug';
-  static const makers = '/shop?segment=makers';
+  static const brandsSegment = '/shop?segment=brands';
   static String shopCategory(String slug) => '/shop?category=$slug';
 
   static const craftsmen = '/craftsmen';

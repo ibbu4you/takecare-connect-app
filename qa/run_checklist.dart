@@ -287,23 +287,34 @@ void main() {
         expect(stat.label, isNotEmpty, reason: 'a figure has no label');
       }
       expect(
-        await scrollTo(tester, find.text('WHAT WE HAVE DONE')),
+        await scrollTo(tester, find.text('Join a growing community')),
         isTrue,
-        reason: 'the numbers band is nowhere on the page',
+        reason: 'the impact band is nowhere on the page',
       );
-      noRenderErrors(tester, 'the numbers band');
+
+      // Every figure it sends is drawn, each on a panel of its own.
+      for (final stat in live.home.stats) {
+        expect(
+          find.text(stat.value).evaluate().isNotEmpty,
+          isTrue,
+          reason: '"${stat.label}" is missing its figure',
+        );
+      }
+
+      noRenderErrors(tester, 'the impact band');
     });
 
     await runCase(tester, 'A2.7', 'The Donate button sits in that band', () async {
       await open(tester, Routes.home);
 
+      // "Be part of it", as the website words it, leading to volunteering.
       expect(
-        await scrollTo(tester, find.text('Stand behind a maker')),
+        await scrollTo(tester, find.text('Be part of it')),
         isTrue,
-        reason: 'the donate button is nowhere in the band',
+        reason: 'the invitation is nowhere in the band',
       );
       expect(
-        find.text('Every rupee is receipted and reported. 80G tax benefit applies.'),
+        find.text('Changemakers, creators and dreamers — and the people who back them.'),
         findsWidgets,
       );
     });
@@ -319,13 +330,14 @@ void main() {
     await runCase(tester, 'A2.11', 'The two invitation panels are there', () async {
       await open(tester, Routes.home);
 
+      // The website's own words, so the two surfaces read the same.
       expect(
-        await scrollTo(tester, find.text('Buy something made by hand')),
+        await scrollTo(tester, find.text('India’s craftsmen. Told properly.')),
         isTrue,
         reason: 'the first invitation panel is missing',
       );
       expect(
-        await scrollTo(tester, find.text('Tell us what you make')),
+        await scrollTo(tester, find.text('Do you run a business worth knowing about?')),
         isTrue,
         reason: 'the second invitation panel is missing',
       );
@@ -518,7 +530,7 @@ void main() {
       await open(tester, Routes.shop);
 
       expect(find.text('Products'), findsWidgets);
-      expect(find.text('Makers'), findsWidgets);
+      expect(find.text('Brands'), findsWidgets);
       noRenderErrors(tester, 'the shop');
     });
 
@@ -530,7 +542,7 @@ void main() {
 
       final routes = <String>[
         Routes.shop,
-        Routes.makers,
+        Routes.brandsSegment,
         Routes.brands,
         if (live.products.items.isNotEmpty) Routes.product(live.products.items.first.slug),
       ];
@@ -739,11 +751,11 @@ void main() {
   // =====================================================================  A6
 
   testWidgets('A6 the makers', (tester) async {
-    await runCase(tester, 'A6.1', 'The Makers half lists makers', () async {
-      await open(tester, Routes.makers);
+    await runCase(tester, 'A6.1', 'The Brands half lists makers', () async {
+      await open(tester, Routes.brandsSegment);
 
       expect(find.text('Read the interviews'), findsWidgets);
-      noRenderErrors(tester, 'the makers segment');
+      noRenderErrors(tester, 'the brands segment');
     });
 
     await runCase(tester, 'A6.2', 'The busiest maker is first', () async {
@@ -861,7 +873,7 @@ void main() {
 
       for (final label in [
         'Browse what they make',
-        'The makers',
+        'Brands',
         'Craftsmen interviews',
         'Membership for craftsmen',
         'Sell with us',
@@ -1093,7 +1105,7 @@ void main() {
       final routes = <String>[
         Routes.home,
         Routes.shop,
-        Routes.makers,
+        Routes.brandsSegment,
         Routes.brands,
         if (live.products.items.isNotEmpty) Routes.product(live.products.items.first.slug),
         if (live.brands.isNotEmpty) Routes.brand(live.brands.first.slug),

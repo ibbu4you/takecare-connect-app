@@ -426,7 +426,7 @@
           "id": "A12.4",
           "title": "Searching finds makers",
           "steps": [
-            "Tap the Makers heading."
+            "Tap the Brands heading."
           ],
           "expected": "Matching craftsmen appear."
         },
@@ -461,7 +461,7 @@
             "Tap Shop.",
             "Look at the two buttons under the heading."
           ],
-          "expected": "A pair of buttons, 'Products' and 'Makers', with 'Products' selected. Under them a search box, then cards in two columns.",
+          "expected": "A pair of buttons, 'Products' and 'Brands', with 'Products' selected. Under them a search box, then cards in two columns.",
           "blocker": true
         },
         {
@@ -673,7 +673,7 @@
       "cases": [
         {
           "id": "A6.1",
-          "title": "The Makers half of the shop",
+          "title": "The Brands half of the shop",
           "steps": [
             "Tap Shop, then 'Makers'."
           ],

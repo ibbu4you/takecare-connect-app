@@ -491,7 +491,7 @@ const _screens = [
   _Screen('search', '${Routes.home}search', '17-search'),
   _Screen('home impact', Routes.home, '23-home-impact', scrollBy: 1500),
   _Screen('home promos', Routes.home, '24-home-promos', scrollBy: 2600),
-  _Screen('makers', Routes.makers, '25-makers'),
+  _Screen('brands segment', Routes.brandsSegment, '25-brands-segment'),
   _Screen('brands', Routes.brands, '26-brands'),
   _Screen('membership', Routes.membership, '27-membership'),
   _Screen('sell with us', Routes.sellWithUs, '28-sell-with-us'),

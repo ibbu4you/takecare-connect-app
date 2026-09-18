@@ -11,6 +11,7 @@ import '../../core/router/route_names.dart';
 import '../../core/state/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/widgets/card_carousel.dart';
 import '../../core/widgets/cards.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/state_views.dart';
@@ -235,22 +236,18 @@ class _CraftsmenRail extends StatelessWidget {
           actionLabel: 'All',
           onAction: () => context.go(Routes.craftsmen),
         ),
-        SizedBox(
-          height: 264,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: businesses.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, i) {
-              final business = businesses[i];
+        CardCarousel(
+          height: 300,
+          itemCount: businesses.length,
+          itemBuilder: (context, i) {
+            final business = businesses[i];
 
-              return BusinessTile(
-                business: business,
-                onTap: () => context.go(Routes.craftsman(business.slug)),
-              );
-            },
-          ),
+            return BusinessCard(
+              expand: true,
+              business: business,
+              onTap: () => context.go(Routes.craftsman(business.slug)),
+            );
+          },
         ),
       ],
     );
@@ -273,23 +270,18 @@ class _CampaignsRail extends StatelessWidget {
           actionLabel: 'All',
           onAction: () => context.go(Routes.give),
         ),
-        SizedBox(
+        CardCarousel(
           height: 340,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: campaigns.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, i) {
-              final campaign = campaigns[i];
+          itemCount: campaigns.length,
+          itemBuilder: (context, i) {
+            final campaign = campaigns[i];
 
-              return CampaignCard(
-                campaign: campaign,
-                width: 280,
-                onTap: () => context.go(Routes.campaign(campaign.slug)),
-              );
-            },
-          ),
+            return CampaignCard(
+              expand: true,
+              campaign: campaign,
+              onTap: () => context.go(Routes.campaign(campaign.slug)),
+            );
+          },
         ),
       ],
     );

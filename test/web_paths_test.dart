@@ -72,9 +72,10 @@ void main() {
     });
 
     /// A query, never a path segment — so a product whose slug happened to be
-    /// "makers" could not shadow it.
-    test('the makers list is a segment of the Shop tab', () {
-      expect(appPathFor('/shop/makers'), '/shop?segment=makers');
+    /// "brands" could not shadow it.
+    test('the brands list is a segment of the Shop tab', () {
+      expect(appPathFor('/shop/makers'), '/shop?segment=brands');
+      expect(appPathFor('/shop/brands'), '/shop?segment=brands');
     });
 
     test('brands resolve on their own paths too', () {

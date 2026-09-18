@@ -20,19 +20,20 @@ import 'brands_screen.dart';
 import 'shop_filter_sheet.dart';
 
 /// Which half of the tab is showing.
-enum ShopSegment { products, makers }
+enum ShopSegment { products, brands }
 
 /// The shop: what our makers sell, and who they are.
 ///
 /// Two segments in one tab, because they answer two halves of the same
-/// question. Products is the shelf; Makers is the directory of the people whose
+/// question. Products is the shelf; Brands is the directory of the people whose
 /// shelf it is — and the interviews with them are one tap further in, from the
 /// row at the top of that segment.
 ///
-/// The Makers segment is reached at `/shop?segment=makers`, never
-/// `/shop/makers`: a path segment there could be shadowed by a product whose
-/// slug happened to be "makers", which is a collision the website has to keep a
-/// reserved-slug list for.
+/// The Brands segment is reached at `/shop?segment=brands`, never
+/// `/shop/brands`: a path segment there could be shadowed by a product whose
+/// slug happened to be "brands", which is a collision the website has to keep a
+/// reserved-slug list for. `?segment=makers` is still honoured, because it is
+/// what every link the app has already produced says.
 ///
 /// There is no Buy button anywhere in this feature, no cart and no checkout.
 /// The foundation is not party to the sale — a buyer contacts the maker and the
@@ -59,8 +60,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   void initState() {
     super.initState();
 
-    _segment =
-        widget.initialSegment == 'makers' ? ShopSegment.makers : ShopSegment.products;
+    _segment = _segmentFrom(widget.initialSegment);
     _query = ProductsQuery(
       categories: widget.initialCategory == null ? const [] : [widget.initialCategory!],
     );
@@ -94,12 +94,14 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     }
 
     if (widget.initialSegment != oldWidget.initialSegment) {
-      setState(() {
-        _segment =
-            widget.initialSegment == 'makers' ? ShopSegment.makers : ShopSegment.products;
-      });
+      setState(() => _segment = _segmentFrom(widget.initialSegment));
     }
   }
+
+  /// `makers` as well as `brands`: the segment was called Makers first, and
+  /// every share link and deep link the app produced then still says so.
+  static ShopSegment _segmentFrom(String? value) =>
+      (value == 'brands' || value == 'makers') ? ShopSegment.brands : ShopSegment.products;
 
   @override
   void dispose() {
@@ -176,9 +178,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                     icon: Icon(Icons.inventory_2_outlined, size: 16),
                   ),
                   ButtonSegment(
-                    value: ShopSegment.makers,
-                    label: Text('Makers'),
-                    icon: Icon(Icons.handshake_outlined, size: 16),
+                    value: ShopSegment.brands,
+                    label: Text('Brands'),
+                    icon: Icon(Icons.storefront_outlined, size: 16),
                   ),
                 ],
                 selected: {_segment},
@@ -194,7 +196,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           ),
         ),
       ),
-      body: _segment == ShopSegment.makers
+      body: _segment == ShopSegment.brands
           ? const BrandsView()
           : _Products(
               query: _query,

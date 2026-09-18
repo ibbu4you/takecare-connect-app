@@ -56,10 +56,22 @@ class AppCard extends StatelessWidget {
 /// A story in a vertical list: image on top, category pill, title, excerpt,
 /// byline.
 class PostCard extends StatelessWidget {
-  const PostCard({super.key, required this.post, this.onTap});
+  const PostCard({super.key, required this.post, this.onTap, this.expand = false});
 
   final PostSummary post;
   final VoidCallback? onTap;
+
+  /// Fill a fixed height rather than sizing to the content.
+  ///
+  /// A card in a list sizes to whatever it holds. The same card in a carousel
+  /// is handed a height, and its text block has to take what is left after the
+  /// photograph — otherwise a title one line longer than the height allows
+  /// overflows, which Flutter paints as hazard stripes and carries on from.
+  ///
+  /// Keyed on its own flag rather than inferred: [CampaignCard] used to infer
+  /// it from `width`, and putting that card in a carousel that sets the height
+  /// but not the width turned the protection off exactly where it was needed.
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
@@ -69,23 +81,43 @@ class PostCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppImage(url: post.thumbnail, aspectRatio: 16 / 9, semanticLabel: post.title),
-          Padding(
+          _Fit(
+            expand: expand,
+            child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 if (post.category != null) ...[
                   Pill(post.category!.name, dense: true),
                   const SizedBox(height: 8),
                 ],
-                Text(post.title, style: AppText.h3, maxLines: 3, overflow: TextOverflow.ellipsis),
+              // Flexible where the height is fixed, so the title and the
+              // excerpt give way to each other rather than pushing the byline
+              // out of the bottom of the card. `Expanded` hands this column
+              // the space left after the photograph; it does not make what is
+              // inside it any smaller, which is what overflowed at the largest
+              // font.
+                _Give(
+                  expand,
+                  child: Text(
+                    post.title,
+                    style: AppText.h3,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 if (post.excerpt.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  Text(
-                    post.excerpt,
-                    style: AppText.excerpt,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  _Give(
+                    expand,
+                    child: Text(
+                      post.excerpt,
+                      style: AppText.excerpt,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
                 const SizedBox(height: 10),
@@ -98,6 +130,7 @@ class PostCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
         ],
       ),
@@ -176,10 +209,22 @@ class PostTile extends StatelessWidget {
 /// so they are now the same card: the photograph gets the full width, and the
 /// trade, the maker and the town drop to the meta line under the excerpt.
 class BusinessCard extends StatelessWidget {
-  const BusinessCard({super.key, required this.business, this.onTap});
+  const BusinessCard({super.key, required this.business, this.onTap, this.expand = false});
 
   final BusinessSummary business;
   final VoidCallback? onTap;
+
+  /// Fill a fixed height rather than sizing to the content.
+  ///
+  /// A card in a list sizes to whatever it holds. The same card in a carousel
+  /// is handed a height, and its text block has to take what is left after the
+  /// photograph — otherwise a title one line longer than the height allows
+  /// overflows, which Flutter paints as hazard stripes and carries on from.
+  ///
+  /// Keyed on its own flag rather than inferred: [CampaignCard] used to infer
+  /// it from `width`, and putting that card in a carousel that sets the height
+  /// but not the width turned the protection off exactly where it was needed.
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
@@ -189,23 +234,43 @@ class BusinessCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppImage(url: business.thumbnail, aspectRatio: 16 / 9, semanticLabel: business.name),
-          Padding(
+          _Fit(
+            expand: expand,
+            child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 if (business.category != null) ...[
                   Pill(business.category!.name, dense: true),
                   const SizedBox(height: 8),
                 ],
-                Text(business.name, style: AppText.h3, maxLines: 3, overflow: TextOverflow.ellipsis),
+              // Flexible where the height is fixed, so the title and the
+              // excerpt give way to each other rather than pushing the byline
+              // out of the bottom of the card. `Expanded` hands this column
+              // the space left after the photograph; it does not make what is
+              // inside it any smaller, which is what overflowed at the largest
+              // font.
+                _Give(
+                  expand,
+                  child: Text(
+                    business.name,
+                    style: AppText.h3,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 if (business.excerpt.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  Text(
-                    business.excerpt,
-                    style: AppText.excerpt,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  _Give(
+                    expand,
+                    child: Text(
+                      business.excerpt,
+                      style: AppText.excerpt,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
                 const SizedBox(height: 10),
@@ -222,6 +287,7 @@ class BusinessCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
         ],
       ),
@@ -281,13 +347,33 @@ class BusinessTile extends StatelessWidget {
 
 /// A campaign, with its progress bar. The one card that spends accent red.
 class CampaignCard extends StatelessWidget {
-  const CampaignCard({super.key, required this.campaign, this.onTap, this.width});
+  const CampaignCard({
+    super.key,
+    required this.campaign,
+    this.onTap,
+    this.width,
+    this.expand = false,
+  });
 
   final Campaign campaign;
   final VoidCallback? onTap;
 
-  /// Set on the home carousel; null makes it fill the column.
+  /// Set where the card sits in a fixed-width rail; null makes it fill the
+  /// column it is in.
   final double? width;
+
+  /// Fill a fixed height rather than sizing to the content.
+  ///
+  /// A card in a list sizes to whatever it holds. The same card in a carousel
+  /// is handed a height, and its text block has to take what is left after the
+  /// photograph — otherwise a title one line longer than the height allows
+  /// overflows, which Flutter paints as hazard stripes and carries on from.
+  ///
+  /// Keyed on its own flag rather than inferred: [CampaignCard] used to infer
+  /// it from `width`, and putting that card in a carousel that sets the height
+  /// but not the width turned the protection off exactly where it was needed.
+  final bool expand;
+
 
   @override
   Widget build(BuildContext context) {
@@ -312,10 +398,10 @@ class CampaignCard extends StatelessWidget {
                 ),
             ],
           ),
-          // In the rail the text is Expanded so it fits whatever height the
-          // carousel gives it; in a column it sizes to its content.
+          // In a carousel the text is Expanded so it fits whatever height it
+          // is given; in a column it sizes to its content.
           _Fit(
-            expand: width != null,
+            expand: expand || width != null,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
               child: Column(
@@ -336,10 +422,10 @@ class CampaignCard extends StatelessWidget {
                       child: Text(
                         campaign.excerpt,
                         style: AppText.excerpt,
-                        // One line in the rail, two in a full-width card: the
-                        // rail's height is fixed and the progress bar below is
-                        // the part a donor actually needs to see.
-                        maxLines: width == null ? 2 : 1,
+                        // One line where the height is fixed, two in a
+                        // full-width card: the progress bar below is the part a
+                        // donor actually needs to see.
+                        maxLines: (expand || width != null) ? 1 : 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -356,6 +442,21 @@ class CampaignCard extends StatelessWidget {
 
     return width == null ? card : SizedBox(width: width, child: card);
   }
+}
+
+/// Lets a child give way, but only where there is a fixed height to fit into.
+///
+/// In a list the card sizes to its content and nothing should shrink; in a
+/// carousel the height is fixed and the longest title has to ellipsise rather
+/// than push the byline off the bottom.
+class _Give extends StatelessWidget {
+  const _Give(this.flexible, {required this.child});
+
+  final bool flexible;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => flexible ? Flexible(child: child) : child;
 }
 
 /// Wraps a child in [Expanded] only when the parent has a bounded height.

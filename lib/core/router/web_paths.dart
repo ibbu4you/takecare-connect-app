@@ -113,7 +113,11 @@ String? appPathFor(String? webPath) {
         return Routes.brand(segments[2]);
       }
 
-      if (segments[1] == 'makers') return Routes.makers;
+      // Both spellings: the website's own path is /shop/makers, and
+      // /shop/brands is what somebody would guess.
+      if (segments[1] == 'makers' || segments[1] == 'brands') {
+        return Routes.brandsSegment;
+      }
 
       return Routes.product(segments[1]);
 

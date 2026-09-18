@@ -29,23 +29,27 @@ class PromoPanels extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
+          // The website's own words, not a paraphrase. Somebody who reads the
+          // site and then opens the app should meet the same two invitations.
           _Panel(
             image: images.craft,
-            eyebrow: 'FROM THEIR WORKSHOPS',
-            title: 'Buy something made by hand',
-            body: 'Pottery, handloom, bamboo and brass, from the people who make it. '
-                'We take no commission — you contact the maker directly.',
-            actionLabel: 'Browse the shop',
-            onTap: () => context.go(Routes.shop),
+            eyebrow: 'CRAFTSMEN & CREATORS',
+            title: 'India’s craftsmen. Told properly.',
+            body: 'From handloom and blue pottery to workshops making things nobody '
+                'mass-produces. We visit, we photograph, and we print the number that '
+                'reaches them.',
+            actionLabel: 'Explore craft stories',
+            onTap: () => context.go(Routes.craftsmen),
           ),
           const SizedBox(height: 12),
           _Panel(
             image: images.discover,
-            eyebrow: 'FOR CRAFTSMEN',
-            title: 'Tell us what you make',
-            body: 'We interview craftsmen and small businesses across India, publish '
-                'the story, and print the number that reaches you. There is no charge.',
-            actionLabel: 'Register for an interview',
+            eyebrow: 'GET DISCOVERED',
+            title: 'Do you run a business worth knowing about?',
+            body: 'Tell us what you make. If it fits the programme we come to you, '
+                'photograph the work in progress, and publish the story — free, and '
+                'only once you have read it.',
+            actionLabel: 'Share your story',
             onTap: () => context.push(Routes.registerInterview),
           ),
         ],

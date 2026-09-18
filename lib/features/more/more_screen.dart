@@ -61,8 +61,8 @@ class MoreScreen extends ConsumerWidget {
                 branchPath: Routes.shop,
               ),
               _Row(
-                icon: Icons.handshake_outlined,
-                label: 'The makers',
+                icon: Icons.storefront_outlined,
+                label: 'Brands',
                 subtitle: 'Every craftsman selling through us',
                 branchPath: Routes.brands,
               ),

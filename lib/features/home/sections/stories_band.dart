@@ -9,6 +9,7 @@ import '../../../core/router/route_names.dart';
 import '../../../core/router/web_paths.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/card_carousel.dart';
 import '../../../core/widgets/cards.dart';
 import '../../../core/widgets/pill.dart';
 import '../../../core/widgets/section_header.dart';
@@ -78,38 +79,25 @@ class _StoriesBandState extends State<StoriesBand> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text('Nothing here yet.', style: AppText.meta),
           )
-        else ...[
-          // The lead story gets the full-width card; the rest follow in a rail.
-          // One tall card and a row is the website's mosaic, as close as a
-          // phone's width allows.
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: PostCard(
-              post: posts.first,
-              onTap: () => context.go(Routes.story(posts.first.slug)),
+        else
+          /*
+           | One card at a time, snapping, with a sliver of the next showing.
+           |
+           | This was a full-width lead card above a strip of smaller ones — the
+           | website's mosaic, squeezed. On a phone the two sizes read as two
+           | different things rather than one row, and the strip stopped
+           | wherever a thumb left it. Every story is now the same card and the
+           | dots say how many there are.
+           */
+          CardCarousel(
+            height: 344,
+            itemCount: posts.length,
+            itemBuilder: (context, i) => PostCard(
+              expand: true,
+              post: posts[i],
+              onTap: () => context.go(Routes.story(posts[i].slug)),
             ),
           ),
-          if (posts.length > 1) ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 288,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: posts.length - 1,
-                separatorBuilder: (_, __) => const SizedBox(width: 12),
-                itemBuilder: (context, i) {
-                  final post = posts[i + 1];
-
-                  return PostTile(
-                    post: post,
-                    onTap: () => context.go(Routes.story(post.slug)),
-                  );
-                },
-              ),
-            ),
-          ],
-        ],
       ],
     );
   }
