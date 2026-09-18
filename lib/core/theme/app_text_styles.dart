@@ -15,10 +15,11 @@ import 'app_colors.dart';
 class AppText {
   AppText._();
 
+  /// [color] may be given as null deliberately — see [button].
   static TextStyle _dm({
     required FontWeight weight,
     required double size,
-    Color color = AppColors.foreground,
+    Color? color = AppColors.foreground,
     double height = 1.4,
     double letterSpacing = 0,
   }) {
@@ -76,7 +77,20 @@ class AppText {
     letterSpacing: 1.2,
   );
 
-  static TextStyle button = _dm(weight: FontWeight.w600, size: 15);
+  /// The only style here with no colour of its own, on purpose.
+  ///
+  /// A Text merges its style over the DefaultTextStyle it sits in and any
+  /// colour it names wins — so this style carrying `foreground` meant every
+  /// label written with it painted itself near-black over whatever the button
+  /// underneath had set. The donate button drew a black label on red with a
+  /// white icon beside it; a section header's "All" drew black on the dark
+  /// footer. Both buttons had set a foregroundColor, correctly, and were
+  /// overruled by their own child.
+  ///
+  /// Left null, the button's foregroundColor reaches the label — which is what
+  /// a style named for buttons should do. Anywhere this is used outside one,
+  /// name the colour.
+  static TextStyle button = _dm(weight: FontWeight.w600, size: 15, color: null);
 
   /// A campaign's raised figure, and the price on an offer card.
   static TextStyle figure = _dm(weight: FontWeight.w700, size: 26, height: 1.1);
