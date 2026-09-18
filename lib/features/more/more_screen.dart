@@ -30,6 +30,7 @@ class MoreScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider).valueOrNull;
+    final storyCategories = ref.watch(postCategoriesProvider).valueOrNull ?? const [];
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -80,12 +81,43 @@ class MoreScreen extends ConsumerWidget {
               ),
               _Row(
                 icon: Icons.storefront_outlined,
-                label: 'Sell with us',
+                label: 'Become a Vendor',
                 subtitle: 'No commission — buyers contact you directly',
                 path: '/sell-with-us',
               ),
             ],
           ),
+
+          /*
+           | The writing, grouped under the name the website gives it.
+           |
+           | Read from the server rather than written out here. The six on the
+           | site today are a menu the office edits, and a list hard-coded into
+           | an installed app cannot follow them — a category renamed or added
+           | would leave the app showing last year's menu until somebody
+           | shipped a build. `/post-categories` is the same taxonomy the
+           | stories are actually filed under.
+           |
+           | The group disappears entirely while that is loading, and if it
+           | fails. A menu is scanned, not read, and a spinner or an error row
+           | in the middle of one is worse than the row simply not being there
+           | — Stories is a tab of its own either way.
+           */
+          if (storyCategories.isNotEmpty)
+            _Group(
+              label: 'Influencing Narratives',
+              children: [
+                for (final category in storyCategories)
+                  _Row(
+                    icon: Icons.article_outlined,
+                    label: category.name,
+                    // `go`, not `push`: this belongs to the Stories branch, and
+                    // pushing it here would light the More tab over a stories
+                    // list. See _Row.branchPath.
+                    branchPath: '${Routes.stories}?category=${category.slug}',
+                  ),
+              ],
+            ),
 
           const _Group(
             label: 'Take part',
@@ -256,12 +288,12 @@ class _Header extends StatelessWidget {
               // "Where it goes" stood here until the website took its
               // transparency page down. Replaced rather than left blank: this
               // is the second thing a reader looks for on this tab, and a
-              // craftsman who has found the app is exactly who "sell with us"
-              // is written for.
+              // craftsman who has found the app is exactly who this is
+              // written for.
               Expanded(
                 child: _Tile(
                   icon: Icons.storefront_outlined,
-                  label: 'Sell with us',
+                  label: 'Become a Vendor',
                   caption: 'List your work, no commission',
                   onTap: () => context.push(Routes.sellWithUs),
                 ),
