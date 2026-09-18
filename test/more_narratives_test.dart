@@ -29,12 +29,17 @@ void main() {
     TaxonomyOption(slug: 'startup-stories', name: 'Startup stories'),
   ];
 
-  Future<void> pump(WidgetTester tester, List<TaxonomyOption> options) async {
+  Future<void> pump(
+    WidgetTester tester,
+    List<TaxonomyOption> options, {
+    double width = 390,
+    double scale = 1.0,
+  }) async {
     // Tall enough that the whole menu builds. A ListView only builds what is
     // near the viewport, so at a phone's height the groups below the fold do
     // not exist to be found — and `skipOffstage: false` does not help, because
     // they were never created rather than merely hidden.
-    await tester.binding.setSurfaceSize(const Size(390, 3000));
+    await tester.binding.setSurfaceSize(Size(width, 3000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(
@@ -47,7 +52,14 @@ void main() {
           // "a Timer is still pending after the widget tree was disposed".
           settingsProvider.overrideWith((ref) => Completer<SiteSettings>().future),
         ],
-        child: MaterialApp(theme: AppTheme.light(), home: const MoreScreen()),
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          builder: (context, inner) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)),
+            child: inner!,
+          ),
+          home: const MoreScreen(),
+        ),
       ),
     );
 
@@ -87,6 +99,39 @@ void main() {
       expect(find.text(label), findsOneWidget, reason: '$label went missing');
     }
   });
+
+  /// The two tiles at the top are one size.
+  ///
+  /// "80G receipt by email" fits on one line and "List your work, no
+  /// commission" does not, so the tiles were different heights and the shorter
+  /// one sat centred against the taller with a gap above and below — two cards
+  /// that plainly did not match.
+  ///
+  /// Found by their captions, which are unique to the tiles: "Become a Vendor"
+  /// appears twice on this screen and "Donate" is also the tab.
+  ///
+  /// Measured across widths and both font sizes because the gap does not show
+  /// at every size: at 390pt both captions happen to wrap to two lines and the
+  /// tiles match by luck. At 360pt they did not — "Become a Vendor" takes two
+  /// lines where "Donate" takes one, and the tiles came out 116 and 136. A
+  /// test pinned to one width would have passed against the broken layout.
+  for (final width in [320.0, 360.0, 390.0, 430.0]) {
+    for (final scale in [1.0, 1.3]) {
+      testWidgets('the donate and vendor tiles match at ${width}pt x $scale', (tester) async {
+        await pump(tester, categories, width: width, scale: scale);
+
+        Size tileUnder(String caption) => tester.getSize(
+              find.ancestor(of: find.text(caption), matching: find.byType(InkWell)).first,
+            );
+
+        final donate = tileUnder('80G receipt by email');
+        final vendor = tileUnder('List your work, no commission');
+
+        expect(donate.height, vendor.height, reason: 'the tiles are different heights');
+        expect(donate.width, vendor.width, reason: 'the tiles are different widths');
+      });
+    }
+  }
 
   /// Selling is called "Become a Vendor" here.
   ///

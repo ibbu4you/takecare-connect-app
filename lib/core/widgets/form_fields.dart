@@ -353,7 +353,21 @@ class SubmitButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (icon != null) ...[Icon(icon, size: 18), const SizedBox(width: 8)],
-                  Text(label, style: AppText.button.copyWith(fontSize: 16)),
+                  // Flexible, or a long label runs off the end of the button
+                  // in hazard stripes — which is what "Subscribe to the
+                  // newsletter" did at 320pt, and what every label here would
+                  // do at a large enough font. An overflow is not an exception
+                  // the app catches: Flutter paints the stripes and carries
+                  // on, so nothing logs and nothing fails.
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: AppText.button.copyWith(fontSize: 16),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ],
               ),
       ),
@@ -361,6 +375,18 @@ class SubmitButton extends StatelessWidget {
   }
 }
 
+/// A field's name, with a red star on it when the field must be filled in.
+///
+/// The star is the website's own convention — its FieldLabel renders exactly
+/// this, `*` in the accent — and the app was the only surface without it. Red
+/// is otherwise reserved here for donate calls to action, progress bars and
+/// eyebrows, so this is a deliberate exception and worth saying so: the site
+/// spends the colour on this one glyph, and a form that marked its required
+/// fields in navy would not look like the same organisation's form.
+///
+/// [AppColors.accentDark] rather than [AppColors.accent], which is where it
+/// departs from the website: the brighter red measures 4.2:1 on white and
+/// fails AA for text this size. A star somebody cannot make out is not a mark.
 class _FieldLabel extends StatelessWidget {
   const _FieldLabel(this.label, {required this.optional});
 
@@ -369,9 +395,26 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final style = AppText.metaStrong.copyWith(fontSize: 13);
+
     return Row(
       children: [
-        Flexible(child: Text(label, style: AppText.metaStrong.copyWith(fontSize: 13))),
+        Flexible(
+          child: optional
+              ? Text(label, style: style)
+              : Text.rich(
+                  TextSpan(
+                    text: label,
+                    children: [
+                      TextSpan(text: ' *', style: style.copyWith(color: AppColors.accentDark)),
+                    ],
+                  ),
+                  style: style,
+                  // A star is a picture of a rule, and a screen reader reading
+                  // "asterisk" passes the picture on without the rule.
+                  semanticsLabel: '$label, required',
+                ),
+        ),
         if (optional) ...[
           const SizedBox(width: 6),
           Text('Optional', style: AppText.meta.copyWith(fontSize: 11)),

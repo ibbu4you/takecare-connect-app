@@ -270,35 +270,53 @@ class _Header extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Two tiles, not two more rows. Giving and accountability are the
-          // reasons somebody opens this tab; as rows nine and ten of a list
-          // they read as admin.
-          Row(
-            children: [
-              Expanded(
-                child: _Tile(
-                  icon: Icons.favorite_rounded,
-                  label: 'Donate',
-                  caption: '80G receipt by email',
-                  accent: true,
-                  onTap: () => context.go(Routes.donate),
+          /*
+           | Two tiles, not two more rows. Giving and selling are the reasons
+           | somebody opens this tab; as rows nine and ten of a list they read
+           | as admin.
+           |
+           | IntrinsicHeight so the two are the same size. "80G receipt by
+           | email" fits on one line and "List your work, no commission" does
+           | not, so the tiles were different heights and the shorter one sat
+           | centred against the taller with a gap above and below it — two
+           | cards that plainly did not match.
+           |
+           | It is what makes `stretch` legal, too, and that is the reason it
+           | has to be IntrinsicHeight rather than the alignment alone: this
+           | Row sits in a ListView and so has no height of its own, and
+           | stretch against an unbounded cross axis asks the children to be
+           | infinitely tall and asserts. IntrinsicHeight measures the taller
+           | tile first and hands the Row that, which is a real number.
+           */
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _Tile(
+                    icon: Icons.favorite_rounded,
+                    label: 'Donate',
+                    caption: '80G receipt by email',
+                    accent: true,
+                    onTap: () => context.go(Routes.donate),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              // "Where it goes" stood here until the website took its
-              // transparency page down. Replaced rather than left blank: this
-              // is the second thing a reader looks for on this tab, and a
-              // craftsman who has found the app is exactly who this is
-              // written for.
-              Expanded(
-                child: _Tile(
-                  icon: Icons.storefront_outlined,
-                  label: 'Become a Vendor',
-                  caption: 'List your work, no commission',
-                  onTap: () => context.push(Routes.sellWithUs),
+                const SizedBox(width: 12),
+                // "Where it goes" stood here until the website took its
+                // transparency page down. Replaced rather than left blank:
+                // this is the second thing a reader looks for on this tab, and
+                // a craftsman who has found the app is exactly who this is
+                // written for.
+                Expanded(
+                  child: _Tile(
+                    icon: Icons.storefront_outlined,
+                    label: 'Become a Vendor',
+                    caption: 'List your work, no commission',
+                    onTap: () => context.push(Routes.sellWithUs),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -343,7 +361,12 @@ class _Tile extends StatelessWidget {
               children: [
                 Icon(icon, size: 20, color: accent ? foreground : AppColors.primary),
                 const SizedBox(height: 10),
-                Text(label, style: AppText.title.copyWith(fontSize: 15, color: foreground)),
+                Text(
+                  label,
+                  style: AppText.title.copyWith(fontSize: 15, color: foreground),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 2),
                 Text(
                   caption,
