@@ -72,12 +72,43 @@ void main() {
       );
     }
 
+    /*
+     | The regression check for the bug this whole round of work started with.
+     |
+     | `scopeLive` filtered `is_active` and the dates and nothing else, so
+     | every banner meant for the foot of a web page was also rotating at the
+     | top of the app's home screen. If the footer strip's picture turns up
+     | among the hero slides again, this is what says so.
+     */
+    final footer = home.footerBanner;
+    if (footer != null) {
+      expect(
+        home.banners.every((slide) => slide.bestImage != footer.bestImage),
+        isTrue,
+        reason: 'the footer strip is being served as a hero slide again',
+      );
+    }
+
+    for (final category in home.postCategories) {
+      expect(category.slug, isNotEmpty);
+      expect(category.name, isNotEmpty);
+    }
+
+    for (final stat in home.stats) {
+      expect(stat.value, isNotEmpty, reason: 'an impact figure has no value');
+      expect(stat.label, isNotEmpty, reason: 'an impact figure has no label');
+    }
+
     // ignore: avoid_print
     print('  home: ${home.banners.length} banners, '
         '${home.featuredStories.length} stories, '
         '${home.featuredCraftsmen.length} craftsmen, '
         '${home.activeCampaigns.length} campaigns, '
-        '${home.categorySections.length} rails');
+        '${home.categorySections.length} rails, '
+        '${home.postCategories.length} subjects, '
+        '${home.stats.length} figures, '
+        '${home.testimonials.length} quotes, '
+        'footer strip: ${footer == null ? 'none' : 'yes'}');
   });
 
   test('settings carry the footer and the credentials', () async {
@@ -294,6 +325,110 @@ void main() {
         '${about.stats.length} stats');
     // ignore: avoid_print
     print('  transparency: ${transparency.campaigns.length} campaigns listed');
+  });
+
+  test('the shop is readable, filterable and contactable', () async {
+    final page = await repo.products();
+
+    // ignore: avoid_print
+    print('  shop: ${page.items.length} products on the first page');
+
+    for (final product in page.items) {
+      expect(product.slug, isNotEmpty);
+      expect(product.name, isNotEmpty);
+      // Never blank and never "₹0": a piece made to order says "Ask the
+      // maker", and that wording is the server's.
+      expect(product.priceLabel, isNotEmpty, reason: '${product.slug} has no price label');
+    }
+
+    final filters = await repo.shopFilters();
+
+    // Only what actually has something for sale. A craft nobody sells would be
+    // a tick that empties the page.
+    for (final craft in filters.categories) {
+      expect(craft.slug, isNotEmpty);
+    }
+
+    // ignore: avoid_print
+    print('  filters: ${filters.categories.length} crafts, '
+        '${filters.cities.length} cities, ${filters.makers.length} makers');
+
+    if (page.items.isNotEmpty) {
+      final detail = await repo.product(page.items.first.slug);
+
+      expect(detail.name, isNotEmpty);
+      // Whether either button can be drawn is the server's answer, because it
+      // depends on fields this payload does not carry.
+      expect(detail.canCall, isA<bool>());
+      expect(detail.canEnquire, isA<bool>());
+
+      // ignore: avoid_print
+      print('  product "${detail.name}": ${detail.images.length} photographs, '
+          'enquire=${detail.canEnquire}, call=${detail.canCall}, '
+          'maker=${detail.maker?.name ?? 'none'}');
+    }
+
+    // A filtered read, to prove the plural parameter serialises the way the
+    // server's `categories.*` rules expect.
+    if (filters.categories.isNotEmpty) {
+      final filtered = await repo.products(categories: [filters.categories.first.slug]);
+
+      // ignore: avoid_print
+      print('  filtered by ${filters.categories.first.slug}: '
+          '${filtered.items.length} products');
+    }
+  });
+
+  test('the makers are listed busiest first, with their shelves', () async {
+    final brands = await repo.brands();
+
+    var previous = 1 << 30;
+    for (final brand in brands) {
+      expect(brand.slug, isNotEmpty);
+      expect(brand.name, isNotEmpty);
+
+      // The server orders by how much each has listed, which is the reason
+      // this list is not cursor paginated.
+      final count = brand.productCount ?? 0;
+      expect(count <= previous, isTrue, reason: 'the brand order is not busiest first');
+      previous = count;
+    }
+
+    // ignore: avoid_print
+    print('  brands: ${brands.length} makers');
+
+    if (brands.isNotEmpty) {
+      final detail = await repo.brand(brands.first.slug);
+
+      // ignore: avoid_print
+      print('  brand "${detail.name}": ${detail.products.length} on the shelf, '
+          'contact=${detail.contact.hasAny}');
+    }
+  });
+
+  test('membership is priced from the plans table', () async {
+    final membership = await repo.membership();
+
+    expect(membership.title, isNotEmpty);
+
+    for (final plan in membership.plans) {
+      expect(plan.name, isNotEmpty);
+      expect(plan.priceLabel, isNotEmpty);
+    }
+
+    // ignore: avoid_print
+    print('  membership: ${membership.plans.length} plans, '
+        '${membership.graceDays} days of grace');
+  });
+
+  test('the trades the sell-with-us form offers are served', () async {
+    final options = await repo.formOptions();
+
+    expect(
+      options['vendor_trades'],
+      isNotEmpty,
+      reason: 'the application form would have an empty trade select',
+    );
   });
 
   test('the static pages the More tab links to actually exist', () async {

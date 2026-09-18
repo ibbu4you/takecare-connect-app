@@ -52,6 +52,37 @@ void main() {
     });
   });
 
+  group('the shop', () {
+    test('the shelf is the Shop tab', () {
+      expect(appPathFor('/shop'), '/shop');
+    });
+
+    test('a craft page becomes the tab with that craft ticked', () {
+      expect(appPathFor('/shop/category/pottery-and-ceramics'), '/shop?category=pottery-and-ceramics');
+    });
+
+    test('a product opens the product', () {
+      expect(appPathFor('/shop/blue-serving-bowl'), '/shop/blue-serving-bowl');
+    });
+
+    /// The website 301s this to /brands/{slug}. Resolved here so the app never
+    /// has to follow a redirect to find that out.
+    test('the old maker path goes straight to the brand', () {
+      expect(appPathFor('/shop/maker/selvi-pottery'), '/brands/selvi-pottery');
+    });
+
+    /// A query, never a path segment — so a product whose slug happened to be
+    /// "makers" could not shadow it.
+    test('the makers list is a segment of the Shop tab', () {
+      expect(appPathFor('/shop/makers'), '/shop?segment=makers');
+    });
+
+    test('brands resolve on their own paths too', () {
+      expect(appPathFor('/brands'), '/brands');
+      expect(appPathFor('/brands/selvi-pottery'), '/brands/selvi-pottery');
+    });
+  });
+
   group('give', () {
     test('campaigns map onto the Give tab', () {
       expect(appPathFor('/campaigns'), '/give');
@@ -80,8 +111,9 @@ void main() {
       expect(appPathFor('/photo-gallery/launch-2026'), '/more/galleries/launch-2026');
       expect(appPathFor('/press-release'), '/more/press');
       expect(appPathFor('/about'), '/more/about');
-      expect(appPathFor('/transparency'), '/more/transparency');
       expect(appPathFor('/contact'), '/more/contact');
+      expect(appPathFor('/membership'), '/more/membership');
+      expect(appPathFor('/sell-with-us'), '/more/sell-with-us');
       expect(appPathFor('/volunteer-opportunities'), '/more/volunteer');
       expect(appPathFor('/intern-opportunities'), '/more/intern');
       expect(appPathFor('/interview-today'), '/more/register-interview');
@@ -107,6 +139,17 @@ void main() {
       expect(appPathFor('/robots.txt'), isNull);
     });
 
+    /// A craftsman's invitation link ends in a signed-in seller panel. The app
+    /// has no login and must not grow one to follow this.
+    test("the seller panel is the browser's business", () {
+      expect(appPathFor('/seller/welcome/TOKEN123'), isNull);
+      expect(appPathFor('/seller'), isNull);
+    });
+
+    test('a POST-only path has nothing to show', () {
+      expect(appPathFor('/newsletter'), isNull);
+    });
+
     test('nothing at all is nothing at all', () {
       expect(appPathFor(null), isNull);
       expect(appPathFor(''), isNull);
@@ -115,6 +158,14 @@ void main() {
 
     test('the site root is the home tab', () {
       expect(appPathFor('/'), '/');
+    });
+
+    /// The website redirects `/transparency` to its front page, so the app
+    /// sends a reader home rather than opening a browser at a URL that will
+    /// only redirect them anyway. Delete this and restore the route's builder
+    /// when the page comes back.
+    test('the retired transparency page lands on home', () {
+      expect(appPathFor('/transparency'), '/');
     });
   });
 

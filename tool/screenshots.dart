@@ -13,6 +13,7 @@ import 'package:takecare_connect/core/api/api_client.dart';
 import 'package:takecare_connect/core/api/cursor_page.dart';
 import 'package:takecare_connect/core/api/repository.dart';
 import 'package:takecare_connect/core/models/business.dart';
+import 'package:takecare_connect/core/models/shop.dart';
 import 'package:takecare_connect/core/models/campaign.dart';
 import 'package:takecare_connect/core/models/donation.dart';
 import 'package:takecare_connect/core/models/home.dart';
@@ -476,7 +477,10 @@ const _screens = [
   _Screen('more', Routes.more, '06-more'),
   _Screen('more footer', Routes.more, '07-more-footer', scrollBy: 900),
   _Screen('about', '${Routes.more}/about', '08-about'),
-  _Screen('transparency', '${Routes.more}/transparency', '09-transparency'),
+  // The transparency screen is retired along with the website's own page, and
+  // its route redirects home — a config for it would shoot the front page
+  // under a transparency filename, which is worse than not shooting it.
+  _Screen('shop', Routes.shop, '09-shop'),
   _Screen('contact', '${Routes.more}/contact', '10-contact'),
   _Screen('volunteer', '${Routes.more}/volunteer', '11-volunteer'),
   _Screen('register interview', '${Routes.more}/register-interview', '12-register'),
@@ -485,6 +489,12 @@ const _screens = [
   _Screen('privacy page', '${Routes.more}/pages/privacy-policy', '15-page'),
   _Screen('donate', Routes.donate, '16-donate'),
   _Screen('search', '${Routes.home}search', '17-search'),
+  _Screen('home impact', Routes.home, '23-home-impact', scrollBy: 1500),
+  _Screen('home promos', Routes.home, '24-home-promos', scrollBy: 2600),
+  _Screen('makers', Routes.makers, '25-makers'),
+  _Screen('brands', Routes.brands, '26-brands'),
+  _Screen('membership', Routes.membership, '27-membership'),
+  _Screen('sell with us', Routes.sellWithUs, '28-sell-with-us'),
 
   // The detail screens, on whatever the site is publishing today.
   _Screen('story', Routes.stories, '18-story', slugFrom: _firstStory),
@@ -526,7 +536,7 @@ const _screens = [
   _Screen('play home', Routes.home, 'play-1-home', size: _play, pixelRatio: 1, dir: _storeDir),
   _Screen('play stories', Routes.stories, 'play-2-stories',
       size: _play, pixelRatio: 1, dir: _storeDir),
-  _Screen('play craftsmen', Routes.craftsmen, 'play-3-craftsmen',
+  _Screen('play shop', Routes.shop, 'play-3-shop',
       size: _play, pixelRatio: 1, dir: _storeDir),
   _Screen('play craftsman', Routes.craftsmen, 'play-4-craftsman',
       slugFrom: _firstCraftsman, size: _play, pixelRatio: 1, dir: _storeDir),
@@ -553,7 +563,7 @@ const _screens = [
   _Screen('ios home', Routes.home, 'ios-1-home', size: _ios, pixelRatio: 1, dir: _storeDir),
   _Screen('ios stories', Routes.stories, 'ios-2-stories',
       size: _ios, pixelRatio: 1, dir: _storeDir),
-  _Screen('ios craftsmen', Routes.craftsmen, 'ios-3-craftsmen',
+  _Screen('ios shop', Routes.shop, 'ios-3-shop',
       size: _ios, pixelRatio: 1, dir: _storeDir),
   _Screen('ios craftsman', Routes.craftsmen, 'ios-4-craftsman',
       slugFrom: _firstCraftsman, size: _ios, pixelRatio: 1, dir: _storeDir),
@@ -637,6 +647,12 @@ class _Snapshot {
     required this.campaignDetails,
     required this.authors,
     required this.galleryDetails,
+    required this.products,
+    required this.shopFilters,
+    required this.brands,
+    required this.membership,
+    required this.productDetails,
+    required this.brandDetails,
   });
 
   final HomePayload home;
@@ -663,6 +679,13 @@ class _Snapshot {
   final Map<String, AuthorProfile> authors;
   final Map<String, GalleryDetail> galleryDetails;
 
+  final CursorPage<ShopProduct> products;
+  final ShopFilters shopFilters;
+  final List<Brand> brands;
+  final MembershipContent membership;
+  final Map<String, ShopProductDetail> productDetails;
+  final Map<String, Brand> brandDetails;
+
   static Future<_Snapshot> fetch() async {
     final repo = Repository(ApiClient());
 
@@ -683,6 +706,34 @@ class _Snapshot {
     } catch (e) {
       // ignore: avoid_print
       print('  (trending unavailable: $e)');
+    }
+
+    // The shop endpoints are newer than the deployed server may be. A 404 here
+    // should cost the shop screenshots rather than the whole run — the same
+    // treatment `trending` gets above, and for the same reason.
+    var products = const CursorPage<ShopProduct>(items: []);
+    var shopFilters = const ShopFilters();
+    var brands = <Brand>[];
+    var membership = MembershipContent.fromJson(const {});
+    try {
+      products = await repo.products();
+      shopFilters = await repo.shopFilters();
+      brands = await repo.brands();
+      membership = await repo.membership();
+    } catch (e) {
+      // ignore: avoid_print
+      print('  (the shop is unavailable: $e)');
+    }
+
+    final productDetails = <String, ShopProductDetail>{};
+    if (products.items.isNotEmpty) {
+      final slug = products.items.first.slug;
+      productDetails[slug] = await repo.product(slug);
+    }
+
+    final brandDetails = <String, Brand>{};
+    if (brands.isNotEmpty) {
+      brandDetails[brands.first.slug] = await repo.brand(brands.first.slug);
     }
 
     final posts = await repo.posts();
@@ -743,6 +794,12 @@ class _Snapshot {
       campaignDetails: campaignDetails,
       authors: authors,
       galleryDetails: galleryDetails,
+      products: products,
+      shopFilters: shopFilters,
+      brands: brands,
+      membership: membership,
+      productDetails: productDetails,
+      brandDetails: brandDetails,
     );
   }
 }
@@ -848,6 +905,35 @@ class _SnapshotRepository extends Repository {
   @override
   Future<AuthorProfile> author(String slug) async =>
       _s.authors[slug] ?? (throw StateError('no snapshot for author $slug'));
+
+  @override
+  Future<CursorPage<ShopProduct>> products({
+    List<String> categories = const [],
+    List<String> makers = const [],
+    String? city,
+    String? query,
+    double? priceMin,
+    double? priceMax,
+    String? cursor,
+  }) async =>
+      _s.products;
+
+  @override
+  Future<ShopFilters> shopFilters() async => _s.shopFilters;
+
+  @override
+  Future<List<Brand>> brands({String? craft, String? city, String? query}) async => _s.brands;
+
+  @override
+  Future<MembershipContent> membership() async => _s.membership;
+
+  @override
+  Future<ShopProductDetail> product(String slug) async =>
+      _s.productDetails[slug] ?? (throw StateError('no snapshot for product $slug'));
+
+  @override
+  Future<Brand> brand(String slug) async =>
+      _s.brandDetails[slug] ?? (throw StateError('no snapshot for brand $slug'));
 
   @override
   Future<AboutContent> about() async => _s.about;
