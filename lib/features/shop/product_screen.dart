@@ -404,22 +404,62 @@ class _ContactBar extends StatelessWidget {
                         padding: EdgeInsets.zero,
                         minimumSize: const Size(52, 44),
                       ),
-                      child: const Icon(Icons.chat_outlined, size: 18),
+                      child: const Icon(
+                        Icons.chat_outlined,
+                        size: 18,
+                        // An icon with no words beside it is nothing at all to
+                        // a screen reader, which is what this button was.
+                        semanticLabel: 'WhatsApp the maker',
+                      ),
                     ),
                   ),
                 ),
+
+              /*
+               | The number is an icon alone, beside the button people came for.
+               |
+               | "Their number" said nothing the handset does not, and it was
+               | taking a third of the bar away from "Ask about this". Fixed
+               | width for the same reason the WhatsApp button has one — see
+               | the note above; a Row measures a non-flexible child with an
+               | unbounded main axis, and a button handed infinite width fails
+               | layout outright.
+               |
+               | It keeps its words when there is no enquiry button to sit
+               | beside, which happens when nothing would receive an enquiry —
+               | no maker email and no contact address in Settings. An
+               | unlabelled handset alone in an otherwise empty bar explains
+               | nothing, and then it is the only thing on offer.
+               */
               if (product.canCall)
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => EnquirySheet.forProduct(context, product),
-                    icon: const Icon(Icons.call_outlined, size: 18),
-                    label: const Text('Their number'),
-                  ),
-                ),
-              if (product.canCall && product.canEnquire) const SizedBox(width: 10),
+                product.canEnquire
+                    ? Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: SizedBox(
+                          width: 52,
+                          child: OutlinedButton(
+                            onPressed: () => EnquirySheet.forProduct(context, product),
+                            style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(52, 44),
+                            ),
+                            child: const Icon(
+                              Icons.call_outlined,
+                              size: 18,
+                              semanticLabel: 'Their number',
+                            ),
+                          ),
+                        ),
+                      )
+                    : Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => EnquirySheet.forProduct(context, product),
+                          icon: const Icon(Icons.call_outlined, size: 18),
+                          label: const Text('Their number'),
+                        ),
+                      ),
               if (product.canEnquire)
                 Expanded(
-                  flex: 2,
                   child: FilledButton.icon(
                     onPressed: () => EnquirySheet.forProduct(context, product),
                     icon: const Icon(Icons.mail_outline_rounded, size: 18),
