@@ -6,8 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/models/home.dart';
 import '../../../core/models/post.dart';
 import '../../../core/router/route_names.dart';
-import '../../../core/router/web_paths.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/card_carousel.dart';
 import '../../../core/widgets/cards.dart';
@@ -52,10 +50,14 @@ class _StoriesBandState extends State<StoriesBand> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // The website's words: the stories are the Influencing Narratives
+        // pillar, and the heading says what they are for.
         SectionHeader(
-          eyebrow: 'From the field',
-          title: 'Stories',
-          actionLabel: 'All',
+          eyebrow: 'Influencing Narratives',
+          title: 'Stories that deserve to be seen',
+          description: 'Discover the people, skills, ideas and communities behind the work.',
+          actionLabel: 'View all',
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           onAction: () => context.go(
             _slug == null ? Routes.stories : '${Routes.stories}?category=$_slug',
           ),
@@ -99,95 +101,6 @@ class _StoriesBandState extends State<StoriesBand> {
             ),
           ),
       ],
-    );
-  }
-}
-
-/// The four programmes, each with its own glyph.
-///
-/// The `icon` key has been in the payload all along and the app drew the same
-/// hand-holding symbol for all four, which made them read as one repeated
-/// thing rather than four different programmes.
-class ProgrammesBand extends StatelessWidget {
-  const ProgrammesBand({super.key, required this.programmes});
-
-  final List<Programme> programmes;
-
-  static const _icons = <String, IconData>{
-    'craftsmen': Icons.handyman_outlined,
-    'brands': Icons.storefront_outlined,
-    'startups': Icons.rocket_launch_outlined,
-    'humanity': Icons.emoji_events_outlined,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          for (final programme in programmes) ...[
-            AppCard(
-              padding: const EdgeInsets.all(14),
-              // Through the translator, never straight to `context.go`. These
-              // paths are the website's — `/blog/category/tales-of-brands`,
-              // `/interview-today` — and three of the four programme cards
-              // landed on the "page has moved" screen when they were passed
-              // through unchanged.
-              onTap: programme.path.isEmpty
-                  ? null
-                  : () => openWebPath(context, programme.path),
-              child: Row(
-                children: [
-                  Container(
-                    height: 40,
-                    width: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(AppRadii.small),
-                    ),
-                    child: Icon(
-                      // A key the app does not recognise falls back rather
-                      // than leaving a blank square.
-                      _icons[programme.icon] ?? Icons.volunteer_activism_outlined,
-                      size: 20,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(programme.title, style: AppText.title.copyWith(fontSize: 15)),
-                        if (programme.description.isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            programme.description,
-                            style: AppText.meta,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  if (programme.path.isNotEmpty)
-                    Icon(
-                      // An external programme leaves the app; say so.
-                      programme.external
-                          ? Icons.open_in_new_rounded
-                          : Icons.chevron_right_rounded,
-                      size: programme.external ? 16 : 24,
-                      color: AppColors.mutedForeground,
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-          ],
-        ],
-      ),
     );
   }
 }

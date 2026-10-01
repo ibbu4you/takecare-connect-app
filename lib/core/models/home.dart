@@ -3,6 +3,7 @@ library;
 import 'business.dart';
 import 'campaign.dart';
 import 'post.dart';
+import 'shop.dart';
 
 /// Everything the Home tab draws, in one payload.
 ///
@@ -249,6 +250,43 @@ class CategorySection {
       );
 }
 
+/// The photographs behind the landing page's fixed sections.
+///
+/// Their words are written into the app, as they are into the website's
+/// Home.tsx; their pictures are the website's own files, sent as full URLs so
+/// that replacing one on the website changes the app with no release. Null on
+/// an older server, and each section then draws without its picture.
+class LandingImages {
+  const LandingImages({
+    this.whoWeAre,
+    this.craftsmanship,
+    this.events,
+    this.crowdfunding,
+    this.stories,
+    this.vision,
+  });
+
+  final String? whoWeAre;
+  final String? craftsmanship;
+  final String? events;
+  final String? crowdfunding;
+  final String? stories;
+  final String? vision;
+
+  factory LandingImages.fromJson(Map<String, dynamic>? json) {
+    final pillars = json?['pillars'] as Map<String, dynamic>?;
+
+    return LandingImages(
+      whoWeAre: json?['who_we_are'] as String?,
+      craftsmanship: pillars?['craftsmanship'] as String?,
+      events: pillars?['events'] as String?,
+      crowdfunding: pillars?['crowdfunding'] as String?,
+      stories: pillars?['stories'] as String?,
+      vision: json?['vision'] as String?,
+    );
+  }
+}
+
 class HomePayload {
   const HomePayload({
     this.banners = const [],
@@ -259,6 +297,8 @@ class HomePayload {
     this.promoImages = const PromoImages(),
     this.featuredStories = const [],
     this.featuredCraftsmen = const [],
+    this.featuredProducts = const [],
+    this.landingImages = const LandingImages(),
     this.activeCampaigns = const [],
     this.programmes = const [],
     this.categorySections = const [],
@@ -281,6 +321,12 @@ class HomePayload {
 
   final List<PostSummary> featuredStories;
   final List<BusinessSummary> featuredCraftsmen;
+
+  /// The website's Shop row. Empty on an older server, and the band is left out.
+  final List<ShopProduct> featuredProducts;
+
+  final LandingImages landingImages;
+
   final List<Campaign> activeCampaigns;
   final List<Programme> programmes;
 
@@ -319,6 +365,8 @@ class HomePayload {
       promoImages: PromoImages.fromJson(json['promo_images'] as Map<String, dynamic>?),
       featuredStories: list('featured_stories', PostSummary.fromJson),
       featuredCraftsmen: list('featured_craftsmen', BusinessSummary.fromJson),
+      featuredProducts: list('featured_products', ShopProduct.fromJson),
+      landingImages: LandingImages.fromJson(json['landing_images'] as Map<String, dynamic>?),
       activeCampaigns: list('active_campaigns', Campaign.fromJson),
       programmes: list('programmes', Programme.fromJson),
       categorySections: list('category_sections', CategorySection.fromJson),

@@ -4,40 +4,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/models/business.dart';
-import '../../core/models/campaign.dart';
 import '../../core/models/home.dart';
 import '../../core/router/route_names.dart';
 import '../../core/state/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/widgets/card_carousel.dart';
-import '../../core/widgets/cards.dart';
-import '../../core/widgets/section_header.dart';
 import '../../core/widgets/state_views.dart';
 import '../../core/widgets/tcif_logo.dart';
-import 'sections/category_tiles.dart';
 import 'sections/hero_carousel.dart';
-import 'sections/impact_band.dart';
-import 'sections/promo_panels.dart';
+import 'sections/landing_bands.dart';
 import 'sections/stories_band.dart';
 
-/// The front page.
+/// The front page, matching the website's landing page section for section.
 ///
-/// The bands are in the website's order, read off its Home.tsx rather than
-/// guessed: hero, the subjects, the impact band, the stories, the craftsmen,
-/// the two invitations, the programmes, the campaigns, and the footer strip.
+/// Read off the website's resources/js/Pages/Home.tsx, in its order and with its
+/// words: hero, who we are, the four pillars, meet the makers, the stories, the
+/// shop, events, crowdfunding, our approach, our ecosystem, our vision, where do
+/// you fit in, and the closing ask.
 ///
-/// Every section comes from a single `/home` request, composed server-side, so
-/// this screen has one loading state rather than nine — and every band hides
-/// itself when the office has not filled it in, so an empty section is never a
-/// heading over nothing.
+/// One section of the website's is left out on purpose — "in your pocket", the
+/// app store badges — because somebody reading this already has the app.
 ///
-/// Two deliberate departures from the web page, because a phone is not a
-/// browser. The app store badges are dropped — a badge for the store you were
-/// installed from — and the footer strip appears here and on More rather than
-/// under every screen, because a promotional band under every article is where
-/// people stop scrolling.
+/// Everything still comes from one `/home` request. The sections drawn from the
+/// office's content (makers, stories, shop, campaigns) hide themselves when
+/// there is nothing to show, as the website's do; the written ones always show.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -69,77 +59,44 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  /// The page, band by band.
+  /// The page, section by section.
   ///
   /// A flat list of slivers rather than nested scrollables: the rails inside
-  /// each band scroll horizontally, and wrapping the lot in a ListView would
-  /// mean a second vertical scrollable inside the first.
+  /// some sections scroll sideways, and wrapping the lot in a ListView would
+  /// put a second vertical scrollable inside the first.
   List<Widget> _bands(BuildContext context, HomePayload data) {
+    final images = data.landingImages;
+
     final bands = <Widget>[
-      if (data.banners.isNotEmpty) BannerCarousel(banners: data.banners),
+      if (data.banners.isNotEmpty) BannerCarousel(banners: data.banners) else const FallbackHero(),
 
-      // Directly under the hero: the first question a reader has is what is
-      // here, and a list of subjects answers it better than a band of prose.
-      if (data.postCategories.isNotEmpty)
-        _Band(child: CategoryTiles(categories: data.postCategories)),
+      WhoWeAreBand(image: images.whoWeAre),
 
-      // The figures, the quote and the invitation, in one band. This is where
-      // the donate ask lives — the website folded the two together, and an
-      // earlier version of this screen had a hand-written donate strip with
-      // invented copy sitting above everything editorial instead.
-      if (data.stats.isNotEmpty || data.testimonials.isNotEmpty)
-        ImpactBand(
-          stats: data.stats,
-          testimonials: data.testimonials,
-          image: data.ctaImage,
-        ),
+      PillarsBand(images: images),
+
+      if (data.featuredCraftsmen.isNotEmpty) MakersBand(businesses: data.featuredCraftsmen),
 
       if (data.featuredStories.length > 1)
-        _Band(
-          surface: true,
-          child: StoriesBand(
-            featured: data.featuredStories,
-            sections: data.categorySections,
-          ),
+        HomeBand(
+          ground: BandGround.surface,
+          child: StoriesBand(featured: data.featuredStories, sections: data.categorySections),
         ),
 
-      // Directly under the stories, and in the same shape. Reading about the
-      // work and meeting whoever did it are the same errand.
-      if (data.featuredCraftsmen.isNotEmpty)
-        _Band(child: _CraftsmenRail(businesses: data.featuredCraftsmen)),
+      if (data.featuredProducts.isNotEmpty) ShopBand(products: data.featuredProducts),
 
-      _Band(surface: true, child: PromoPanels(images: data.promoImages)),
+      const EventsBand(),
 
-      if (data.programmes.isNotEmpty)
-        _Band(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SectionHeader(eyebrow: 'What we do', title: 'Our programmes'),
-              ProgrammesBand(programmes: data.programmes),
-            ],
-          ),
-        ),
+      if (data.activeCampaigns.isNotEmpty) CampaignsBand(campaigns: data.activeCampaigns),
 
-      // Its own band near the foot, as on the website. The ask is already at
-      // band three, so there is nothing to rescue by moving this up.
-      if (data.activeCampaigns.isNotEmpty)
-        _Band(surface: true, child: _CampaignsRail(campaigns: data.activeCampaigns)),
+      const ApproachBand(),
 
-      /*
-       | The website's before-footer strip is deliberately not drawn here.
-       |
-       | It is a promotional band the site carries at the foot of every page,
-       | and on a phone the foot of the home page is where somebody has just
-       | finished reading nine bands — an advertisement there is the thing that
-       | stops them scrolling rather than the thing that rewards it.
-       |
-       | `footer_banner` is still sent and still parsed, so bringing it back is
-       | this block and nothing else. What the payload is *also* for is the
-       | check that it never leaks into the hero carousel, which is the defect
-       | that started all of this — see the case in qa/checklist.json.
-       */
-      const SizedBox(height: 28),
+      const EcosystemBand(),
+
+      if (images.vision != null) VisionBand(image: images.vision!),
+
+      const FitInBand(),
+
+      const ClosingBand(),
     ];
 
     return [for (final band in bands) SliverToBoxAdapter(child: band)];
@@ -194,96 +151,4 @@ SliverAppBar homeAppBar(BuildContext context) {
       ),
     ],
   );
-}
-
-/// One band's padding and ground.
-///
-/// White and `surface` alternate down the page, which is how the website
-/// carries its section rhythm — borders and a change of ground rather than
-/// shadows.
-class _Band extends StatelessWidget {
-  const _Band({required this.child, this.surface = false});
-
-  final Widget child;
-  final bool surface;
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: surface ? AppColors.surface : AppColors.background,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 22),
-        child: child,
-      ),
-    );
-  }
-}
-
-class _CraftsmenRail extends StatelessWidget {
-  const _CraftsmenRail({required this.businesses});
-
-  final List<BusinessSummary> businesses;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(
-          eyebrow: 'The people',
-          title: 'Craftsmen and makers',
-          description: 'Interviews with the artisans the foundation works alongside.',
-          actionLabel: 'All',
-          onAction: () => context.go(Routes.craftsmen),
-        ),
-        CardCarousel(
-          height: 300,
-          itemCount: businesses.length,
-          itemBuilder: (context, i) {
-            final business = businesses[i];
-
-            return BusinessCard(
-              expand: true,
-              business: business,
-              onTap: () => context.go(Routes.craftsman(business.slug)),
-            );
-          },
-        ),
-      ],
-    );
-  }
-}
-
-class _CampaignsRail extends StatelessWidget {
-  const _CampaignsRail({required this.campaigns});
-
-  final List<Campaign> campaigns;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(
-          eyebrow: 'Open appeals',
-          title: 'Campaigns you can back',
-          actionLabel: 'All',
-          onAction: () => context.go(Routes.give),
-        ),
-        CardCarousel(
-          height: 340,
-          itemCount: campaigns.length,
-          itemBuilder: (context, i) {
-            final campaign = campaigns[i];
-
-            return CampaignCard(
-              expand: true,
-              campaign: campaign,
-              onTap: () => context.go(Routes.campaign(campaign.slug)),
-            );
-          },
-        ),
-      ],
-    );
-  }
 }

@@ -36,7 +36,14 @@ class SectionHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (eyebrow != null) ...[
-            Text(eyebrow!.toUpperCase(), style: AppText.eyebrow),
+            // White on a navy band, as the website does it: the red eyebrow
+            // is for white and grey grounds, and on navy it fights the blue.
+            Text(
+              eyebrow!.toUpperCase(),
+              style: onDark
+                  ? AppText.eyebrow.copyWith(color: AppColors.primaryForeground)
+                  : AppText.eyebrow,
+            ),
             const SizedBox(height: 6),
           ],
           Row(
@@ -72,8 +79,11 @@ class SectionHeader extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               description!,
+              // Four-fifths white on navy, the website's primary-foreground/80.
               style: onDark
-                  ? AppText.excerpt.copyWith(color: AppColors.footerMuted)
+                  ? AppText.excerpt.copyWith(
+                      color: AppColors.primaryForeground.withValues(alpha: 0.8),
+                    )
                   : AppText.excerpt,
             ),
           ],

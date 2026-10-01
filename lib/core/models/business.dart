@@ -7,6 +7,7 @@ class BusinessSummary {
     required this.slug,
     required this.name,
     required this.excerpt,
+    this.headline,
     this.ownerName,
     this.thumbnail,
     this.category,
@@ -17,6 +18,11 @@ class BusinessSummary {
   final String slug;
   final String name;
   final String excerpt;
+
+  /// The interview's headline. Null from a server older than this field, and
+  /// [title] falls back to the name, which is what the website does too.
+  final String? headline;
+
   final String? ownerName;
   final String? thumbnail;
   final Taxonomy? category;
@@ -27,12 +33,16 @@ class BusinessSummary {
         slug: (json['slug'] ?? '') as String,
         name: (json['name'] ?? '') as String,
         excerpt: (json['excerpt'] ?? '') as String,
+        headline: json['headline'] as String?,
         ownerName: json['owner_name'] as String?,
         thumbnail: json['thumbnail'] as String?,
         category: Taxonomy.fromJson(json['category'] as Map<String, dynamic>?),
         city: CityRef.fromJson(json['city'] as Map<String, dynamic>?),
         publishedAt: DateTime.tryParse((json['published_at'] ?? '') as String),
       );
+
+  /// What a card is titled with: the headline, or the name without one.
+  String get title => (headline?.isNotEmpty ?? false) ? headline! : name;
 }
 
 class CityRef {
