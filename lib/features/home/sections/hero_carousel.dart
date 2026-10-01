@@ -10,18 +10,25 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_image.dart';
 
-/// The hero carousel.
+/// The hero, as the website's HeroSlider draws it on a phone.
 ///
-/// Swipe-driven, with dots. Auto-advance is deliberately gentle — six seconds,
-/// and it stops for good the moment the reader swipes, because a banner that
-/// keeps moving under somebody reading it is an argument, not a feature.
+/// A tall navy-washed slide with the words in the middle — a red eyebrow, the
+/// title, the line under it, and two full-width buttons, red and outlined —
+/// and along the bottom the website's controls: previous, next and pause as
+/// three round buttons, then a bar per slide, the current one long and red.
 ///
-/// Two things arrived with the website's footer strip and are honoured here for
-/// the first time: the office's `overlay` choice, and a second call to action.
+/// It moves on by itself every six seconds, stops for good once the reader
+/// swipes or presses anything, and pauses while they hold the pause button —
+/// the website's rules.
 class BannerCarousel extends StatefulWidget {
   const BannerCarousel({super.key, required this.banners});
 
   final List<BannerSlide> banners;
+
+  /// Tall enough for an eyebrow, a three-line title, a three-line line under
+  /// it and two buttons above the controls — the website's slide is about this
+  /// on a phone, because its minimum is 26rem and its copy grows it.
+  static const height = 540.0;
 
   @override
   State<BannerCarousel> createState() => _BannerCarouselState();
@@ -31,225 +38,293 @@ class _BannerCarouselState extends State<BannerCarousel> {
   final _controller = PageController();
   Timer? _timer;
   int _index = 0;
+  bool _paused = false;
+
+  bool get _isCarousel => widget.banners.length > 1;
 
   @override
   void initState() {
     super.initState();
-
-    if (widget.banners.length > 1) {
-      _timer = Timer.periodic(const Duration(seconds: 6), (_) {
-        if (!mounted || !_controller.hasClients) return;
-
-        final next = (_index + 1) % widget.banners.length;
-        _controller.animateToPage(
-          next,
-          duration: const Duration(milliseconds: 450),
-          curve: Curves.easeOutCubic,
-        );
-      });
-    }
+    _start();
   }
 
-  @override
-  void dispose() {
+  void _start() {
+    if (!_isCarousel) return;
+
     _timer?.cancel();
-    _controller.dispose();
-    super.dispose();
+    _timer = Timer.periodic(const Duration(seconds: 6), (_) => _go(_index + 1));
   }
 
-  void _stopAutoplay() {
+  void _stop() {
     _timer?.cancel();
     _timer = null;
   }
 
+  void _go(int index) {
+    if (!mounted || !_controller.hasClients) return;
+
+    final count = widget.banners.length;
+    _controller.animateToPage(
+      ((index % count) + count) % count,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  void dispose() {
+    _stop();
+    _controller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        AspectRatio(
-          // Portrait-ish, because the banners carry designed artwork that a
-          // 16:9 letterbox would crop the words out of.
-          aspectRatio: 4 / 3,
-          child: NotificationListener<ScrollStartNotification>(
-            onNotification: (_) {
-              _stopAutoplay();
+    return SizedBox(
+      height: BannerCarousel.height,
+      child: ColoredBox(
+        color: AppColors.primary,
+        child: Stack(
+          children: [
+            NotificationListener<ScrollStartNotification>(
+              onNotification: (notification) {
+                // A swipe by the reader, not the timer's own animation.
+                if (notification.dragDetails != null) {
+                  _stop();
+                  setState(() => _paused = true);
+                }
 
-              return false;
-            },
-            child: PageView.builder(
-              controller: _controller,
-              itemCount: widget.banners.length,
-              onPageChanged: (i) => setState(() => _index = i),
-              itemBuilder: (context, i) => BannerFrame(slide: widget.banners[i]),
+                return false;
+              },
+              child: PageView.builder(
+                controller: _controller,
+                itemCount: widget.banners.length,
+                onPageChanged: (i) => setState(() => _index = i),
+                itemBuilder: (context, i) => BannerFrame(slide: widget.banners[i]),
+              ),
             ),
-          ),
-        ),
-        if (widget.banners.length > 1)
-          Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                for (var i = 0; i < widget.banners.length; i++)
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    height: 6,
-                    width: i == _index ? 20 : 6,
-                    decoration: BoxDecoration(
-                      color: i == _index ? AppColors.primary : AppColors.border,
-                      borderRadius: BorderRadius.circular(AppRadii.pill),
+            if (_isCarousel)
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 24,
+                child: Row(
+                  children: [
+                    _ControlButton(
+                      icon: Icons.chevron_left_rounded,
+                      label: 'Previous slide',
+                      onTap: () => _go(_index - 1),
                     ),
-                  ),
-              ],
-            ),
-          ),
-      ],
+                    const SizedBox(width: 8),
+                    _ControlButton(
+                      icon: Icons.chevron_right_rounded,
+                      label: 'Next slide',
+                      onTap: () => _go(_index + 1),
+                    ),
+                    const SizedBox(width: 8),
+                    _ControlButton(
+                      icon: _paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                      label: _paused ? 'Resume automatic slides' : 'Pause automatic slides',
+                      onTap: () {
+                        setState(() => _paused = !_paused);
+                        _paused ? _stop() : _start();
+                      },
+                    ),
+                    const SizedBox(width: 12),
+                    for (var i = 0; i < widget.banners.length; i++)
+                      GestureDetector(
+                        onTap: () => _go(i),
+                        child: Semantics(
+                          button: true,
+                          label: 'Go to slide ${i + 1}',
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            margin: const EdgeInsets.only(right: 8),
+                            height: 6,
+                            width: i == _index ? 32 : 12,
+                            decoration: BoxDecoration(
+                              color: i == _index
+                                  ? AppColors.accent
+                                  : AppColors.primaryForeground.withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(AppRadii.pill),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
 
-/// One banner.
-///
-/// It took an `aspectRatio` while the home page also drew the website's
-/// before-footer strip. That band is not shown in the app — see the note in
-/// home_screen.dart — so the only caller is the carousel above, which sizes
-/// its own frame.
+/// One of the three round buttons: white ring, a little navy behind it.
+class _ControlButton extends StatelessWidget {
+  const _ControlButton({required this.icon, required this.label, required this.onTap});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: Material(
+        color: AppColors.primary.withValues(alpha: 0.4),
+        shape: CircleBorder(
+          side: BorderSide(color: AppColors.primaryForeground.withValues(alpha: 0.3)),
+        ),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 36,
+            height: 36,
+            child: Icon(icon, size: 18, color: AppColors.primaryForeground),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One slide.
 class BannerFrame extends StatelessWidget {
   const BannerFrame({super.key, required this.slide});
 
   final BannerSlide slide;
 
-  Future<void> _open(BuildContext context, String? url) => openWebPath(context, url);
-
-  /// The scrim, as the office asked for it.
-  ///
-  /// Three stops rather than a fade from the bottom third: white copy has to be
-  /// legible over *any* photograph, including a pale one and including the
-  /// placeholder showing while the image is still arriving. The first pass
-  /// faded in only at the foot and left a three-line white headline sitting on
-  /// near-white sky.
-  List<Color> get _scrim => switch (slide.overlay) {
-        BannerOverlay.none => const [Color(0x00000000), Color(0x00000000)],
-        BannerOverlay.light => const [
-            Color(0x140B1020),
-            Color(0x4D0B1020),
-            Color(0xB30B1020),
+  /// The website's wash: navy from the left, heaviest behind the words and
+  /// clearing towards the right, at the strength the office chose.
+  List<Color>? get _scrim => switch (slide.overlay) {
+        BannerOverlay.none => null,
+        BannerOverlay.light => [
+            AppColors.primary.withValues(alpha: 0.7),
+            AppColors.primary.withValues(alpha: 0.45),
+            AppColors.primary.withValues(alpha: 0.1),
           ],
-        BannerOverlay.heavy => const [
-            Color(0x660B1020),
-            Color(0xB30B1020),
-            Color(0xFA0B1020),
+        BannerOverlay.standard => [
+            AppColors.primary.withValues(alpha: 0.95),
+            AppColors.primary.withValues(alpha: 0.8),
+            AppColors.primary.withValues(alpha: 0.4),
           ],
-        BannerOverlay.standard => const [
-            Color(0x330B1020),
-            Color(0x8A0B1020),
-            Color(0xF20B1020),
+        BannerOverlay.heavy => [
+            AppColors.primary,
+            AppColors.primary.withValues(alpha: 0.9),
+            AppColors.primary.withValues(alpha: 0.65),
           ],
       };
 
   @override
   Widget build(BuildContext context) {
-    final frame = GestureDetector(
-      onTap: () => _open(context, slide.ctaUrl),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          AppImage(
-            url: slide.bestImage,
-            fit: BoxFit.cover,
-            semanticLabel: slide.semanticLabel,
-          ),
+    final scrim = _scrim;
+    final hasTitle = slide.title?.isNotEmpty ?? false;
+    final hasSubtitle = slide.subtitle?.isNotEmpty ?? false;
+    final hasEyebrow = slide.eyebrow?.isNotEmpty ?? false;
 
-          // A banner whose artwork already carries its words gets no scrim and
-          // no overlaid copy — printing the title again over the top of a
-          // designed poster is how the website used to look wrong. The office
-          // can also ask for no scrim on a banner that does have words, which
-          // is what `overlay: none` means.
-          if (!slide.isImageOnly) ...[
-            if (slide.overlay != BannerOverlay.none)
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: _scrim,
-                    stops: _scrim.length == 3 ? const [0, 0.45, 1] : const [0, 1],
-                  ),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        AppImage(url: slide.bestImage, fit: BoxFit.cover, semanticLabel: slide.semanticLabel),
+
+        // A designed banner carries its own words: no wash, no copy over it.
+        if (!slide.isImageOnly) ...[
+          if (scrim != null)
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: scrim,
                 ),
-                child: const SizedBox.expand(),
-              ),
-            Positioned(
-              left: 20,
-              right: 20,
-              bottom: 22,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (slide.eyebrow != null && slide.eyebrow!.isNotEmpty)
-                    Text(slide.eyebrow!.toUpperCase(), style: AppText.eyebrow),
-                  if (slide.title != null && slide.title!.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      slide.title!,
-                      style: AppText.h1.copyWith(color: Colors.white, fontSize: 23),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  if (slide.subtitle != null && slide.subtitle!.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      slide.subtitle!,
-                      // Near-white, not the footer's muted blue-grey: that tone
-                      // is legible on a flat navy band and disappears against a
-                      // photograph.
-                      style: AppText.excerpt.copyWith(color: const Color(0xE6FFFFFF)),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  if (slide.hasCta || slide.hasSecondaryCta) ...[
-                    const SizedBox(height: 14),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: [
-                        if (slide.hasCta)
-                          FilledButton(
-                            onPressed: () => _open(context, slide.ctaUrl),
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size(0, 42),
-                              padding: const EdgeInsets.symmetric(horizontal: 18),
-                            ),
-                            child: Text(slide.ctaLabel!),
-                          ),
-                        // The quieter of the two. Outlined in white because it
-                        // sits on a photograph, where the theme's navy outline
-                        // would disappear.
-                        if (slide.hasSecondaryCta)
-                          OutlinedButton(
-                            onPressed: () => _open(context, slide.secondaryCtaUrl),
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(0, 42),
-                              padding: const EdgeInsets.symmetric(horizontal: 18),
-                              foregroundColor: Colors.white,
-                              side: const BorderSide(color: Color(0x66FFFFFF)),
-                            ),
-                            child: Text(slide.secondaryCtaLabel!),
-                          ),
-                      ],
-                    ),
-                  ],
-                ],
               ),
             ),
-          ],
-        ],
-      ),
+          // Centred in the slide above the controls row, as the website
+          // centres its copy in the slide's height.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 32, 16, 84),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (hasEyebrow)
+                  Text(slide.eyebrow!.toUpperCase(), style: AppText.eyebrow.copyWith(fontSize: 13)),
+                if (hasTitle) ...[
+                  const SizedBox(height: 12),
+                  Flexible(
+                    child: Text(
+                      slide.title!,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.h1.copyWith(
+                        color: AppColors.primaryForeground,
+                        fontSize: 30,
+                        height: 1.15,
+                      ),
+                    ),
+                  ),
+                ],
+                if (hasSubtitle) ...[
+                  const SizedBox(height: 16),
+                  Flexible(
+                    child: Text(
+                      slide.subtitle!,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.body.copyWith(
+                        color: AppColors.primaryForeground.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ),
+                ],
+                if (slide.hasCta || slide.hasSecondaryCta) const SizedBox(height: 24),
+                // Both full width, one above the other, as the website stacks
+                // them on a phone.
+                if (slide.hasCta)
+                  FilledButton(
+                    onPressed: () => openWebPath(context, slide.ctaUrl),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: AppColors.accentForeground,
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadii.field),
+                      ),
+                    ),
+                    child: Text(slide.ctaLabel!, style: AppText.button),
+                  ),
+                if (slide.hasCta && slide.hasSecondaryCta) const SizedBox(height: 12),
+                if (slide.hasSecondaryCta)
+                  OutlinedButton(
+                    onPressed: () => openWebPath(context, slide.secondaryCtaUrl),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primaryForeground,
+                      side: BorderSide(
+                        color: AppColors.primaryForeground.withValues(alpha: 0.4),
+                      ),
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadii.field),
+                      ),
+                    ),
+                    child: Text(slide.secondaryCtaLabel!, style: AppText.button),
+                  ),
+              ],
+            ),
+          ),
+        ] else
+          // An image-only banner is a link as a whole, when it has one.
+          if (slide.hasCta)
+            Material(
+              color: Colors.transparent,
+              child: InkWell(onTap: () => openWebPath(context, slide.ctaUrl)),
+            ),
+      ],
     );
-
-    return frame;
   }
 }

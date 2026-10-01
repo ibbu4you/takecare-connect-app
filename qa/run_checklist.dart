@@ -12,6 +12,7 @@ import 'package:takecare_connect/core/api/api_client.dart';
 import 'package:takecare_connect/core/api/api_endpoints.dart';
 import 'package:takecare_connect/core/api/cursor_page.dart';
 import 'package:takecare_connect/core/api/repository.dart';
+import 'package:takecare_connect/core/models/navigation.dart';
 import 'package:takecare_connect/core/models/business.dart';
 import 'package:takecare_connect/core/models/campaign.dart';
 import 'package:takecare_connect/core/models/donation.dart';
@@ -88,7 +89,7 @@ void main() {
     print('checking ${Api.base}');
     // ignore: avoid_print
     print('  ${live.products.items.length} products, ${live.brands.length} makers, '
-        '${live.home.banners.length} banners, ${live.home.postCategories.length} subjects');
+        '${live.home.banners.length} banners, ${live.home.featuredProducts.length} shop products');
   });
 
   tearDownAll(() {
@@ -207,8 +208,8 @@ void main() {
     await runCase(tester, 'A1.1', 'The app opens on the home page', () async {
       await open(tester, Routes.home);
 
-      expect(find.text('Takecare Connect'), findsOneWidget);
-      expect(find.byIcon(Icons.search_rounded), findsWidgets);
+      expect(find.text('Donate'), findsWidgets);
+      expect(find.byIcon(Icons.menu_rounded), findsOneWidget);
       noRenderErrors(tester, 'the home page');
     });
 
@@ -250,163 +251,207 @@ void main() {
   // =====================================================================  A2
 
   testWidgets('A2 the home page', (tester) async {
-    await runCase(tester, 'A2.1', 'The pictures at the top are a carousel', () async {
+    await runCase(tester, 'A2.1', "The top bar is the website's", () async {
+      await open(tester, Routes.home);
+
+      expect(find.text('Donate'), findsWidgets, reason: 'no Donate button in the bar');
+      expect(find.byIcon(Icons.menu_rounded), findsOneWidget, reason: 'no ☰ menu button');
+      // The website's header carries no words beside its mark.
+      expect(find.text('Takecare Connect'), findsNothing);
+      noRenderErrors(tester, 'the top bar');
+    });
+
+    await runCase(tester, 'A2.2', "The ☰ menu is the website's menu", () async {
+      await open(tester, Routes.home);
+      await tester.tap(find.byIcon(Icons.menu_rounded));
+      await tester.pumpAndSettle();
+
+      final header = live.menus['header'] ?? const <NavItem>[];
+      expect(header, isNotEmpty, reason: 'the API sent no header menu');
+
+      for (final item in header) {
+        expect(find.text(item.label), findsWidgets, reason: '"${item.label}" is not in the menu');
+      }
+      noRenderErrors(tester, 'the menu');
+    });
+
+    await runCase(tester, 'A2.3', "The menu's lists open in place", () async {
+      await open(tester, Routes.home);
+      await tester.tap(find.byIcon(Icons.menu_rounded));
+      await tester.pumpAndSettle();
+
+      final header = live.menus['header'] ?? const <NavItem>[];
+      final withList = header.where((item) => item.hasChildren).toList();
+      expect(withList, isNotEmpty, reason: 'no menu item has a list under it');
+
+      final first = withList.first;
+      await tester.tap(find.text(first.label));
+      await tester.pumpAndSettle();
+
+      for (final child in first.children) {
+        expect(find.text(child.label), findsWidgets, reason: '"${child.label}" did not open');
+      }
+
+      final nested = first.children.where((child) => child.hasChildren).firstOrNull;
+      if (nested != null) {
+        await tester.tap(find.text(nested.label));
+        await tester.pumpAndSettle();
+
+        for (final grandchild in nested.children) {
+          expect(find.text(grandchild.label), findsWidgets);
+        }
+      }
+      noRenderErrors(tester, 'the menu, opened');
+    });
+
+    await runCase(tester, 'A2.4', 'The pictures at the top', () async {
       await open(tester, Routes.home);
 
       expect(live.home.banners, isNotEmpty, reason: 'the API sent no banners');
       expect(find.byType(PageView), findsWidgets);
-    });
 
-    await runCase(tester, 'A2.4', 'The coloured squares never say "0 stories"', () async {
-      await open(tester, Routes.home);
-
-      expect(live.home.postCategories, isNotEmpty, reason: 'the API sent no subjects');
-      expect(
-        texts(tester).where((t) => t.startsWith('0 stor')),
-        isEmpty,
-        reason: 'a subject tile printed a zero count',
-      );
-      // At least one subject's name is on screen.
-      expect(find.text(live.home.postCategories.first.name), findsWidgets);
-    });
-
-    await runCase(tester, 'A2.5', 'No two subject squares share a colour side by side', () async {
-      // Decided by CategoryColours.run, which is the website's own rule.
-      await open(tester, Routes.home);
-
-      final slugs = [for (final c in live.home.postCategories) c.slug];
-      expect(slugs.length, greaterThan(1));
-    });
-
-    await runCase(tester, 'A2.6', 'The numbers band shows counted figures', () async {
-      await open(tester, Routes.home);
-
-      expect(live.home.stats, isNotEmpty, reason: 'the API sent no figures');
-      for (final stat in live.home.stats) {
-        expect(stat.value, isNotEmpty, reason: 'a figure has no value');
-        expect(stat.label, isNotEmpty, reason: 'a figure has no label');
+      if (live.home.banners.length > 1) {
+        // The website's controls: back, forward, pause.
+        expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
+        expect(find.byIcon(Icons.chevron_left_rounded), findsWidgets);
       }
-      expect(
-        await scrollTo(tester, find.text('Join a growing community')),
-        isTrue,
-        reason: 'the impact band is nowhere on the page',
-      );
+    });
 
-      // Every figure it sends is drawn, each on a panel of its own.
-      for (final stat in live.home.stats) {
-        expect(
-          find.text(stat.value).evaluate().isNotEmpty,
-          isTrue,
-          reason: '"${stat.label}" is missing its figure',
-        );
+    await runCase(tester, 'A2.6', 'Who we are', () async {
+      await open(tester, Routes.home);
+
+      expect(await scrollTo(tester, find.text('Connecting talent to opportunity')), isTrue);
+      expect(
+        await scrollTo(tester, find.text('“Every skill deserves a pathway to opportunity.”')),
+        isTrue,
+      );
+      expect(await scrollTo(tester, find.text('Discover our story')), isTrue);
+    });
+
+    await runCase(tester, 'A2.7', 'Explore Take Care Connect — the four pillars', () async {
+      await open(tester, Routes.home);
+
+      for (final pillar in ['Craftsmanship', 'Events', 'Crowdfunding', 'Influencing Narratives']) {
+        expect(await scrollTo(tester, find.text(pillar)), isTrue, reason: 'no "$pillar" pillar');
       }
-
-      noRenderErrors(tester, 'the impact band');
     });
 
-    await runCase(tester, 'A2.7', 'The Donate button sits in that band', () async {
+    await runCase(tester, 'A2.8', 'Meet the makers', () async {
+      if (live.home.featuredCraftsmen.isEmpty) return;
+
       await open(tester, Routes.home);
 
-      // "Be part of it", as the website words it, leading to volunteering.
+      expect(await scrollTo(tester, find.text('Meet the makers')), isTrue);
+      expect(await scrollTo(tester, find.text('View all craftsmen')), isTrue);
+      // Titled with the interview headline, as on the website.
       expect(
-        await scrollTo(tester, find.text('Be part of it')),
+        await scrollTo(tester, find.text(live.home.featuredCraftsmen.first.title)),
         isTrue,
-        reason: 'the invitation is nowhere in the band',
+        reason: 'the first maker card is not titled with its headline',
       );
-      expect(
-        find.text('Changemakers, creators and dreamers — and the people who back them.'),
-        findsWidgets,
-      );
+      noRenderErrors(tester, 'the makers row');
     });
 
-    await runCase(tester, 'A2.9', 'The stories band has a tab per subject', () async {
+    await runCase(tester, 'A2.9', 'Stories that deserve to be seen', () async {
+      if (live.home.featuredStories.length < 2) return;
+
       await open(tester, Routes.home);
 
-      expect(find.text('Stories'), findsWidgets);
-      // "All" is the first pill, and each category section is one more.
-      expect(live.home.categorySections, isNotEmpty);
+      expect(await scrollTo(tester, find.text('Stories that deserve to be seen')), isTrue);
+      expect(await scrollTo(tester, find.text('Featured')), isTrue);
     });
 
-    await runCase(tester, 'A2.11', 'The two invitation panels are there', () async {
+    await runCase(tester, 'A2.10', 'The shop row', () async {
+      if (live.home.featuredProducts.isEmpty) return;
+
       await open(tester, Routes.home);
 
-      // The website's own words, so the two surfaces read the same.
+      expect(await scrollTo(tester, find.text('Discover the craft. Support the maker.')), isTrue);
+      expect(await scrollTo(tester, find.text('View details')), isTrue);
+      expect(find.textContaining('Buy'), findsNothing, reason: 'the shop row offers to sell');
+    });
+
+    await runCase(tester, 'A2.11', 'What is happening', () async {
+      await open(tester, Routes.home);
+
+      expect(await scrollTo(tester, find.text('What is happening')), isTrue);
+      expect(await scrollTo(tester, find.text('Craft & Culture Showcase')), isTrue);
+    });
+
+    await runCase(tester, 'A2.12', 'Ideas need opportunity — the campaigns', () async {
+      await open(tester, Routes.home);
+
+      final found = await scrollTo(tester, find.text('Ideas need opportunity'));
+
+      if (live.home.activeCampaigns.isEmpty) {
+        expect(found, isFalse, reason: 'a crowdfunding heading over no campaigns');
+      } else {
+        expect(found, isTrue, reason: 'the campaigns are nowhere on the page');
+        noRenderErrors(tester, 'the campaigns');
+      }
+    });
+
+    await runCase(tester, 'A2.13', 'Our approach, our ecosystem, our vision', () async {
+      await open(tester, Routes.home);
+
+      expect(await scrollTo(tester, find.text('From discovery to opportunity')), isTrue);
       expect(
-        await scrollTo(tester, find.text('India’s craftsmen. Told properly.')),
+        await scrollTo(tester, find.text('We do not replace the ecosystems. We connect them.')),
         isTrue,
-        reason: 'the first invitation panel is missing',
       );
-      expect(
-        await scrollTo(tester, find.text('Do you run a business worth knowing about?')),
-        isTrue,
-        reason: 'the second invitation panel is missing',
-      );
-      noRenderErrors(tester, 'the invitation panels');
+      expect(live.home.landingImages.vision, isNotNull, reason: 'the API sent no vision artwork');
     });
 
-    await runCase(tester, 'A2.12', 'The four programmes have four different icons', () async {
+    await runCase(tester, 'A2.14', 'Where do you fit in?', () async {
       await open(tester, Routes.home);
 
-      expect(live.home.programmes, isNotEmpty);
-      final icons = {for (final p in live.home.programmes) p.icon};
-      expect(
-        icons.length,
-        live.home.programmes.length,
-        reason: 'two programmes share an icon key, so they would draw the same glyph',
-      );
+      expect(await scrollTo(tester, find.text('Where do you fit in?')), isTrue);
+      for (final door in ['I am talent', 'I am a business', 'I want to support', 'I am an organisation']) {
+        expect(await scrollTo(tester, find.text(door)), isTrue, reason: 'no "$door" card');
+      }
     });
 
-    await runCase(tester, 'A2.13', 'Up to six campaigns, each with a progress bar', () async {
+    await runCase(tester, 'A2.15', 'The closing section and the footer', () async {
       await open(tester, Routes.home);
 
+      expect(await scrollTo(tester, find.text('Let’s build the connection together.'), steps: 30), isTrue);
       expect(
-        live.home.activeCampaigns.length,
-        lessThanOrEqualTo(6),
-        reason: 'more than six campaigns reached the rail',
-      );
-      expect(
-        await scrollTo(tester, find.text('Campaigns you can back')),
+        await scrollTo(tester, find.textContaining('All rights reserved.'), steps: 30),
         isTrue,
-        reason: 'the campaigns rail is nowhere on the page',
+        reason: 'the footer is missing',
       );
-      noRenderErrors(tester, 'the campaigns rail');
-    });
 
-    await runCase(tester, 'A2.14', "The website's footer strip is not shown", () async {
+      // The defect this whole round of work once started with: a banner meant
+      // for the foot of a page must never rotate at the top of the app.
       final footer = live.home.footerBanner;
+      if (footer != null) {
+        expect(
+          live.home.banners.every((b) => b.bestImage != footer.bestImage),
+          isTrue,
+          reason: 'the footer strip is also a hero slide',
+        );
+      }
+      noRenderErrors(tester, 'the foot of the page');
+    });
 
-      if (footer == null) return;
-
+    await runCase(tester, 'A2.16', 'None of the old sections is left', () async {
       await open(tester, Routes.home);
 
-      /*
-       | Two things, and the first is the defect this whole round of work
-       | started with: a banner meant for the foot of a web page was rotating
-       | at the top of the app, because the query filtered the dates and the
-       | active flag and not the placement.
-       */
-      expect(
-        live.home.banners.every((b) => b.bestImage != footer.bestImage),
-        isTrue,
-        reason: 'the footer strip is also a hero slide',
-      );
+      final onScreen = (await allTexts(tester, steps: 30)).join('\n');
 
-      // And the second: the app does not draw that strip at all. It is still
-      // sent and still parsed, so it can come back — but on a phone the foot
-      // of the home page is where somebody stops scrolling.
-      final onScreen = await allTexts(tester, steps: 20);
-      final title = footer.title?.trim() ?? '';
-
-      if (title.isNotEmpty) {
-        expect(
-          onScreen.any((t) => t.contains(title)),
-          isFalse,
-          reason: 'the before-footer strip is being drawn on the home page',
-        );
+      for (final gone in [
+        'WHAT WE HAVE DONE',
+        'India’s craftsmen. Told properly.',
+        'Do you run a business worth knowing about?',
+        'Our programmes',
+        'Craftsmen and makers',
+        'Campaigns you can back',
+      ]) {
+        expect(onScreen.contains(gone), isFalse, reason: 'the old "$gone" section is still drawn');
       }
     });
 
-    await runCase(tester, 'A2.15', 'Pull to refresh is offered', () async {
+    await runCase(tester, 'A2.17', 'Pull to refresh is offered', () async {
       await open(tester, Routes.home);
 
       expect(find.byType(RefreshIndicator), findsWidgets);
@@ -414,30 +459,18 @@ void main() {
 
     await runCase(tester, 'A2.18', 'The whole page lays out at a large font', () async {
       /*
-       | The check that catches what the others miss.
-       |
-       | A case that scrolls to a band and looks for its heading passes
-       | whether or not that band laid out correctly. This one walks the
-       | entire page at the narrowest width and the largest font the app
-       | allows, and asks only whether anything overflowed — which is how
-       | both of the layout faults found today were found.
+       | The check that catches what the others miss: the entire page at the
+       | narrowest width and the largest font the app allows, asking only
+       | whether anything overflowed.
        */
       for (final width in [320.0, 360.0, 400.0]) {
         for (final scale in [1.0, 1.3]) {
           await open(tester, Routes.home, size: Size(width, 900), textScale: scale);
-          await allTexts(tester, steps: 20);
+          await allTexts(tester, steps: 30);
 
           noRenderErrors(tester, 'the home page at ${width}pt / ${scale}x');
         }
       }
-    });
-
-    await runCase(tester, 'A2.17', 'There is no app store badge inside the app', () async {
-      await open(tester, Routes.home);
-
-      final all = texts(tester).join(' ').toLowerCase();
-      expect(all.contains('google play'), isFalse);
-      expect(all.contains('app store'), isFalse);
     });
   });
 
@@ -1134,11 +1167,13 @@ void main() {
     });
 
     await runCase(tester, 'A11.3', 'No figure on the home page is invented', () async {
-      final labels = [for (final s in live.home.stats) s.label.toLowerCase()];
+      await open(tester, Routes.home);
+
+      final words = (await allTexts(tester, steps: 30)).join(' ').toLowerCase();
 
       for (final unmeasurable in ['lives touched', 'people reached', 'readers']) {
         expect(
-          labels.any((l) => l.contains(unmeasurable)),
+          words.contains(unmeasurable),
           isFalse,
           reason: 'the home page claims "$unmeasurable", which nobody here can measure',
         );
@@ -1162,6 +1197,7 @@ void main() {
 class _Live {
   _Live({
     required this.home,
+    required this.menus,
     required this.settings,
     required this.formOptions,
     required this.posts,
@@ -1190,6 +1226,10 @@ class _Live {
   });
 
   final HomePayload home;
+
+  /// The website's menus by location: header, footer, footer_secondary, legal.
+  final Map<String, List<NavItem>> menus;
+
   final SiteSettings settings;
   final FormOptions formOptions;
   final CursorPage<PostSummary> posts;
@@ -1278,6 +1318,10 @@ class _Live {
 
     return _Live(
       home: await repo.home(),
+      menus: {
+        for (final location in ['header', 'footer', 'footer_secondary', 'legal'])
+          location: await repo.navigation(location: location == 'header' ? null : location),
+      },
       settings: await repo.settings(),
       formOptions: await repo.formOptions(),
       posts: posts,
@@ -1325,6 +1369,10 @@ class _Fixed extends Repository {
 
   @override
   Future<SiteSettings> settings() async => _l.settings;
+
+  @override
+  Future<List<NavItem>> navigation({String? location}) async =>
+      _l.menus[location ?? 'header'] ?? const [];
 
   @override
   Future<FormOptions> formOptions() async => _l.formOptions;

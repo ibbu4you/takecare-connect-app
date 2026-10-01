@@ -41,9 +41,14 @@ class Repository {
     return SiteSettings.fromJson(_object(json));
   }
 
-  /// The website's header menu, for the app's menu.
-  Future<List<NavItem>> navigation() async {
-    return _list(await _api.get(Api.navigation), NavItem.fromJson);
+  /// One of the website's menus: the header by default, or a footer one —
+  /// `footer` (Explore), `footer_secondary` (Get involved), `legal`.
+  Future<List<NavItem>> navigation({String? location}) async {
+    final json = await _api.get(Api.navigation, query: {
+      if (location != null) 'location': location,
+    });
+
+    return _list(json, NavItem.fromJson);
   }
 
   Future<FormOptions> formOptions() async {

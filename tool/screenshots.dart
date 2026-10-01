@@ -167,19 +167,22 @@ Future<void> _loadImages(_Snapshot s) async {
   for (final b in s.home.banners) {
     add(b.bestImage);
   }
-  // The rest of the front page. The category tiles are the visible ones —
-  // without them the home screenshot is a grid of grey rectangles where the
-  // subjects should be — but every one of these renders a placeholder just as
-  // quietly if it is missed.
+  // The rest of the front page, every photograph it draws — each renders a
+  // grey placeholder in the screenshot just as quietly if it is missed.
   add(s.home.footerBanner?.bestImage);
-  add(s.home.ctaImage);
-  add(s.home.promoImages.craft);
-  add(s.home.promoImages.discover);
-  for (final tile in s.home.postCategories) {
-    add(tile.image);
+  final landing = s.home.landingImages;
+  for (final url in [
+    landing.whoWeAre,
+    landing.craftsmanship,
+    landing.events,
+    landing.crowdfunding,
+    landing.stories,
+    landing.vision,
+  ]) {
+    add(url);
   }
-  for (final t in s.home.testimonials) {
-    add(t.avatar);
+  for (final product in s.home.featuredProducts) {
+    add(product.thumbnail);
   }
   for (final p in [...s.home.featuredStories, ...s.posts.items, ...s.trending]) {
     add(p.thumbnail);

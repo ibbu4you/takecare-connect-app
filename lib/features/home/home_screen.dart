@@ -14,7 +14,8 @@ import '../../core/widgets/state_views.dart';
 import '../../core/widgets/tcif_logo.dart';
 import 'sections/hero_carousel.dart';
 import 'sections/landing_bands.dart';
-import 'sections/stories_band.dart';
+import 'sections/landing_footer.dart';
+import 'sections/landing_rows.dart';
 
 /// The front page, matching the website's landing page section for section.
 ///
@@ -82,7 +83,7 @@ class HomeScreen extends ConsumerWidget {
       if (data.featuredStories.length > 1)
         HomeBand(
           ground: BandGround.surface,
-          child: StoriesBand(featured: data.featuredStories, sections: data.categorySections),
+          child: LandingStoriesBand(featured: data.featuredStories, sections: data.categorySections),
         ),
 
       if (data.featuredProducts.isNotEmpty) ShopBand(products: data.featuredProducts),
@@ -100,6 +101,12 @@ class HomeScreen extends ConsumerWidget {
       const FitInBand(),
 
       const ClosingBand(),
+
+      // The foot of every website page: the strip the office sets above the
+      // footer, then the footer itself.
+      if (data.footerBanner != null) FooterBannerBand(banner: data.footerBanner!),
+
+      const SiteFooterBand(),
     ];
 
     return [for (final band in bands) SliverToBoxAdapter(child: band)];
@@ -140,7 +147,7 @@ SliverAppBar homeAppBar(BuildContext context) {
         child: FilledButton(
           onPressed: () => context.push(Routes.donate),
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.accentButton,
+            backgroundColor: AppColors.accent,
             foregroundColor: AppColors.accentForeground,
             padding: const EdgeInsets.symmetric(horizontal: 18),
             minimumSize: const Size(0, 36),

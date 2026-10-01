@@ -24,11 +24,11 @@ void main() {
       });
 
       expect(payload.banners, hasLength(1));
-      expect(payload.postCategories, isEmpty);
-      expect(payload.stats, isEmpty);
-      expect(payload.testimonials, isEmpty);
-      expect(payload.ctaImage, isNull);
-      expect(payload.promoImages.craft, isNull);
+      // The landing page's newer sections, from a server that predates them:
+      // empty, and the sections leave themselves out.
+      expect(payload.featuredProducts, isEmpty);
+      expect(payload.landingImages.whoWeAre, isNull);
+      expect(payload.landingImages.vision, isNull);
       expect(payload.footerBanner, isNull);
     });
 
@@ -69,23 +69,18 @@ void main() {
             'secondary_cta': {'label': 'All stories', 'url': '/blog'},
           },
         ],
-        'post_categories': [
-          {'slug': 'her-stories', 'name': 'Her Stories', 'count': 12, 'image': 'x.jpg'},
-          {'slug': 'nothing-yet', 'name': 'Nothing yet', 'count': 0},
+        'featured_products': [
+          {'slug': 'noni-soap', 'name': 'Eden Noni Soap', 'price_label': '₹100'},
         ],
-        'stats': [
-          {'value': '1,000+', 'label': 'Stories published'},
-          {'value': 'One', 'label': 'Brighter India'},
+        'featured_craftsmen': [
+          {'slug': 'eden', 'name': 'Eden Food Park', 'headline': 'The inspiring journey of Abdullah'},
+          {'slug': 'plain', 'name': 'A maker with no interview headline'},
         ],
-        'testimonials': [
-          {
-            'quote': 'They printed my number and the orders came.',
-            'author_name': 'Selvi',
-            'author_role': 'Potter, Khurja',
-          },
-        ],
-        'cta_image': 'https://example.test/band.jpg',
-        'promo_images': {'craft': 'craft.jpg', 'discover': 'discover.jpg'},
+        'landing_images': {
+          'who_we_are': 'https://example.test/who.webp',
+          'pillars': {'craftsmanship': 'c.webp', 'events': 'e.webp', 'crowdfunding': 'f.webp', 'stories': 's.webp'},
+          'vision': 'https://example.test/vision.png',
+        },
         'footer_banner': {'title': 'Above the footer', 'image': 'strip.jpg'},
       });
 
@@ -95,16 +90,15 @@ void main() {
       expect(slide.hasCta, isTrue);
       expect(slide.hasSecondaryCta, isTrue);
 
-      expect(payload.postCategories.first.countLabel, '12 stories');
-      // Never "0 stories" — no line at all is better.
-      expect(payload.postCategories.last.countLabel, isNull);
+      expect(payload.featuredProducts.single.name, 'Eden Noni Soap');
 
-      // A string, because the server rounds and one of them is a word.
-      expect(payload.stats.last.value, 'One');
+      // A maker card is titled with the interview headline, or the name.
+      expect(payload.featuredCraftsmen.first.title, 'The inspiring journey of Abdullah');
+      expect(payload.featuredCraftsmen.last.title, 'A maker with no interview headline');
 
-      expect(payload.testimonials.first.authorRole, 'Potter, Khurja');
-      expect(payload.ctaImage, isNotNull);
-      expect(payload.promoImages.discover, 'discover.jpg');
+      expect(payload.landingImages.whoWeAre, 'https://example.test/who.webp');
+      expect(payload.landingImages.events, 'e.webp');
+      expect(payload.landingImages.vision, 'https://example.test/vision.png');
       expect(payload.footerBanner?.title, 'Above the footer');
     });
   });

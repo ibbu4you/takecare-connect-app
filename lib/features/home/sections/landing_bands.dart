@@ -11,10 +11,9 @@ import '../../../core/router/route_names.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_image.dart';
-import '../../../core/widgets/card_carousel.dart';
 import '../../../core/widgets/cards.dart';
 import '../../../core/widgets/section_header.dart';
-import '../../../core/widgets/shop_cards.dart';
+import 'landing_rows.dart';
 
 /*
  | The landing page's sections, as the website draws them on a phone.
@@ -135,8 +134,8 @@ class _ArrowLink extends StatelessWidget {
 
 /// The red button the website uses for its two strongest calls.
 ///
-/// accentButton, the darker red, rather than the accent itself: white on the
-/// lighter red does not reach the contrast a label needs.
+/// The website's own red — bg-accent — so the two calls look the same on
+/// both.
 class _AccentButton extends StatelessWidget {
   const _AccentButton({required this.label, required this.onPressed, this.expand = false});
 
@@ -149,7 +148,7 @@ class _AccentButton extends StatelessWidget {
     final button = FilledButton(
       onPressed: onPressed,
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.accentButton,
+        backgroundColor: AppColors.accent,
         foregroundColor: AppColors.accentForeground,
         minimumSize: const Size(0, 50),
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -526,27 +525,20 @@ class MakersBand extends StatelessWidget {
   Widget build(BuildContext context) {
     return HomeBand(
       ground: BandGround.navy,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _header(
-            onDark: true,
-            eyebrow: 'Craftsmanship',
-            title: 'Meet the makers',
-            description: 'Every craft has a story. Every maker has a journey. Discover the people '
-                'and skills behind the work.',
-            actionLabel: 'View all craftsmen',
-            onAction: () => context.go(Routes.craftsmen),
-          ),
-          CardCarousel(
-            height: 352,
-            itemCount: businesses.length,
-            itemBuilder: (context, i) => _MakerCard(
-              business: businesses[i],
-              onTap: () => context.go(Routes.craftsman(businesses[i].slug)),
-            ),
-          ),
-        ],
+      child: LandingCarousel(
+        onDark: true,
+        eyebrow: 'Craftsmanship',
+        title: 'Meet the makers',
+        description: 'Every craft has a story. Every maker has a journey. Discover the people '
+            'and skills behind the work.',
+        viewAllLabel: 'View all craftsmen',
+        onViewAll: () => context.go(Routes.craftsmen),
+        itemCount: businesses.length,
+        height: 400,
+        itemBuilder: (context, i) => _MakerCard(
+          business: businesses[i],
+          onTap: () => context.go(Routes.craftsman(businesses[i].slug)),
+        ),
       ),
     );
   }
@@ -655,26 +647,19 @@ class ShopBand extends StatelessWidget {
   Widget build(BuildContext context) {
     return HomeBand(
       ground: BandGround.surface,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _header(
-            eyebrow: 'Shop',
-            title: 'Discover the craft. Support the maker.',
-            description: 'Explore products created by talented makers and craftsmen featured on '
-                'Take Care Connect.',
-            actionLabel: 'Visit the shop',
-            onAction: () => context.go(Routes.shop),
-          ),
-          CardCarousel(
-            height: 336,
-            itemCount: products.length,
-            itemBuilder: (context, i) => ProductCard(
-              product: products[i],
-              onTap: () => context.go(Routes.product(products[i].slug)),
-            ),
-          ),
-        ],
+      child: LandingCarousel(
+        eyebrow: 'Shop',
+        title: 'Discover the craft. Support the maker.',
+        description: 'Explore products created by talented makers and craftsmen featured on '
+            'Take Care Connect.',
+        viewAllLabel: 'Visit the shop',
+        onViewAll: () => context.go(Routes.shop),
+        itemCount: products.length,
+        height: 470,
+        itemBuilder: (context, i) => LandingProductCard(
+          product: products[i],
+          onTap: () => context.go(Routes.product(products[i].slug)),
+        ),
       ),
     );
   }

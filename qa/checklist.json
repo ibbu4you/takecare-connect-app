@@ -155,170 +155,160 @@
     {
       "id": "A2",
       "area": "home",
-      "title": "The home page, band by band",
+      "title": "The home page — the website's landing page, section by section",
       "cases": [
         {
           "id": "A2.1",
-          "title": "The pictures at the top change on their own and when you swipe",
+          "title": "The top bar is the website's",
           "steps": [
-            "On the home page, look at the large photograph at the top.",
-            "Wait about six seconds without touching anything.",
-            "Then swipe the picture sideways with your finger."
+            "Open the app on the Home tab and look at the bar across the top."
           ],
-          "expected": "It changes by itself after about six seconds, and the small dots underneath move along. After you swipe it once, it stops changing by itself and waits for you."
+          "expected": "On the left, the foundation's round logo. On the right, a red 'Donate' button and a ☰ menu button. Nothing else — no app name and no magnifying glass, exactly like the website on a phone."
         },
         {
           "id": "A2.2",
-          "title": "The writing over the picture is readable",
+          "title": "The ☰ menu is the website's menu",
           "steps": [
-            "Swipe through every picture at the top, one at a time."
+            "Tap ☰ at the top right.",
+            "Compare the list with the website's menu on a phone."
           ],
-          "expected": "On any picture that has words over it, the words are white and clearly readable — never white writing on a pale sky. Some pictures are designs with the words already printed in them; those correctly have no extra writing added on top."
+          "expected": "A panel slides in from the right with the same items in the same order: Our Programs, Shop, Brands, Influencing Narratives, Join our community, News and Media, Reach Us, About Us. Search is the first row and a red Donate button is at the bottom."
         },
         {
           "id": "A2.3",
-          "title": "Both buttons on a picture work",
+          "title": "The menu's lists open in place",
           "steps": [
-            "Find a picture at the top that has two buttons on it — one filled in, one outlined.",
-            "Tap the filled one. Come back. Tap the outlined one."
+            "In the menu, tap 'Our Programs'.",
+            "Then tap '100 Most Inspiring Startup' inside it.",
+            "Tap 'Register'."
           ],
-          "expected": "Each opens the thing it names, inside the app. Neither does nothing, and neither opens a web browser unless it is plainly an outside website."
+          "expected": "Each opens underneath itself rather than as a separate box, and the arrow turns over. 'Register' appears under '100 Most Inspiring Startup' and opens the interview registration form inside the app. 'Pride of Humanity' has a small 'opens outside' mark and opens the web browser."
         },
         {
           "id": "A2.4",
-          "title": "The coloured squares under the pictures",
+          "title": "The pictures at the top",
           "steps": [
-            "Scroll down a little from the top of the home page.",
-            "Look at the grid of coloured squares.",
-            "Tap one."
+            "Look at the large picture at the top. Wait six seconds.",
+            "Tap the › button at the bottom, then the pause button."
           ],
-          "expected": "Each square has a subject written on it and, underneath, how many stories there are — for example '21 stories'. None says '0 stories'. Tapping one opens the Stories tab already showing only that subject."
+          "expected": "It changes by itself every six seconds. Along the bottom are three round buttons — back, forward, pause — and a short bar for each picture, the current one long and red. Pause stops it changing; the words over each picture are white and readable, and both buttons are full width."
         },
         {
           "id": "A2.5",
-          "title": "Each subject keeps its own colour",
+          "title": "Both buttons on a picture work",
           "steps": [
-            "Note the colour of the first two squares.",
-            "Pull the page down to refresh it, and look again."
+            "On a picture with two buttons — red and outlined — tap the red one. Come back and tap the outlined one."
           ],
-          "expected": "The same subjects have the same colours as before. No two squares next to each other are the same colour."
+          "expected": "Each opens the thing it names, inside the app."
         },
         {
           "id": "A2.6",
-          "title": "The numbers band",
+          "title": "Who we are",
           "steps": [
-            "Keep scrolling down past the coloured squares."
+            "Scroll to 'Connecting talent to opportunity'."
           ],
-          "expected": "A dark band with 'WHAT WE HAVE DONE' above a heading, then several figures with a short label under each — for example a number of stories published. One of them reads 'One / Brighter India'. Every figure has both a number and a label; none is blank."
+          "expected": "The words match the website, with 'unseen', 'undervalued' and 'disconnected' in bold, a quotation with a red line down its left — 'Every skill deserves a pathway to opportunity.' — a red 'Discover our story' button, and a photograph underneath. The button opens About."
         },
         {
           "id": "A2.7",
-          "title": "The Donate button in that band",
+          "title": "Explore Take Care Connect — the four pillars",
           "steps": [
-            "In the dark band, find the red button and tap it."
+            "Scroll to 'Explore Take Care Connect'. Tap each of the four cards in turn, coming back each time."
           ],
-          "expected": "The donation screen opens. The line under the button says every rupee is receipted and mentions the 80G tax benefit."
+          "expected": "Four dark blue cards, each with a photograph and a number 01–04 on it: Craftsmanship, Events, Crowdfunding, Influencing Narratives. They open Craftsmen, the photo galleries, Give and Stories."
         },
         {
           "id": "A2.8",
-          "title": "A quote from a real person",
+          "title": "Meet the makers",
           "steps": [
-            "Look inside the dark band for a quotation in speech marks."
+            "Scroll to the dark blue 'Meet the makers' section. Press › twice, then tap the card showing.",
+            "Come back and tap 'View all craftsmen'."
           ],
-          "expected": "If the office has added one, you see the quote with a name under it, and either a small round photograph or that person's initials in a circle. If there is no quote yet, the band simply has no quotation — not an empty box.",
-          "blocker": false
+          "expected": "One white card at a time across the width, with ‹ › beside 'View all craftsmen'; › greys out on the last card. Each card has a photograph (or a plain area if the maker has none), its interview headline, the maker and town, and 'Read their story'."
         },
         {
           "id": "A2.9",
-          "title": "The stories band and its subject buttons",
+          "title": "Stories that deserve to be seen",
           "steps": [
-            "Scroll to the band headed 'Stories'.",
-            "Tap the small oval buttons above the cards — 'All' first, then one of the subjects."
+            "Scroll to the stories section. Tap a subject pill, then 'All'."
           ],
-          "expected": "One large story card sits above a row you can swipe sideways. Tapping a subject changes the cards to that subject's stories. Tapping 'All' brings back the newest from everywhere. The cards change without the whole page reloading."
+          "expected": "The pills wrap onto more than one line. Each card has the subject and 'min read' on its photograph, the title, two lines of it, and the author's initials with the date. The first card under 'All' is marked 'Featured'; under a subject none is."
         },
         {
           "id": "A2.10",
-          "title": "The craftsmen row",
+          "title": "The shop row",
           "steps": [
-            "Scroll to 'Craftsmen and makers'.",
-            "Swipe the row of square cards sideways, then tap one.",
-            "Come back, and tap 'All' at the top right of that band."
+            "Scroll to 'Discover the craft. Support the maker.' Tap 'View details' on a card.",
+            "Come back and tap 'Visit the shop'."
           ],
-          "expected": "The row swipes smoothly. Tapping a card opens that person's interview. 'All' opens the full list of craftsmen."
+          "expected": "Each card has the category on its photograph, the product, 'by' the maker and town, the price — or 'Ask the maker' — and a blue 'View details' button. There is no Buy button anywhere."
         },
         {
           "id": "A2.11",
-          "title": "The two invitation panels",
+          "title": "What is happening",
           "steps": [
-            "Scroll to the two large dark panels.",
-            "Tap the first, come back, then tap the second."
+            "Scroll to 'What is happening' and tap 'See the photographs' on any card."
           ],
-          "expected": "The first opens the Shop. The second opens the form for a craftsman to put themselves forward for an interview. Each panel has a heading, a sentence and an arrow."
+          "expected": "Three cards — Craft & Culture Showcase, Learn from the makers, Stories & Conversations — with no dates or prices. Each opens the photo galleries."
         },
         {
           "id": "A2.12",
-          "title": "The four programmes",
+          "title": "Ideas need opportunity — the campaigns",
           "steps": [
-            "Scroll to 'Our programmes'.",
-            "Tap each of the four rows in turn, coming back each time."
+            "Scroll to the dark blue crowdfunding section, if any campaign is running. Tap a campaign."
           ],
-          "expected": "Four rows, each with a different small icon — not the same icon four times. Each opens something. The one that leads to an outside website shows a small 'open outwards' arrow instead of a '>' and opens your web browser."
+          "expected": "Up to three campaign cards, one under another, each with a progress bar. If more than three are running, 'All campaigns' sits under them. With none running, the whole section is absent — not an empty heading.",
+          "blocker": false
         },
         {
           "id": "A2.13",
-          "title": "The campaigns row",
+          "title": "Our approach, our ecosystem, our vision",
           "steps": [
-            "Scroll to 'Campaigns you can back'.",
-            "Swipe the row sideways and count the cards.",
-            "Tap one."
+            "Keep scrolling through 'From discovery to opportunity', 'We do not replace the ecosystems' and the vision picture."
           ],
-          "expected": "Up to six cards, each with a picture, a title and a progress bar. Tapping one opens that campaign. A campaign that has closed says 'Closed' on its picture."
+          "expected": "Five numbered steps 01–05 in one panel; six cards each opening with a short red line; then the vision artwork across the full width with nothing cut off."
         },
         {
           "id": "A2.14",
-          "title": "The website’s footer strip is not shown in the app",
+          "title": "Where do you fit in?",
           "steps": [
-            "Open the website in a browser and scroll to the bottom of any page. Note the wide promotional strip just above the footer, if the office has set one.",
-            "Now scroll to the very end of the app’s home page."
+            "Tap each of the four cards in turn, coming back each time."
           ],
-          "expected": "The app does not show that strip. The home page simply ends after the campaigns. This is deliberate: on a phone the foot of the home page is where somebody has just read nine sections, and an advertisement there is what stops them scrolling. It also must never appear among the pictures at the top — that was a real fault, and it is the next case."
+          "expected": "I am talent opens the interview registration; I am a business and I am an organisation open Reach Us; I want to support opens Give."
         },
         {
           "id": "A2.15",
-          "title": "Pull to refresh",
+          "title": "The closing section and the footer",
           "steps": [
-            "Scroll back to the top of the home page.",
-            "Drag the page down and let go."
+            "Scroll to the very end of the home page."
           ],
-          "expected": "A spinning circle appears, then the page reloads. Nothing disappears permanently and no error appears."
+          "expected": "'Let's build the connection together.' with two full-width buttons, then the strip the office has set above the footer (if any), then the dark footer: the foundation's name and description, its registration ticks, Explore, Get involved, Contact us, and '© year … All rights reserved.' with the legal links. Phone and email in the footer open the dialler and email."
         },
         {
           "id": "A2.16",
-          "title": "The top bar comes back when you scroll up",
+          "title": "None of the old sections is left",
           "steps": [
-            "Scroll a long way down the home page.",
-            "Now flick upwards a little."
+            "Scroll the whole home page from top to bottom."
           ],
-          "expected": "The bar with the logo and the magnifying glass slides back into view straight away, without having to scroll all the way to the top."
+          "expected": "There are no coloured subject squares, no 'What we have done' figures band, no two invitation panels and no list of four programmes. Those were removed from the website and are gone from the app too."
         },
         {
           "id": "A2.17",
-          "title": "There is no app store badge inside the app",
+          "title": "Pull to refresh",
           "steps": [
-            "Scroll the whole home page and look for a 'Get it on Google Play' or 'App Store' badge."
+            "Scroll back to the top and drag the page down."
           ],
-          "expected": "There is none. You are already in the app, so a badge for the shop you installed it from would be pointless. (There is a 'Rate this app' row on the More tab instead, once the office fills in the link.)"
+          "expected": "A spinning circle appears, then the page reloads. Nothing disappears and no error appears."
         },
         {
           "id": "A2.18",
           "title": "The whole home page lays out at the largest font",
           "steps": [
             "Set your phone's font size to the largest, in Settings → Display.",
-            "Open the app and scroll the home page slowly from top to bottom.",
+            "Scroll the home page slowly from top to bottom, and open the ☰ menu with every list open.",
             "Put the font size back afterwards."
           ],
-          "expected": "Nothing anywhere on the page shows black-and-yellow striped bars, and no text is chopped off mid-word. Headings may wrap onto more lines and the page will be longer — that is fine.",
+          "expected": "Nothing anywhere shows black-and-yellow striped bars, and no text is chopped off mid-word.",
           "blocker": true
         }
       ]
@@ -1126,7 +1116,7 @@
           "steps": [
             "Read the numbers in the dark band on the home page."
           ],
-          "expected": "They are things that can be counted — stories published, businesses interviewed, subjects covered, live campaigns. There is nothing about 'lives touched' or 'people reached', which nobody here can measure."
+          "expected": "The home page counts nothing of its own any more. The only numbers on it are a campaign's raised amount and its goal, which come from real donations. Nowhere does it claim lives touched, people reached or readers."
         },
         {
           "id": "A11.4",

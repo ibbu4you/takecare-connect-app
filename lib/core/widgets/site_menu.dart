@@ -97,7 +97,7 @@ class SiteMenu extends ConsumerWidget {
                   host.push(Routes.donate);
                 },
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accentButton,
+                  backgroundColor: AppColors.accent,
                   foregroundColor: AppColors.accentForeground,
                   minimumSize: const Size.fromHeight(50),
                   shape: RoundedRectangleBorder(

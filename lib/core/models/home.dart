@@ -108,124 +108,6 @@ class BannerSlide {
   }
 }
 
-/// One counted figure from the impact band.
-///
-/// The value is a string on purpose — the server rounds ("1,000+") and one of
-/// them is the word "One", for "One brighter India". Formatting it here would
-/// mean parsing prose back into a number.
-class ImpactStat {
-  const ImpactStat({required this.value, required this.label});
-
-  final String value;
-  final String label;
-
-  factory ImpactStat.fromJson(Map<String, dynamic> json) => ImpactStat(
-        value: (json['value'] ?? '') as String,
-        label: (json['label'] ?? '') as String,
-      );
-}
-
-/// Somebody's words about the foundation, with their name against them.
-class Testimonial {
-  const Testimonial({
-    required this.quote,
-    this.authorName,
-    this.authorRole,
-    this.avatar,
-    this.url,
-  });
-
-  final String quote;
-  final String? authorName;
-  final String? authorRole;
-
-  /// Optional, and null rather than a placeholder: initials read better than a
-  /// grey silhouette.
-  final String? avatar;
-
-  final String? url;
-
-  factory Testimonial.fromJson(Map<String, dynamic> json) => Testimonial(
-        quote: (json['quote'] ?? '') as String,
-        authorName: json['author_name'] as String?,
-        authorRole: json['author_role'] as String?,
-        avatar: json['avatar'] as String?,
-        url: json['url'] as String?,
-      );
-}
-
-/// A subject a reader can browse by, with a cover picture and a count.
-class PostCategoryTile {
-  const PostCategoryTile({
-    required this.slug,
-    required this.name,
-    this.description,
-    this.count = 0,
-    this.image,
-  });
-
-  final String slug;
-  final String name;
-  final String? description;
-  final int count;
-
-  /// Null until somebody uploads one; the tile draws itself in the category's
-  /// own colour instead of leaving a gap.
-  final String? image;
-
-  /// "12 stories", or nothing at all for a subject nobody has written in yet —
-  /// "0 stories" on a tile is worse than no line.
-  String? get countLabel => count == 0 ? null : '$count ${count == 1 ? 'story' : 'stories'}';
-
-  factory PostCategoryTile.fromJson(Map<String, dynamic> json) => PostCategoryTile(
-        slug: (json['slug'] ?? '') as String,
-        name: (json['name'] ?? '') as String,
-        description: json['description'] as String?,
-        count: (json['count'] ?? 0) as int,
-        image: json['image'] as String?,
-      );
-}
-
-/// The two photographs behind the invitation panels. Either may be absent, and
-/// the panel draws its own field instead.
-class PromoImages {
-  const PromoImages({this.craft, this.discover});
-
-  final String? craft;
-  final String? discover;
-
-  factory PromoImages.fromJson(Map<String, dynamic>? json) => PromoImages(
-        craft: json?['craft'] as String?,
-        discover: json?['discover'] as String?,
-      );
-}
-
-class Programme {
-  const Programme({
-    required this.title,
-    required this.description,
-    required this.path,
-    this.icon,
-    this.external = false,
-  });
-
-  final String title;
-  final String description;
-
-  /// A path the app routes on, not a website URL.
-  final String path;
-  final String? icon;
-  final bool external;
-
-  factory Programme.fromJson(Map<String, dynamic> json) => Programme(
-        title: (json['title'] ?? '') as String,
-        description: (json['description'] ?? '') as String,
-        path: (json['path'] ?? '') as String,
-        icon: json['icon'] as String?,
-        external: (json['external'] ?? false) as bool,
-      );
-}
-
 class CategorySection {
   const CategorySection({
     required this.slug,
@@ -290,34 +172,16 @@ class LandingImages {
 class HomePayload {
   const HomePayload({
     this.banners = const [],
-    this.postCategories = const [],
-    this.stats = const [],
-    this.testimonials = const [],
-    this.ctaImage,
-    this.promoImages = const PromoImages(),
     this.featuredStories = const [],
     this.featuredCraftsmen = const [],
     this.featuredProducts = const [],
     this.landingImages = const LandingImages(),
     this.activeCampaigns = const [],
-    this.programmes = const [],
     this.categorySections = const [],
     this.footerBanner,
   });
 
   final List<BannerSlide> banners;
-
-  /// The subjects a reader browses by, under the hero.
-  final List<PostCategoryTile> postCategories;
-
-  /// The counted figures and the quote that share one band with the donate ask.
-  final List<ImpactStat> stats;
-  final List<Testimonial> testimonials;
-
-  /// The photograph behind that band. Null and it draws a navy field.
-  final String? ctaImage;
-
-  final PromoImages promoImages;
 
   final List<PostSummary> featuredStories;
   final List<BusinessSummary> featuredCraftsmen;
@@ -328,7 +192,6 @@ class HomePayload {
   final LandingImages landingImages;
 
   final List<Campaign> activeCampaigns;
-  final List<Programme> programmes;
 
   /// One rail per subject on the website; in the app these are the tabs over
   /// the stories band, which is how the website presents them too.
@@ -358,17 +221,11 @@ class HomePayload {
 
     return HomePayload(
       banners: list('banners', BannerSlide.fromJson),
-      postCategories: list('post_categories', PostCategoryTile.fromJson),
-      stats: list('stats', ImpactStat.fromJson),
-      testimonials: list('testimonials', Testimonial.fromJson),
-      ctaImage: json['cta_image'] as String?,
-      promoImages: PromoImages.fromJson(json['promo_images'] as Map<String, dynamic>?),
       featuredStories: list('featured_stories', PostSummary.fromJson),
       featuredCraftsmen: list('featured_craftsmen', BusinessSummary.fromJson),
       featuredProducts: list('featured_products', ShopProduct.fromJson),
       landingImages: LandingImages.fromJson(json['landing_images'] as Map<String, dynamic>?),
       activeCampaigns: list('active_campaigns', Campaign.fromJson),
-      programmes: list('programmes', Programme.fromJson),
       categorySections: list('category_sections', CategorySection.fromJson),
       footerBanner: footer == null ? null : BannerSlide.fromJson(footer),
     );

@@ -44,6 +44,12 @@ final navigationProvider = FutureProvider<List<NavItem>>(
   (ref) => ref.read(repositoryProvider).navigation(),
 );
 
+/// The website's footer menus, by location: `footer` (Explore),
+/// `footer_secondary` (Get involved) and `legal`, for the foot of Home.
+final footerMenuProvider = FutureProvider.family<List<NavItem>, String>(
+  (ref, location) => ref.read(repositoryProvider).navigation(location: location),
+);
+
 final settingsProvider = FutureProvider<SiteSettings>(
   (ref) => ref.read(repositoryProvider).settings(),
 );

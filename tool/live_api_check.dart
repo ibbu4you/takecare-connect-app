@@ -89,15 +89,18 @@ void main() {
       );
     }
 
-    for (final category in home.postCategories) {
-      expect(category.slug, isNotEmpty);
-      expect(category.name, isNotEmpty);
+    // The landing page's newer sections: a product the shop would open, and
+    // the website's photographs for the written sections.
+    for (final product in home.featuredProducts) {
+      expect(product.slug, isNotEmpty);
+      expect(product.name, isNotEmpty);
     }
 
-    for (final stat in home.stats) {
-      expect(stat.value, isNotEmpty, reason: 'an impact figure has no value');
-      expect(stat.label, isNotEmpty, reason: 'an impact figure has no label');
-    }
+    expect(home.landingImages.whoWeAre, isNotNull, reason: 'no "who we are" photograph');
+    expect(home.landingImages.vision, isNotNull, reason: 'no vision artwork');
+
+    final menu = await repo.navigation();
+    expect(menu, isNotEmpty, reason: 'the header menu came back empty');
 
     // ignore: avoid_print
     print('  home: ${home.banners.length} banners, '
@@ -105,9 +108,8 @@ void main() {
         '${home.featuredCraftsmen.length} craftsmen, '
         '${home.activeCampaigns.length} campaigns, '
         '${home.categorySections.length} rails, '
-        '${home.postCategories.length} subjects, '
-        '${home.stats.length} figures, '
-        '${home.testimonials.length} quotes, '
+        '${home.featuredProducts.length} shop products, '
+        '${menu.length} menu items, '
         'footer strip: ${footer == null ? 'none' : 'yes'}');
   });
 
