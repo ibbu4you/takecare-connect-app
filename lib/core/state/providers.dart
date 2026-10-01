@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/cursor_page.dart';
 import '../api/repository.dart';
+import '../models/navigation.dart';
 import '../models/business.dart';
 import '../models/campaign.dart';
 import '../models/donation.dart' show DonationOptions;
@@ -37,6 +38,12 @@ final homeProvider = FutureProvider.autoDispose<HomePayload>(
 
 /// Not auto-disposed: the footer, the contact screen and the More tab all read
 /// this, and it changes about once a year.
+/// The website's header menu. Fetched once per launch, like the settings: it
+/// changes when the office edits it, not while somebody is reading.
+final navigationProvider = FutureProvider<List<NavItem>>(
+  (ref) => ref.read(repositoryProvider).navigation(),
+);
+
 final settingsProvider = FutureProvider<SiteSettings>(
   (ref) => ref.read(repositoryProvider).settings(),
 );

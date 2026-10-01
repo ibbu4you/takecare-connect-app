@@ -9,6 +9,7 @@ import '../../core/router/route_names.dart';
 import '../../core/state/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/widgets/site_menu.dart';
 import '../../core/widgets/state_views.dart';
 import '../../core/widgets/tcif_logo.dart';
 import 'sections/hero_carousel.dart';
@@ -36,6 +37,8 @@ class HomeScreen extends ConsumerWidget {
     final home = ref.watch(homeProvider);
 
     return Scaffold(
+      // The website's ☰ menu, from the right, where its button is.
+      endDrawer: SiteMenu(host: context),
       body: RefreshIndicator(
         onRefresh: () async => ref.refresh(homeProvider.future),
         child: CustomScrollView(
@@ -109,46 +112,55 @@ class HomeScreen extends ConsumerWidget {
 /// its own comment — a duplicate that could drift from what ships is a test
 /// asserting the wrong widget fits.
 SliverAppBar homeAppBar(BuildContext context) {
+  /*
+   | The website's header, as it is on a phone: the mark on the left, and a red
+   | Donate button and the ☰ on the right. Nothing in between — the website
+   | has no words there either, and the mark says whose site it is.
+   |
+   | Search, which sat here, is the first row of the menu now. The website
+   | keeps it out of its header, and a third control in a bar this width is
+   | the thing that overflowed it before.
+   */
   return SliverAppBar(
-    // Floating and snapping, so search is one flick away from anywhere down
+    // Floating and snapping, so the menu is one flick away from anywhere down
     // the page rather than a scroll back to the top.
     floating: true,
     snap: true,
     backgroundColor: AppColors.background,
     surfaceTintColor: AppColors.background,
-    // The logo goes in `leading`, not into a Row inside `title`.
-    //
-    // This started as a logo beside a two-line block holding both the app's
-    // name and the foundation's full name, packed into the title slot. It
-    // overflowed on a real phone. Replacing the block with a single Flexible
-    // line should have been enough — and by every measurement it is, at every
-    // width from 320pt up — but a hand-built Row in the title slot competes
-    // with the leading gap and the actions for a width it is never told, which
-    // is why it went wrong twice.
-    //
-    // AppBar already has a slot that is measured for it. Using it means there
-    // is no Flex here at all, and so nothing that can overflow.
-    //
-    // Nothing is lost by dropping the second line: the full name and the
-    // tagline are both on the More tab, under the same mark.
-    leadingWidth: 58,
+    automaticallyImplyLeading: false,
+    leadingWidth: 64,
     leading: const Padding(
       padding: EdgeInsets.only(left: 16),
-      child: Center(child: TcifLogo(size: 30)),
-    ),
-    titleSpacing: 10,
-    title: Text(
-      'Takecare Connect',
-      style: AppText.title.copyWith(fontSize: 17),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
+      child: Center(child: TcifLogo(size: 40)),
     ),
     actions: [
-      IconButton(
-        onPressed: () => context.push(Routes.search),
-        icon: const Icon(Icons.search_rounded),
-        tooltip: 'Search',
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: FilledButton(
+          onPressed: () => context.push(Routes.donate),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.accentButton,
+            foregroundColor: AppColors.accentForeground,
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            minimumSize: const Size(0, 36),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.field)),
+          ),
+          child: Text('Donate', style: AppText.button),
+        ),
       ),
+      const SizedBox(width: 4),
+      // A Builder, because the Scaffold that owns the menu is below the
+      // context this bar is built from, and Scaffold.of has to look up from
+      // somewhere inside it.
+      Builder(
+        builder: (inner) => IconButton(
+          onPressed: () => Scaffold.of(inner).openEndDrawer(),
+          icon: const Icon(Icons.menu_rounded),
+          tooltip: 'Open menu',
+        ),
+      ),
+      const SizedBox(width: 6),
     ],
   );
 }

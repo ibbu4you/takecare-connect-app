@@ -5,6 +5,7 @@ import '../models/campaign.dart';
 import '../models/donation.dart';
 import '../models/home.dart';
 import '../models/media.dart';
+import '../models/navigation.dart';
 import '../models/post.dart';
 import '../models/shop.dart';
 import '../models/site.dart';
@@ -38,6 +39,11 @@ class Repository {
     final json = await _api.get(Api.settings);
 
     return SiteSettings.fromJson(_object(json));
+  }
+
+  /// The website's header menu, for the app's menu.
+  Future<List<NavItem>> navigation() async {
+    return _list(await _api.get(Api.navigation), NavItem.fromJson);
   }
 
   Future<FormOptions> formOptions() async {

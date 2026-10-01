@@ -34,6 +34,7 @@ class Api {
   static const health = '/health';
   static const home = '/home';
   static const settings = '/settings';
+  static const navigation = '/navigation';
   static const formOptions = '/form-options';
 
   static const posts = '/posts';
