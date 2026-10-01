@@ -1069,69 +1069,132 @@ class FitInBand extends StatelessWidget {
 // ================================================================= closing ===
 
 /// The closing ask: the page's largest line, two sentences, two doors.
+///
+/// A navy panel set in from both edges, not words floating on the page. The
+/// website centres this across a desktop's width, where a gradient behind it
+/// is enough of an edge; on a phone the same centred block had nothing holding
+/// it — no margin, no frame — and read as text that had come loose at the foot
+/// of the page. In a panel it is the page's last object, and it has the same
+/// 16-point margins as every other section above it.
+///
+/// Left-aligned inside, as every section on this page opens: a heading this
+/// size centred over four short lines is a staircase.
 class ClosingBand extends StatelessWidget {
   const ClosingBand({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      // White easing into the grey at the foot, as the website's does.
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [AppColors.background, AppColors.background, AppColors.surface],
+    return HomeBand(
+      padding: const EdgeInsets.fromLTRB(16, 32, 16, 40),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadii.hero),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.primary, AppColors.primaryDark],
+            ),
+          ),
+          child: Stack(
+            children: [
+              // Two soft lights, as the website puts one warm glow behind
+              // this heading: blurred far enough to read as light, not as
+              // circles somebody left on the panel.
+              Positioned(
+                right: -60,
+                top: -70,
+                child: _Glow(size: 220, colour: Colors.white.withValues(alpha: 0.08)),
+              ),
+              Positioned(
+                left: -50,
+                bottom: -80,
+                child: _Glow(size: 200, colour: AppColors.accent.withValues(alpha: 0.18)),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'JOIN US',
+                      style: AppText.eyebrow.copyWith(color: AppColors.primaryForeground),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Let’s build the connection together.',
+                      style: AppText.h1.copyWith(
+                        color: AppColors.primaryForeground,
+                        fontSize: 30,
+                        height: 1.15,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'A world where talent doesn’t need the right address to find the right '
+                      'opportunity.',
+                      style: AppText.lead.copyWith(color: AppColors.primaryForeground),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Read the stories, meet the makers and back the campaigns — or tell us what '
+                      'you make, and we will come to you.',
+                      style: AppText.body.copyWith(
+                        fontSize: 15,
+                        color: AppColors.primaryForeground.withValues(alpha: 0.8),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    // Both full width, so they read as two doors rather than
+                    // a main one and an afterthought.
+                    _AccentButton(
+                      label: 'Explore Take Care Connect',
+                      expand: true,
+                      onPressed: () => context.go(Routes.stories),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: () => context.go(Routes.contact),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primaryForeground,
+                        backgroundColor: Colors.white.withValues(alpha: 0.06),
+                        side: BorderSide(
+                          color: AppColors.primaryForeground.withValues(alpha: 0.4),
+                        ),
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadii.field),
+                        ),
+                      ),
+                      child: Text('Partner with us', style: AppText.button),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 56, 16, 56),
-        child: Column(
-          children: [
-            Text(
-              'Let’s build the connection together.',
-              textAlign: TextAlign.center,
-              style: AppText.h1.copyWith(fontSize: 32),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              'A world where talent doesn’t need the right address to find the right '
-              'opportunity.',
-              textAlign: TextAlign.center,
-              style: AppText.lead.copyWith(color: AppColors.mutedForeground),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Read the stories, meet the makers and back the campaigns — or tell us what you '
-              'make, and we will come to you.',
-              textAlign: TextAlign.center,
-              style: AppText.body.copyWith(color: AppColors.mutedForeground),
-            ),
-            const SizedBox(height: 28),
-            // Both full width, so they read as two doors rather than a main
-            // one and an afterthought.
-            _AccentButton(
-              label: 'Explore Take Care Connect',
-              expand: true,
-              onPressed: () => context.go(Routes.stories),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () => context.go(Routes.contact),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.foreground,
-                  backgroundColor: AppColors.background,
-                  side: const BorderSide(color: AppColors.border),
-                  minimumSize: const Size(0, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadii.field),
-                  ),
-                ),
-                child: Text('Partner with us', style: AppText.button),
-              ),
-            ),
-          ],
+    );
+  }
+}
+
+/// A soft round light, faded to nothing at its edge.
+class _Glow extends StatelessWidget {
+  const _Glow({required this.size, required this.colour});
+
+  final double size;
+  final Color colour;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(colors: [colour, colour.withValues(alpha: 0)]),
         ),
       ),
     );

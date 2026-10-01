@@ -411,14 +411,15 @@ void main() {
       }
     });
 
-    await runCase(tester, 'A2.15', 'The closing section and the footer', () async {
+    await runCase(tester, 'A2.15', 'The closing section, and no footer', () async {
       await open(tester, Routes.home);
 
       expect(await scrollTo(tester, find.text('Let’s build the connection together.'), steps: 30), isTrue);
+      // No footer in the app, at the office's request.
       expect(
         await scrollTo(tester, find.textContaining('All rights reserved.'), steps: 30),
-        isTrue,
-        reason: 'the footer is missing',
+        isFalse,
+        reason: 'the footer is drawn, and should not be',
       );
 
       // The defect this whole round of work once started with: a banner meant

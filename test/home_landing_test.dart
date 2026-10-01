@@ -4,11 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:takecare_connect/core/models/business.dart';
 import 'package:takecare_connect/core/models/campaign.dart';
 import 'package:takecare_connect/core/models/home.dart';
-import 'package:takecare_connect/core/models/navigation.dart';
 import 'package:takecare_connect/core/models/post.dart';
 import 'package:takecare_connect/core/models/shop.dart';
-import 'package:takecare_connect/core/models/site.dart';
-import 'package:takecare_connect/core/state/providers.dart';
 import 'package:takecare_connect/features/home/sections/landing_bands.dart';
 import 'package:takecare_connect/features/home/sections/landing_footer.dart';
 import 'package:takecare_connect/features/home/sections/landing_rows.dart';
@@ -65,26 +62,6 @@ void main() {
     'cta': {'label': 'Find out more', 'url': '/about'},
   });
 
-  final site = SiteSettings.fromJson(const {
-    'site': {
-      'name': 'Take Care International Foundation',
-      'footer_description': 'The foundation seeks to improve health, education and financial security.',
-      'credentials': ['Section 8 Company', 'Est. October 2019', '12A', '80G'],
-    },
-    'contact': {
-      'email': 'contact@takecareconnect.com',
-      'phone': '+91 91766 87786',
-      'address': 'No: 11/4, Muruga Pillai Nagar Main Road, Kumananchavadi, Chennai – 600 056',
-      'opening_days': 'Mon - Sat',
-    },
-  });
-
-  List<NavItem> menuFor(String location) => switch (location) {
-        'footer' => const [NavItem(label: 'About Us', url: '/about'), NavItem(label: 'Craftsmen', url: '/craftsmen')],
-        'footer_secondary' => const [NavItem(label: 'Donate', url: '/donate')],
-        _ => const [NavItem(label: 'Privacy Policy', url: '/privacy-policy')],
-      };
-
   /// Every section, in the website's order, as HomeScreen lays them out.
   List<Widget> sections() => [
         const FallbackHero(),
@@ -103,7 +80,6 @@ void main() {
         const FitInBand(),
         const ClosingBand(),
         FooterBannerBand(banner: strip),
-        const SiteFooterBand(),
       ];
 
   Future<void> pump(WidgetTester tester, {required Size size, double scale = 1}) async {
@@ -112,9 +88,7 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          settingsProvider.overrideWith((ref) => site),
-          footerMenuProvider.overrideWith((ref, location) => menuFor(location)),
+        overrides: const [
         ],
         child: MaterialApp(
           builder: (context, inner) => MediaQuery(
@@ -144,7 +118,6 @@ void main() {
       'Where do you fit in?',
       'Let’s build the connection together.',
       'Take Care Connect, in your pocket',
-      'CONTACT US',
     ];
 
     var previous = double.negativeInfinity;
@@ -210,24 +183,15 @@ void main() {
     expect(find.byIcon(Icons.chevron_right_rounded), findsWidgets);
   });
 
-  /// The website's footer, from Settings and the footer menus.
-  testWidgets("the page ends with the website's footer", (tester) async {
+  /// The footer is left out of the app at the office's request: the page
+  /// ends with the closing ask and the strip above where the footer would be.
+  testWidgets('there is no footer', (tester) async {
     await pump(tester, size: const Size(390, 20000));
 
-    for (final text in [
-      '80G',
-      'EXPLORE',
-      'GET INVOLVED',
-      'SUPPORT OUR WORK',
-      'Apply as Vendor',
-      'Get the latest stories',
-      'Vendor login',
-      'Back to top',
-      'Privacy Policy',
-      'contact@takecareconnect.com',
-    ]) {
-      expect(find.text(text), findsWidgets, reason: '"$text" is missing from the footer');
+    for (final text in ['EXPLORE', 'GET INVOLVED', 'SUPPORT OUR WORK', 'Vendor login', 'Back to top']) {
+      expect(find.text(text), findsNothing, reason: '"$text" is from the footer');
     }
-    expect(find.textContaining('All rights reserved.'), findsOneWidget);
+    expect(find.textContaining('All rights reserved.'), findsNothing);
+    expect(find.text('Take Care Connect, in your pocket'), findsOneWidget);
   });
 }

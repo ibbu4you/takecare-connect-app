@@ -278,11 +278,11 @@
         },
         {
           "id": "A2.15",
-          "title": "The closing section and the footer",
+          "title": "The closing section, and no footer",
           "steps": [
             "Scroll to the very end of the home page."
           ],
-          "expected": "'Let's build the connection together.' with two full-width buttons, then the strip the office has set above the footer (if any), then the dark footer: the foundation's name and description, its registration ticks, Explore, Get involved, Contact us, and '© year … All rights reserved.' with the legal links. Phone and email in the footer open the dialler and email."
+          "expected": "'Let's build the connection together.' with two full-width buttons, then the strip the office has set above the website's footer (if any), and the page ends there. There is no dark footer in the app: the bottom tabs and the ☰ menu already carry everything it links to."
         },
         {
           "id": "A2.16",

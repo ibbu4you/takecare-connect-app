@@ -102,11 +102,9 @@ class HomeScreen extends ConsumerWidget {
 
       const ClosingBand(),
 
-      // The foot of every website page: the strip the office sets above the
-      // footer, then the footer itself.
+      // The strip the office sets above the website's footer. The footer
+      // itself is left out of the app: the tabs and the menu carry its links.
       if (data.footerBanner != null) FooterBannerBand(banner: data.footerBanner!),
-
-      const SiteFooterBand(),
     ];
 
     return [for (final band in bands) SliverToBoxAdapter(child: band)];
