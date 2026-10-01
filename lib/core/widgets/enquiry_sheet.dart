@@ -19,7 +19,7 @@ import 'form_fields.dart';
 ///
 /// The two answer in the same envelope and follow the same reveal-versus-send
 /// rule, so this is the whole difference between them.
-enum EnquiryAbout { craftsman, product }
+enum EnquiryAbout { craftsman, product, brand }
 
 /// The lead-capture form.
 ///
@@ -51,6 +51,7 @@ class EnquirySheet extends ConsumerStatefulWidget {
     required this.ownerLabel,
     required this.canCall,
     this.subject,
+    this.intent,
   });
 
   /// The craftsman's slug, or the product's.
@@ -68,7 +69,16 @@ class EnquirySheet extends ConsumerStatefulWidget {
   /// reader can see the sheet is about the piece they were looking at.
   final String? subject;
 
-  static Future<void> forCraftsman(BuildContext context, BusinessDetail business) {
+  /// Which button opened it: `call` for a number, `enquiry` for a message.
+  /// The sheet opens on that one, as the website's form does. Null keeps the
+  /// old default, the number where there is one.
+  final String? intent;
+
+  static Future<void> forCraftsman(
+    BuildContext context,
+    BusinessDetail business, {
+    String? intent,
+  }) {
     return _open(
       context,
       EnquirySheet(
@@ -76,11 +86,29 @@ class EnquirySheet extends ConsumerStatefulWidget {
         about: EnquiryAbout.craftsman,
         ownerLabel: business.ownerName ?? business.name,
         canCall: business.canCall || business.contact.hasPhone,
+        intent: intent,
       ),
     );
   }
 
-  static Future<void> forProduct(BuildContext context, ShopProductDetail product) {
+  static Future<void> forBrand(BuildContext context, Brand brand, {String? intent}) {
+    return _open(
+      context,
+      EnquirySheet(
+        slug: brand.slug,
+        about: EnquiryAbout.brand,
+        ownerLabel: brand.ownerName ?? brand.name,
+        canCall: brand.canCall,
+        intent: intent,
+      ),
+    );
+  }
+
+  static Future<void> forProduct(
+    BuildContext context,
+    ShopProductDetail product, {
+    String? intent,
+  }) {
     return _open(
       context,
       EnquirySheet(
@@ -89,6 +117,7 @@ class EnquirySheet extends ConsumerStatefulWidget {
         ownerLabel: product.maker?.ownerName ?? product.maker?.name ?? 'the maker',
         canCall: product.canCall,
         subject: product.name,
+        intent: intent,
       ),
     );
   }
@@ -119,7 +148,7 @@ class _EnquirySheetState extends ConsumerState<EnquirySheet> {
   final _email = TextEditingController();
   final _message = TextEditingController();
 
-  late String _intent = widget.canCall ? 'call' : 'enquiry';
+  late String _intent = widget.canCall && widget.intent != 'enquiry' ? 'call' : 'enquiry';
   bool _busy = false;
   Map<String, String> _serverErrors = {};
 
@@ -161,6 +190,14 @@ class _EnquirySheetState extends ConsumerState<EnquirySheet> {
             message: message.isEmpty ? null : message,
           ),
         EnquiryAbout.product => await repository.sendProductEnquiry(
+            slug: widget.slug,
+            name: _name.text.trim(),
+            phone: _phone.text.trim(),
+            intent: _intent,
+            email: email.isEmpty ? null : email,
+            message: message.isEmpty ? null : message,
+          ),
+        EnquiryAbout.brand => await repository.sendBrandEnquiry(
             slug: widget.slug,
             name: _name.text.trim(),
             phone: _phone.text.trim(),

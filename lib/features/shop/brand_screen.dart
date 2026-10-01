@@ -3,7 +3,6 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/models/shop.dart';
 import '../../core/router/route_names.dart';
@@ -11,6 +10,7 @@ import '../../core/state/providers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/app_image.dart';
+import '../../core/widgets/enquiry_sheet.dart';
 import '../../core/widgets/pill.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/share_sheet.dart';
@@ -71,7 +71,6 @@ class _Brand extends StatelessWidget {
       children: [
         if (brand.banner != null)
           AppImage(url: brand.banner, aspectRatio: 16 / 9, semanticLabel: brand.name),
-
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
           child: Column(
@@ -170,7 +169,6 @@ class _Brand extends StatelessWidget {
             ],
           ),
         ),
-
         if (brand.products.isNotEmpty) ...[
           const SectionHeader(eyebrow: 'On their shelf', title: 'What they make'),
           Padding(
@@ -209,13 +207,13 @@ class _Brand extends StatelessWidget {
   }
 }
 
-/// WhatsApp, a phone call and an email — each shown only where the maker gave
-/// us one.
+/// The website's two buttons: "Message" and "View their number".
 ///
-/// Given plainly rather than behind a lead form, and the difference from the
-/// interview page is deliberate: that page is journalism and the number on it
-/// was collected for an article. This is a shop belonging to somebody paying to
-/// be listed, whose whole reason for being here is that people contact them.
+/// Both open the short form; neither dials, opens WhatsApp or writes an email
+/// on its own. The website stopped printing a maker's details because a number
+/// on a page leaves no record that anybody reached them — the foundation wants
+/// one — and the app does what the website does. The number comes back once
+/// the reader has said who is calling.
 class _Contact extends StatelessWidget {
   const _Contact({required this.brand});
 
@@ -223,44 +221,38 @@ class _Contact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final contact = brand.contact;
-
-    if (!contact.hasAny) {
+    if (!brand.canCall && !brand.canEnquire) {
       return Text(
         'We have no contact details for this maker yet.',
         style: AppText.meta,
       );
     }
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (contact.hasWhatsapp)
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () => launchUrl(
-                Uri.parse(contact.whatsapp!),
-                mode: LaunchMode.externalApplication,
-              ),
-              icon: const Icon(Icons.chat_outlined, size: 18),
-              label: const Text('WhatsApp'),
+        if (brand.canEnquire)
+          FilledButton.icon(
+            onPressed: () => EnquirySheet.forBrand(context, brand, intent: 'enquiry'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.accent,
+              foregroundColor: AppColors.accentForeground,
+              minimumSize: const Size.fromHeight(46),
+            ),
+            icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+            label: Text(
+              'Message ${brand.name}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-        if (contact.hasWhatsapp && contact.hasPhone) const SizedBox(width: 10),
-        if (contact.hasPhone)
-          Expanded(
-            child: FilledButton.icon(
-              onPressed: () => launchUrl(Uri.parse('tel:${contact.phone}')),
-              icon: const Icon(Icons.call_outlined, size: 18),
-              label: const Text('Call'),
-            ),
-          ),
-        if (!contact.hasPhone && !contact.hasWhatsapp && contact.hasEmail)
-          Expanded(
-            child: FilledButton.icon(
-              onPressed: () => launchUrl(Uri.parse('mailto:${contact.email}')),
-              icon: const Icon(Icons.mail_outline_rounded, size: 18),
-              label: const Text('Email them'),
-            ),
+        if (brand.canEnquire && brand.canCall) const SizedBox(height: 10),
+        if (brand.canCall)
+          FilledButton.icon(
+            onPressed: () => EnquirySheet.forBrand(context, brand, intent: 'call'),
+            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(46)),
+            icon: const Icon(Icons.call_outlined, size: 18),
+            label: const Text('View their number'),
           ),
       ],
     );

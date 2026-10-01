@@ -176,6 +176,25 @@ class Repository {
         message: message,
       );
 
+  /// The same question, put to a listed shop from its brand page — most of
+  /// which have no interview, so the interview endpoint above would 404.
+  Future<({String? phone, String message})> sendBrandEnquiry({
+    required String slug,
+    required String name,
+    required String phone,
+    required String intent,
+    String? email,
+    String? message,
+  }) =>
+      _enquiry(
+        Api.brandEnquiries(slug),
+        name: name,
+        phone: phone,
+        intent: intent,
+        email: email,
+        message: message,
+      );
+
   Future<({String? phone, String message})> _enquiry(
     String path, {
     required String name,

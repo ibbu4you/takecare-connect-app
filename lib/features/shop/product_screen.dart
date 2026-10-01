@@ -3,7 +3,6 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/models/business.dart';
 import '../../core/models/shop.dart';
@@ -78,7 +77,6 @@ class _Product extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         if (product.images.isNotEmpty) _Gallery(images: product.images, name: product.name),
-
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
           child: Column(
@@ -121,7 +119,6 @@ class _Product extends StatelessWidget {
             ],
           ),
         ),
-
         if (product.maker != null) ...[
           const SectionHeader(eyebrow: 'Who made it', title: 'The maker'),
           Padding(
@@ -129,7 +126,6 @@ class _Product extends StatelessWidget {
             child: _Maker(maker: product.maker!),
           ),
         ],
-
         if (product.hasDetails) ...[
           const SectionHeader(title: 'About this piece'),
           Padding(
@@ -150,7 +146,6 @@ class _Product extends StatelessWidget {
             ),
           ),
         ],
-
         if (product.alsoBy.isNotEmpty) ...[
           SectionHeader(
             title: 'More from ${product.maker?.name ?? 'this maker'}',
@@ -362,8 +357,6 @@ class _ContactBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final contact = product.maker?.contact;
-
     if (!product.canEnquire && !product.canCall) return const SizedBox.shrink();
 
     return Container(
@@ -378,43 +371,11 @@ class _ContactBar extends StatelessWidget {
           child: Row(
             children: [
               /*
-               | WhatsApp only where they gave us a number for it. The link is
-               | built server-side, already a wa.me URL — the app never has to
-               | guess a country code.
-               |
-               | The SizedBox is load-bearing, not spacing. A Row measures its
-               | non-flexible children with an unbounded main axis before it
-               | shares what is left among the Expanded ones, and a button
-               | handed an infinite width fails layout outright — so this bar
-               | crashed for every maker who had given us a WhatsApp number.
-               | Giving the icon button a width of its own is what makes it
-               | measurable.
+               | No WhatsApp or dial button that skips the form. The website
+               | puts every way of reaching a maker behind it, so the foundation
+               | has a record that somebody did; the number comes back once the
+               | reader has said who is calling.
                */
-              if (contact != null && contact.hasWhatsapp)
-                Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: SizedBox(
-                    width: 52,
-                    child: OutlinedButton(
-                      onPressed: () => launchUrl(
-                        Uri.parse(contact.whatsapp!),
-                        mode: LaunchMode.externalApplication,
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size(52, 44),
-                      ),
-                      child: const Icon(
-                        Icons.chat_outlined,
-                        size: 18,
-                        // An icon with no words beside it is nothing at all to
-                        // a screen reader, which is what this button was.
-                        semanticLabel: 'WhatsApp the maker',
-                      ),
-                    ),
-                  ),
-                ),
-
               /*
                | The number is an icon alone, beside the button people came for.
                |
@@ -438,7 +399,8 @@ class _ContactBar extends StatelessWidget {
                         child: SizedBox(
                           width: 52,
                           child: OutlinedButton(
-                            onPressed: () => EnquirySheet.forProduct(context, product),
+                            onPressed: () =>
+                                EnquirySheet.forProduct(context, product, intent: 'call'),
                             style: OutlinedButton.styleFrom(
                               padding: EdgeInsets.zero,
                               minimumSize: const Size(52, 44),
@@ -453,7 +415,8 @@ class _ContactBar extends StatelessWidget {
                       )
                     : Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () => EnquirySheet.forProduct(context, product),
+                          onPressed: () =>
+                              EnquirySheet.forProduct(context, product, intent: 'call'),
                           icon: const Icon(Icons.call_outlined, size: 18),
                           label: const Text('Their number'),
                         ),
@@ -461,7 +424,7 @@ class _ContactBar extends StatelessWidget {
               if (product.canEnquire)
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: () => EnquirySheet.forProduct(context, product),
+                    onPressed: () => EnquirySheet.forProduct(context, product, intent: 'enquiry'),
                     icon: const Icon(Icons.mail_outline_rounded, size: 18),
                     label: const Text('Ask about this'),
                   ),
@@ -511,7 +474,8 @@ class _Spec extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label.toUpperCase(), style: AppText.eyebrow.copyWith(color: AppColors.mutedForeground)),
+          Text(label.toUpperCase(),
+              style: AppText.eyebrow.copyWith(color: AppColors.mutedForeground)),
           const SizedBox(height: 4),
           HtmlBody(value),
         ],

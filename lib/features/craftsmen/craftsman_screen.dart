@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/models/business.dart';
 import '../../core/router/route_names.dart';
@@ -139,9 +138,10 @@ class _Profile extends ConsumerWidget {
               // that repeats the heading word for word reads as a mistake.
               if (_ownerWorthShowing) ...[
                 const SizedBox(height: 4),
-                Text(business.ownerName!, style: AppText.body.copyWith(
-                  color: AppColors.mutedForeground,
-                )),
+                Text(business.ownerName!,
+                    style: AppText.body.copyWith(
+                      color: AppColors.mutedForeground,
+                    )),
               ],
               if (business.author != null) ...[
                 const SizedBox(height: 12),
@@ -341,9 +341,7 @@ class _Byline extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
-                onTap: author.slug == null
-                    ? null
-                    : () => context.push(Routes.author(author.slug!)),
+                onTap: author.slug == null ? null : () => context.push(Routes.author(author.slug!)),
                 child: Text(
                   author.name,
                   style: AppText.metaStrong.copyWith(
@@ -450,8 +448,7 @@ class _InterviewProductCard extends StatelessWidget {
             Stack(
               children: [
                 AppImage(url: product.image, aspectRatio: 4 / 3, semanticLabel: product.name),
-                if (product.aiAssisted)
-                  const Positioned(right: 8, top: 8, child: AiNote.badge()),
+                if (product.aiAssisted) const Positioned(right: 8, top: 8, child: AiNote.badge()),
               ],
             ),
           Padding(
@@ -511,7 +508,6 @@ class _Spec extends StatelessWidget {
   }
 }
 
-
 /// The bar pinned to the bottom of the interview.
 ///
 /// What it offers depends on what actually exists. Almost no imported craftsman
@@ -557,7 +553,9 @@ class _EnquiryBar extends StatelessWidget {
               if (canCall)
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => launchUrl(Uri.parse('tel:${business.contact.phone}')),
+                    // The form first, as on the website: the number comes back
+                    // once they have said who is calling.
+                    onPressed: () => EnquirySheet.forCraftsman(context, business, intent: 'call'),
                     icon: const Icon(Icons.call_outlined, size: 18),
                     label: const Text('Call'),
                   ),
@@ -567,7 +565,8 @@ class _EnquiryBar extends StatelessWidget {
                 Expanded(
                   flex: 2,
                   child: FilledButton.icon(
-                    onPressed: () => EnquirySheet.forCraftsman(context, business),
+                    onPressed: () =>
+                        EnquirySheet.forCraftsman(context, business, intent: 'enquiry'),
                     icon: const Icon(Icons.mail_outline_rounded, size: 18),
                     label: const Text('Send an enquiry'),
                   ),

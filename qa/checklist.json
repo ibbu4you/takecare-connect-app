@@ -701,12 +701,12 @@
         },
         {
           "id": "A6.6",
-          "title": "The ways to reach a maker",
+          "title": "Reaching a maker goes through the form",
           "steps": [
-            "On a maker's page, look at the buttons under their description.",
-            "Tap WhatsApp if it is there. Come back and tap Call if it is there."
+            "On a maker's page, tap 'View their number'.",
+            "Come back and tap 'Message …'. Then do the same on a product: the handset button and 'Ask about this'."
           ],
-          "expected": "Only the ways they actually gave us. WhatsApp opens WhatsApp with a conversation with them already started. Call opens your dialler. A maker who gave us nothing says so in a plain sentence instead of showing dead buttons."
+          "expected": "Nothing dials or opens WhatsApp straight away. Each button opens the short form: 'Get their number' asks your name and phone, then shows their number with Call now and Copy; 'Message' and 'Ask about this' open 'Send an enquiry'. There is no separate WhatsApp button. A maker with no way to reach them says so in a plain sentence instead of showing dead buttons."
         },
         {
           "id": "A6.7",

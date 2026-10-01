@@ -71,8 +71,7 @@ class _BrandsViewState extends ConsumerState<BrandsView> {
                     // own tab before the shop arrived, and they are the reason
                     // most of these makers are here at all.
                     const _InterviewsRow(),
-                    if (filters.valueOrNull != null &&
-                        filters.value!.categories.isNotEmpty) ...[
+                    if (filters.valueOrNull != null && filters.value!.categories.isNotEmpty) ...[
                       const SizedBox(height: 14),
                       FilterPills(
                         options: [

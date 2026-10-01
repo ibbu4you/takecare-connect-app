@@ -274,11 +274,23 @@ class Brand {
     this.sinceYear,
     this.interviewSlug,
     this.products = const [],
+    this.canCall = false,
+    this.canEnquire = false,
   });
 
   final String slug;
   final String name;
+
+  /// Read only for [canCall]/[canEnquire] against an older server. Never shown
+  /// and never dialled: the website puts every way of reaching a maker behind
+  /// its short form, so the foundation has a record that somebody did.
   final MakerContact contact;
+
+  /// "View their number" — there is a phone behind the form.
+  final bool canCall;
+
+  /// "Message" — a written enquiry has somewhere to land.
+  final bool canEnquire;
   final String? ownerName;
   final String? blurb;
   final String? logo;
@@ -322,6 +334,10 @@ class Brand {
             .whereType<Map<String, dynamic>>()
             .map(ShopProduct.fromJson)
             .toList(),
+        canCall: (json['can_call'] as bool?) ??
+            MakerContact.fromJson(json['contact'] as Map<String, dynamic>?).hasPhone,
+        canEnquire: (json['can_enquire'] as bool?) ??
+            MakerContact.fromJson(json['contact'] as Map<String, dynamic>?).hasEmail,
       );
 }
 

@@ -406,7 +406,12 @@ void main() {
       await open(tester, Routes.home);
 
       expect(await scrollTo(tester, find.text('Where do you fit in?')), isTrue);
-      for (final door in ['I am talent', 'I am a business', 'I want to support', 'I am an organisation']) {
+      for (final door in [
+        'I am talent',
+        'I am a business',
+        'I want to support',
+        'I am an organisation'
+      ]) {
         expect(await scrollTo(tester, find.text(door)), isTrue, reason: 'no "$door" card');
       }
     });
@@ -414,7 +419,8 @@ void main() {
     await runCase(tester, 'A2.15', 'The closing section, and no footer', () async {
       await open(tester, Routes.home);
 
-      expect(await scrollTo(tester, find.text('Let’s build the connection together.'), steps: 30), isTrue);
+      expect(await scrollTo(tester, find.text('Let’s build the connection together.'), steps: 30),
+          isTrue);
       // No footer in the app, at the office's request.
       expect(
         await scrollTo(tester, find.textContaining('All rights reserved.'), steps: 30),
@@ -829,18 +835,20 @@ void main() {
       }
     });
 
-    await runCase(tester, 'A6.6', 'Only the ways a maker actually gave us', () async {
+    await runCase(tester, 'A6.6', 'Reaching a maker goes through the form', () async {
       if (live.brands.isEmpty) throw StateError('the API listed no makers');
 
       final slug = live.brands.first.slug;
       final brand = live.brandDetails[slug]!;
       await open(tester, Routes.brand(slug));
 
-      if (!brand.contact.hasWhatsapp) {
-        expect(find.text('WhatsApp'), findsNothing, reason: 'offers a WhatsApp it has not got');
-      }
-      if (!brand.contact.hasPhone) {
-        expect(find.text('Call'), findsNothing, reason: 'offers a call it cannot make');
+      // Nothing that dials or opens WhatsApp without the form.
+      expect(find.text('WhatsApp'), findsNothing, reason: 'a WhatsApp button skips the form');
+      expect(find.text('Call'), findsNothing, reason: 'a Call button skips the form');
+
+      if (!brand.canCall) {
+        expect(find.text('View their number'), findsNothing,
+            reason: 'offers a number it has not got');
       }
     });
   });
@@ -1040,9 +1048,7 @@ void main() {
       final complained = (await allTexts(tester)).any((t) {
         final lower = t.toLowerCase();
 
-        return lower.contains('please') ||
-            lower.contains('cannot list') ||
-            lower.contains('needs');
+        return lower.contains('please') || lower.contains('cannot list') || lower.contains('needs');
       });
 
       expect(complained, isTrue, reason: 'an empty application was accepted');

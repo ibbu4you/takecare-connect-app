@@ -59,6 +59,7 @@ class Api {
 
   static const brands = '/brands';
   static String brand(String slug) => '/brands/$slug';
+  static String brandEnquiries(String slug) => '/brands/$slug/enquiries';
 
   static const membership = '/membership';
   static const vendorApplications = '/vendor-applications';
