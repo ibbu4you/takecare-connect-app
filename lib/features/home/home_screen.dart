@@ -113,6 +113,9 @@ class HomeScreen extends ConsumerWidget {
 
 /// The app bar, extracted so the fit test can pump the real thing.
 ///
+/// The shop draws it too, because on the website the shop is under the same
+/// header as the home page.
+///
 /// test/app_bar_fit_test.dart used to keep its own copy of this and said so in
 /// its own comment — a duplicate that could drift from what ships is a test
 /// asserting the wrong widget fits.

@@ -3,14 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// One page of a cursor-paginated list.
 ///
 /// The API uses Laravel's `cursorPaginate`, which is **not** page numbers.
-/// There is no `total`, no `last_page`, no `current_page` — so the app can
-/// never show "page 3 of 12" and should not try. The absence of a cursor is
-/// the end signal, and that is the whole contract.
+/// There is no `last_page` and no `current_page` — so the app can never show
+/// "page 3 of 12" and should not try. The absence of a cursor is the end
+/// signal, and that is the whole contract. A `total` comes with the shop's
+/// list, for its "Showing 5 products"; nothing pages by it.
 class CursorPage<T> {
-  const CursorPage({required this.items, this.nextCursor});
+  const CursorPage({required this.items, this.nextCursor, this.total});
 
   final List<T> items;
   final String? nextCursor;
+
+  /// How many there are in all, where the server counts them (`meta.total`) —
+  /// the shop's "Showing 5 products". Null from a list that does not.
+  final int? total;
 
   static CursorPage<T> fromJson<T>(
     Map<String, dynamic> json,
@@ -24,7 +29,15 @@ class CursorPage<T> {
           .map(parse)
           .toList(growable: false),
       nextCursor: _cursorFrom(json),
+      total: _totalFrom(json),
     );
+  }
+
+  static int? _totalFrom(Map<String, dynamic> json) {
+    final meta = json['meta'];
+    final total = meta is Map ? meta['total'] : null;
+
+    return total is num ? total.toInt() : null;
   }
 
   /// `meta.next_cursor`, with a fallback to the cursor inside `links.next`.
@@ -54,10 +67,14 @@ class PagedState<T> {
     this.initialLoading = true,
     this.loadingMore = false,
     this.error,
+    this.total,
   });
 
   final List<T> items;
   final String? nextCursor;
+
+  /// From the first page; see [CursorPage.total].
+  final int? total;
   final bool initialLoading;
   final bool loadingMore;
   final Object? error;
@@ -81,6 +98,7 @@ class PagedState<T> {
       initialLoading: initialLoading ?? this.initialLoading,
       loadingMore: loadingMore ?? this.loadingMore,
       error: clearError ? null : (error ?? this.error),
+      total: total,
     );
   }
 }
@@ -119,6 +137,7 @@ abstract class PagedNotifier<T, Q> extends AutoDisposeFamilyNotifier<PagedState<
         items: page.items,
         nextCursor: page.nextCursor,
         initialLoading: false,
+        total: page.total,
       );
     } catch (e) {
       state = state.copyWith(initialLoading: false, error: e);

@@ -15,8 +15,9 @@ import '../../core/widgets/state_views.dart';
 
 /// The makers, on their own screen.
 ///
-/// Reachable from the More menu and from a deep link; the same grid is the Shop
-/// tab's Makers segment, which is [BrandsView] below.
+/// The website's Brands page — reached from the menu, a product's maker and a
+/// deep link. Under the Home tab, not Shop: on the website it is not part of
+/// the shop either.
 class BrandsScreen extends StatelessWidget {
   const BrandsScreen({super.key});
 

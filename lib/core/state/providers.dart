@@ -238,6 +238,7 @@ class ProductsNotifier extends PagedNotifier<ShopProduct, ProductsQuery> {
           query: query.q,
           priceMin: query.priceMin,
           priceMax: query.priceMax,
+          sort: query.sort,
           cursor: cursor,
         );
   }

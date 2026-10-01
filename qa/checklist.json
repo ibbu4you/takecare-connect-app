@@ -446,12 +446,11 @@
       "cases": [
         {
           "id": "A4.1",
-          "title": "The shop opens with two halves",
+          "title": "The shop is the website's shop",
           "steps": [
-            "Tap Shop.",
-            "Look at the two buttons under the heading."
+            "Tap Shop."
           ],
-          "expected": "A pair of buttons, 'Products' and 'Brands', with 'Products' selected. Under them a search box, then cards in two columns.",
+          "expected": "'Home › Shop', then the heading 'Products by our makers' and the line 'Everything the craftsmen we work with currently make. Contact the maker directly — we take no part in the sale.' Under it a Filters panel with a search box and a 'Search' button, then 'Showing N products', and the products one under another, each with a 'View details' button. No craftsmen and no 'Products | Brands' switch.",
           "blocker": true
         },
         {
@@ -485,55 +484,53 @@
           "id": "A4.5",
           "title": "Searching the shop",
           "steps": [
-            "Type the name of something you know is listed into the search box.",
-            "Then clear it with the cross."
+            "Type the name of something you know is listed into the search box, and tap 'Search'.",
+            "Tap the cross on the 'Search: “…”' chip that appears."
           ],
-          "expected": "The cards narrow to what matches, shortly after you stop typing. Clearing brings everything back."
+          "expected": "The products narrow to what matches and the count changes to match. Removing the chip brings everything back."
         },
         {
           "id": "A4.6",
-          "title": "The craft buttons",
+          "title": "Sorting",
           "steps": [
-            "Tap one of the oval craft buttons above the cards, then tap 'All crafts'."
+            "Change 'Latest' to 'Price: low to high', then 'Name: A–Z'."
           ],
-          "expected": "The shelf narrows to that craft and back. If the office has not set up any crafts yet, this row is simply absent — which is a job for them, not a fault in the app.",
+          "expected": "The same products, reordered: cheapest first, then alphabetical. The count does not change. Scrolling to the end shows every product once.",
           "blocker": false
         },
         {
           "id": "A4.7",
           "title": "The filter panel",
           "steps": [
-            "Tap the sliders icon at the top right.",
-            "Tick two different crafts. Note what the note under 'Craft' says.",
-            "Tap 'Show these'."
+            "Tap 'Filters' beside the count.",
+            "Tick two categories, then tap 'Apply Filters'."
           ],
-          "expected": "A panel slides up with Craft, Where they are, Maker and Price. The note under Craft says ticking more than one shows more, not fewer — and that is what happens. The icon at the top right then carries a small number showing how many filters are on.",
+          "expected": "The panel opens to Categories and Makers (each with a number beside it), Price Range with a slider, and Location. The button then says 'Hide filters'. After Apply, ticking two shows more, not fewer, and a chip for each appears above the products.",
           "blocker": false
         },
         {
           "id": "A4.8",
-          "title": "Dismissing the filter panel keeps your filters",
+          "title": "Nothing changes until you apply",
           "steps": [
-            "Open the filter panel, tick something, and tap 'Show these'.",
-            "Open it again, tick something else, but this time swipe the panel down to dismiss it."
+            "Open the filters, tick something, then tap 'Hide filters' without applying."
           ],
-          "expected": "Your original filters are still applied. Swiping the panel away does not silently wipe what you had chosen."
+          "expected": "The products have not changed. Ticks only take effect when 'Search' or 'Apply Filters' is pressed, as on the website."
         },
         {
           "id": "A4.9",
           "title": "Clearing the filters",
           "steps": [
-            "With filters applied, tap 'Clear' beside the count, or open the panel and tap 'Clear all'."
+            "With filters applied, tap 'Clear all' in the Filters panel. Apply them again, then tap the cross on one chip."
           ],
-          "expected": "Everything comes back and the number on the sliders icon disappears."
+          "expected": "'Clear all' brings everything back and the chips disappear; it is greyed out when nothing is applied. A chip's cross removes just that one filter."
         },
         {
           "id": "A4.10",
           "title": "Filtering down to nothing is explained",
           "steps": [
-            "Use the filter panel to pick a combination you expect nothing to match — a high 'From ₹' price, for instance."
+            "Pick a combination you expect nothing to match — a high lowest price, for instance — and apply it."
           ],
-          "expected": "A short friendly message and a 'Clear filters' button — never a blank white screen."
+          "expected": "A box saying 'Nothing matches that' with a 'Show everything' button — never a blank white screen."
         },
         {
           "id": "A4.11",
@@ -663,9 +660,9 @@
       "cases": [
         {
           "id": "A6.1",
-          "title": "The Brands half of the shop",
+          "title": "The Brands page",
           "steps": [
-            "Tap Shop, then 'Makers'."
+            "Open the ☰ menu and tap 'Brands'."
           ],
           "expected": "A row at the top offering 'Read the interviews', then cards in two columns — each with a picture or mark, a name, their craft and town, and how many things they list."
         },

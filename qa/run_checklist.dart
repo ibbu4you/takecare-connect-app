@@ -560,11 +560,12 @@ void main() {
   // =====================================================================  A4
 
   testWidgets('A4 the shop', (tester) async {
-    await runCase(tester, 'A4.1', 'The shop opens with two halves', () async {
+    await runCase(tester, 'A4.1', "The shop is the website's shop", () async {
       await open(tester, Routes.shop);
 
-      expect(find.text('Products'), findsWidgets);
-      expect(find.text('Brands'), findsWidgets);
+      expect(find.text('Products by our makers'), findsOneWidget);
+      expect(find.text('Filters'), findsWidgets);
+      expect(find.text('Read the interviews'), findsNothing, reason: 'the shop shows craftsmen');
       noRenderErrors(tester, 'the shop');
     });
 
@@ -615,6 +616,7 @@ void main() {
       expect(field, findsWidgets);
 
       await tester.enterText(field.first, 'qqzzqq');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -785,11 +787,11 @@ void main() {
   // =====================================================================  A6
 
   testWidgets('A6 the makers', (tester) async {
-    await runCase(tester, 'A6.1', 'The Brands half lists makers', () async {
+    await runCase(tester, 'A6.1', 'The Brands page lists makers', () async {
       await open(tester, Routes.brandsSegment);
 
       expect(find.text('Read the interviews'), findsWidgets);
-      noRenderErrors(tester, 'the brands segment');
+      noRenderErrors(tester, 'the brands page');
     });
 
     await runCase(tester, 'A6.2', 'The busiest maker is first', () async {
@@ -1449,6 +1451,7 @@ class _Fixed extends Repository {
     String? query,
     double? priceMin,
     double? priceMax,
+    String sort = 'latest',
     String? cursor,
   }) async =>
       CursorPage<ShopProduct>(

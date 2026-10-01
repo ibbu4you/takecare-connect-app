@@ -283,7 +283,8 @@ class _LandingStoriesBandState extends State<LandingStoriesBand> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _Pill(label: 'All', active: _slug == null, onTap: () => setState(() => _slug = null)),
+                _Pill(
+                    label: 'All', active: _slug == null, onTap: () => setState(() => _slug = null)),
                 for (final candidate in widget.sections)
                   _Pill(
                     label: candidate.name,
@@ -541,7 +542,8 @@ class _Badge extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(maxWidth: 200),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(AppRadii.pill)),
+      decoration:
+          BoxDecoration(color: background, borderRadius: BorderRadius.circular(AppRadii.pill)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -570,9 +572,19 @@ class _Badge extends StatelessWidget {
 ///
 /// No Buy button, here or anywhere: the foundation takes no part in the sale.
 class LandingProductCard extends StatelessWidget {
-  const LandingProductCard({super.key, required this.product, required this.onTap});
+  const LandingProductCard({
+    super.key,
+    required this.product,
+    required this.onTap,
+    this.fill = true,
+  });
 
   final ShopProduct product;
+
+  /// Fills the height it is given, with the price pinned to the foot so that
+  /// prices line up across a carousel. Off in the shop's list, where each card
+  /// is as tall as its own content.
+  final bool fill;
   final VoidCallback onTap;
 
   @override
@@ -589,11 +601,27 @@ class LandingProductCard extends StatelessWidget {
             border: Border.all(color: AppColors.border),
           ),
           child: Column(
+            mainAxisSize: fill ? MainAxisSize.max : MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Stack(
                 children: [
-                  AppImage(url: product.thumbnail, aspectRatio: 4 / 3, semanticLabel: product.name),
+                  if (product.thumbnail?.isNotEmpty ?? false)
+                    AppImage(
+                        url: product.thumbnail, aspectRatio: 4 / 3, semanticLabel: product.name)
+                  else
+                    // The website's words for a product still waiting on its
+                    // photograph, rather than a broken-image glyph.
+                    AspectRatio(
+                      aspectRatio: 4 / 3,
+                      child: ColoredBox(
+                        color: AppColors.surface,
+                        child: Center(
+                          child:
+                              Text('No photograph yet', style: AppText.meta.copyWith(fontSize: 14)),
+                        ),
+                      ),
+                    ),
                   if (product.category != null)
                     Positioned(
                       left: 8,
@@ -626,11 +654,13 @@ class LandingProductCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  if (product.aiAssisted) const Positioned(right: 8, bottom: 8, child: AiNote.badge()),
+                  if (product.aiAssisted)
+                    const Positioned(right: 8, bottom: 8, child: AiNote.badge()),
                 ],
               ),
-              Expanded(
-                child: Padding(
+              _fillIf(
+                fill,
+                Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -650,7 +680,7 @@ class LandingProductCard extends StatelessWidget {
                           style: AppText.meta.copyWith(fontSize: 14),
                         ),
                       ],
-                      const Spacer(),
+                      if (fill) const Spacer() else const SizedBox(height: 12),
                       Text(
                         product.priceLabel,
                         maxLines: 1,
@@ -701,3 +731,5 @@ class LandingProductCard extends StatelessWidget {
     );
   }
 }
+
+Widget _fillIf(bool fill, Widget child) => fill ? Expanded(child: child) : child;

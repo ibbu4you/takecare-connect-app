@@ -76,6 +76,41 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
                 ),
               ],
             ),
+            /*
+             | Craftsmen and Brands live under Home, not Shop.
+             |
+             | They were in the Shop tab's branch, so opening a maker or
+             | "Explore craftsmanship" from the home page — or Brands from the
+             | menu — left the Shop tab parked on that screen: tapping Shop then
+             | showed craftsmen instead of products. On the website neither is
+             | part of the shop; Craftsmen is under Our Programs and Brands is
+             | its own menu item. Their paths are unchanged, so every link and
+             | share the app has produced still lands.
+             */
+            GoRoute(
+              path: Routes.craftsmen,
+              builder: (context, state) => CraftsmenScreen(
+                initialCategory: state.uri.queryParameters['category'],
+                initialCity: state.uri.queryParameters['city'],
+              ),
+              routes: [
+                GoRoute(
+                  path: ':slug',
+                  builder: (context, state) =>
+                      CraftsmanScreen(slug: state.pathParameters['slug']!),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: Routes.brands,
+              builder: (context, state) => const BrandsScreen(),
+              routes: [
+                GoRoute(
+                  path: ':slug',
+                  builder: (context, state) => BrandScreen(slug: state.pathParameters['slug']!),
+                ),
+              ],
+            ),
           ]),
 
           // --------------------------------------------------------- Stories
@@ -101,56 +136,25 @@ GoRouter buildRouter({String initialLocation = Routes.home}) {
             ),
           ]),
 
-          /*
-           | ------------------------------------------------------------ Shop
-           |
-           | Three route trees in one branch: what our makers sell, the makers
-           | themselves, and the interviews with them. They share a navigator,
-           | so moving from a product to its maker to the article about them
-           | and back is one history rather than three.
-           |
-           | `/craftsmen` keeps its path. Every share link the app has produced
-           | points at it, as does every `appPathFor('/businesses/...')` result
-           | — only which tab owns it has changed.
-           */
+          // ------------------------------------------------------------ Shop
+          // The shop and its products, and nothing else — as on the website.
           StatefulShellBranch(routes: [
             GoRoute(
               path: Routes.shop,
+              // `?segment=brands` (or `makers`) is what links from before
+              // Brands had its own page say; they land on that page.
+              redirect: (context, state) {
+                final segment = state.uri.queryParameters['segment'];
+                return (segment == 'brands' || segment == 'makers') ? Routes.brands : null;
+              },
               builder: (context, state) => ShopScreen(
                 initialCategory: state.uri.queryParameters['category'],
-                // The Makers segment is a query, never a path segment, so a
-                // product slug can never shadow it.
-                initialSegment: state.uri.queryParameters['segment'],
               ),
               routes: [
                 GoRoute(
                   path: ':slug',
                   builder: (context, state) =>
                       ProductScreen(slug: state.pathParameters['slug']!),
-                ),
-              ],
-            ),
-            GoRoute(
-              path: Routes.craftsmen,
-              builder: (context, state) => CraftsmenScreen(
-                initialCategory: state.uri.queryParameters['category'],
-                initialCity: state.uri.queryParameters['city'],
-              ),
-              routes: [
-                GoRoute(
-                  path: ':slug',
-                  builder: (context, state) =>
-                      CraftsmanScreen(slug: state.pathParameters['slug']!),
-                ),
-              ],
-            ),
-            GoRoute(
-              path: Routes.brands,
-              builder: (context, state) => const BrandsScreen(),
-              routes: [
-                GoRoute(
-                  path: ':slug',
-                  builder: (context, state) => BrandScreen(slug: state.pathParameters['slug']!),
                 ),
               ],
             ),

@@ -216,9 +216,13 @@ class Repository {
     String? query,
     double? priceMin,
     double? priceMax,
+    String sort = 'latest',
     String? cursor,
   }) async {
     final json = await _api.get(Api.products, query: {
+      // Left off for the default, so the request is the one every server
+      // since the shop opened understands.
+      if (sort != 'latest') 'sort': sort,
       if (categories.isNotEmpty) 'categories[]': categories,
       if (makers.isNotEmpty) 'makers[]': makers,
       if (city != null) 'city': city,

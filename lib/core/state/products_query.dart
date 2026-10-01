@@ -25,6 +25,7 @@ class ProductsQuery {
     this.q,
     this.priceMin,
     this.priceMax,
+    this.sort = 'latest',
   })  : categories = List.unmodifiable(categories.toSet().toList()..sort()),
         makers = List.unmodifiable(makers.toSet().toList()..sort());
 
@@ -37,6 +38,9 @@ class ProductsQuery {
   final String? q;
   final double? priceMin;
   final double? priceMax;
+
+  /// The website's order: `latest`, `price_asc`, `price_desc` or `name_asc`.
+  final String sort;
 
   static final empty = ProductsQuery();
 
@@ -59,6 +63,7 @@ class ProductsQuery {
     String? q,
     double? priceMin,
     double? priceMax,
+    String? sort,
     bool clearCity = false,
     bool clearQuery = false,
     bool clearPrices = false,
@@ -70,12 +75,13 @@ class ProductsQuery {
       q: clearQuery ? null : (q ?? this.q),
       priceMin: clearPrices ? null : (priceMin ?? this.priceMin),
       priceMax: clearPrices ? null : (priceMax ?? this.priceMax),
+      sort: sort ?? this.sort,
     );
   }
 
   /// Everything cleared except the search term, which is the one thing the
   /// reader can see they typed.
-  ProductsQuery cleared() => ProductsQuery(q: q);
+  ProductsQuery cleared() => ProductsQuery(q: q, sort: sort);
 
   @override
   bool operator ==(Object other) {
@@ -86,7 +92,8 @@ class ProductsQuery {
         city == other.city &&
         q == other.q &&
         priceMin == other.priceMin &&
-        priceMax == other.priceMax;
+        priceMax == other.priceMax &&
+        sort == other.sort;
   }
 
   @override
@@ -97,9 +104,10 @@ class ProductsQuery {
         q,
         priceMin,
         priceMax,
+        sort,
       );
 
   @override
   String toString() => 'ProductsQuery(categories: $categories, makers: $makers, '
-      'city: $city, q: $q, priceMin: $priceMin, priceMax: $priceMax)';
+      'city: $city, q: $q, priceMin: $priceMin, priceMax: $priceMax, sort: $sort)';
 }

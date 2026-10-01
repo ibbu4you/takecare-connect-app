@@ -40,7 +40,9 @@ class Routes {
    */
   static const productDetail = '/shop/:slug';
   static String product(String slug) => '/shop/$slug';
-  static const brandsSegment = '/shop?segment=brands';
+  /// Brands has its own page now, as on the website, not a half of the shop.
+  /// The name is kept for the links that still say it.
+  static const brandsSegment = brands;
   static String shopCategory(String slug) => '/shop?category=$slug';
 
   static const craftsmen = '/craftsmen';
