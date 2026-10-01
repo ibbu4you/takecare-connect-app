@@ -25,10 +25,10 @@ class BannerCarousel extends StatefulWidget {
 
   final List<BannerSlide> banners;
 
-  /// Tall enough for an eyebrow, a three-line title, a three-line line under
-  /// it and two buttons above the controls — the website's slide is about this
-  /// on a phone, because its minimum is 26rem and its copy grows it.
-  static const height = 540.0;
+  /// An eyebrow, a two-line title, two lines under it and two buttons above
+  /// the controls. Close to the website's own minimum on a phone (26rem, 416px);
+  /// it was 540 and took most of the first screen.
+  static const height = 440.0;
 
   @override
   State<BannerCarousel> createState() => _BannerCarouselState();
@@ -247,7 +247,7 @@ class BannerFrame extends StatelessWidget {
           // Centred in the slide above the controls row, as the website
           // centres its copy in the slide's height.
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 32, 16, 84),
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 76),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -255,11 +255,11 @@ class BannerFrame extends StatelessWidget {
                 if (hasEyebrow)
                   Text(slide.eyebrow!.toUpperCase(), style: AppText.eyebrow.copyWith(fontSize: 13)),
                 if (hasTitle) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   Flexible(
                     child: Text(
                       slide.title!,
-                      maxLines: 3,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: AppText.h1.copyWith(
                         color: AppColors.primaryForeground,
@@ -270,11 +270,11 @@ class BannerFrame extends StatelessWidget {
                   ),
                 ],
                 if (hasSubtitle) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Flexible(
                     child: Text(
                       slide.subtitle!,
-                      maxLines: 4,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: AppText.body.copyWith(
                         color: AppColors.primaryForeground.withValues(alpha: 0.8),
@@ -282,7 +282,7 @@ class BannerFrame extends StatelessWidget {
                     ),
                   ),
                 ],
-                if (slide.hasCta || slide.hasSecondaryCta) const SizedBox(height: 24),
+                if (slide.hasCta || slide.hasSecondaryCta) const SizedBox(height: 20),
                 // Both full width, one above the other, as the website stacks
                 // them on a phone.
                 if (slide.hasCta)
@@ -291,14 +291,14 @@ class BannerFrame extends StatelessWidget {
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.accent,
                       foregroundColor: AppColors.accentForeground,
-                      minimumSize: const Size.fromHeight(48),
+                      minimumSize: const Size.fromHeight(44),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadii.field),
                       ),
                     ),
                     child: Text(slide.ctaLabel!, style: AppText.button),
                   ),
-                if (slide.hasCta && slide.hasSecondaryCta) const SizedBox(height: 12),
+                if (slide.hasCta && slide.hasSecondaryCta) const SizedBox(height: 10),
                 if (slide.hasSecondaryCta)
                   OutlinedButton(
                     onPressed: () => openWebPath(context, slide.secondaryCtaUrl),
@@ -307,7 +307,7 @@ class BannerFrame extends StatelessWidget {
                       side: BorderSide(
                         color: AppColors.primaryForeground.withValues(alpha: 0.4),
                       ),
-                      minimumSize: const Size.fromHeight(48),
+                      minimumSize: const Size.fromHeight(44),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppRadii.field),
                       ),
