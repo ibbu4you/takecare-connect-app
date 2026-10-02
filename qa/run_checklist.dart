@@ -391,28 +391,21 @@ void main() {
       }
     });
 
-    await runCase(tester, 'A2.13', 'Our approach, our ecosystem, our vision', () async {
-      await open(tester, Routes.home);
-
-      expect(await scrollTo(tester, find.text('From discovery to opportunity')), isTrue);
-      expect(
-        await scrollTo(tester, find.text('We do not replace the ecosystems. We connect them.')),
-        isTrue,
-      );
+    await runCase(tester, 'A2.13', 'Our vision', () async {
       expect(live.home.landingImages.vision, isNotNull, reason: 'the API sent no vision artwork');
     });
 
-    await runCase(tester, 'A2.14', 'Where do you fit in?', () async {
+    await runCase(tester, 'A2.14', 'Three sections are gone', () async {
       await open(tester, Routes.home);
 
-      expect(await scrollTo(tester, find.text('Where do you fit in?')), isTrue);
-      for (final door in [
-        'I am talent',
-        'I am a business',
-        'I want to support',
-        'I am an organisation'
+      expect(await scrollTo(tester, find.text('Let’s build the connection together.'), steps: 30),
+          isTrue);
+      for (final heading in [
+        'From discovery to opportunity',
+        'We do not replace the ecosystems. We connect them.',
+        'Where do you fit in?',
       ]) {
-        expect(await scrollTo(tester, find.text(door)), isTrue, reason: 'no "$door" card');
+        expect(find.text(heading), findsNothing, reason: '"$heading" is still on the page');
       }
     });
 

@@ -262,19 +262,19 @@
         },
         {
           "id": "A2.13",
-          "title": "Our approach, our ecosystem, our vision",
+          "title": "Our vision",
           "steps": [
-            "Keep scrolling through 'From discovery to opportunity', 'We do not replace the ecosystems' and the vision picture."
+            "Keep scrolling past the campaigns to the vision picture."
           ],
-          "expected": "Five numbered steps 01–05 in one panel; six cards each opening with a short red line; then the vision artwork across the full width with nothing cut off."
+          "expected": "The vision artwork across the full width with nothing cut off."
         },
         {
           "id": "A2.14",
-          "title": "Where do you fit in?",
+          "title": "Three sections are gone",
           "steps": [
-            "Tap each of the four cards in turn, coming back each time."
+            "Scroll the whole home page."
           ],
-          "expected": "I am talent opens the interview registration; I am a business and I am an organisation open Reach Us; I want to support opens Give."
+          "expected": "There is no 'From discovery to opportunity', no 'We do not replace the ecosystems' and no 'Where do you fit in?' — they were taken off the website's home page too."
         },
         {
           "id": "A2.15",

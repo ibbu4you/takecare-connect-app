@@ -92,13 +92,7 @@ class HomeScreen extends ConsumerWidget {
 
       if (data.activeCampaigns.isNotEmpty) CampaignsBand(campaigns: data.activeCampaigns),
 
-      const ApproachBand(),
-
-      const EcosystemBand(),
-
       if (images.vision != null) VisionBand(image: images.vision!),
-
-      const FitInBand(),
 
       const ClosingBand(),
 

@@ -75,9 +75,6 @@ void main() {
         ShopBand(products: [product, product]),
         const EventsBand(),
         CampaignsBand(campaigns: [campaign, campaign, campaign, campaign]),
-        const ApproachBand(),
-        const EcosystemBand(),
-        const FitInBand(),
         const ClosingBand(),
         FooterBannerBand(banner: strip),
       ];
@@ -113,9 +110,6 @@ void main() {
       'Discover the craft. Support the maker.',
       'What is happening',
       'Ideas need opportunity',
-      'From discovery to opportunity',
-      'We do not replace the ecosystems. We connect them.',
-      'Where do you fit in?',
       'Let’s build the connection together.',
       'Take Care Connect, in your pocket',
     ];
@@ -142,9 +136,6 @@ void main() {
       'Crowdfunding',
       'Influencing Narratives',
       'Craft & Culture Showcase',
-      'Recognise',
-      'Markets & global partners',
-      'I am an organisation',
       'Partner with us',
     ]) {
       expect(find.text(text), findsWidgets, reason: '"$text" is missing');
@@ -181,6 +172,21 @@ void main() {
     expect(find.text('Featured'), findsOneWidget);
     expect(find.text('Visit the shop'), findsOneWidget);
     expect(find.byIcon(Icons.chevron_right_rounded), findsWidgets);
+  });
+
+  /// Taken off the website's home page at the office's request, and so off
+  /// the app's: Our approach, Our ecosystem and Where do you fit in?
+  testWidgets('the three retired sections stay gone', (tester) async {
+    await pump(tester, size: const Size(390, 20000));
+
+    for (final text in [
+      'From discovery to opportunity',
+      'We do not replace the ecosystems. We connect them.',
+      'Where do you fit in?',
+      'I am an organisation',
+    ]) {
+      expect(find.text(text), findsNothing, reason: '"$text" is from a retired section');
+    }
   });
 
   /// The footer is left out of the app at the office's request: the page
